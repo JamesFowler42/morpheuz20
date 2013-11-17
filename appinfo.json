@@ -1,25 +1,32 @@
 {
-  "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
-  "shortName": "Morpheuz",
-  "longName": "Morpheuz",
-  "capabilities": [ "configurable" ],
-  "companyName": "James Fowler",
-  "versionCode": 1,
-  "versionLabel": "1.0.0",
-  "watchapp": {
-    "watchface": true
-  },
-  "appKeys": {
-    "biggest": 1
-  },
-  "resources": {
-    "media": [
-      {
-        "menuIcon": true,
-        "type": "png",
-        "name": "IMAGE_MENU_ICON",
-        "file": "images/menu_icon_simplicity.png"
-      }
-    ]
-  }
+    "versionLabel": "1.0.0",
+    "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
+    "appKeys": {
+        "biggest": 1
+    },
+    "longName": "Morpheuz",
+    "versionCode": 1,
+    "capabilities": [
+        "configurable"
+    ],
+    "shortName": "Morpheuz",
+    "companyName": "James Fowler",
+    "watchapp": {
+        "watchface": true
+    },
+    "resources": {
+        "media": [
+            {
+                "menuIcon": true,
+                "type": "png",
+                "name": "IMAGE_ICON",
+                "file": "images/icon.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_LOGO",
+                "file": "images/logo.png"
+            }
+        ]
+    }
 }

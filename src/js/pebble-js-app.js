@@ -1,7 +1,6 @@
 /**
- * 
+ * Various date functions
  */
-
 Date.prototype.format = function(format) //author: meizz
 {
 	var o = {
@@ -48,11 +47,17 @@ Date.prototype.addHours = function (num) {
     return new Date(value);
 }
 
+/*
+ * Reset log
+ */
 function resetInfo() {
 	console.log("data reset");
 	window.localStorage.clear();
 }
 
+/*
+ * Store data returned from the watch
+ */
 function storePointInfo(point) {
 	var day = window.localStorage.getItem("day");
 	if (day == null) {
@@ -94,13 +99,18 @@ function storePointInfo(point) {
    }
 }
 
-
+/*
+ * Process ready from the watch
+ */
 Pebble.addEventListener("ready",
 		function(e) {
 	console.log("Ready");
 	Pebble.sendAppMessage({"biggest": "-1"});
 });
 
+/*
+ * Process sample from the watch
+ */
 Pebble.addEventListener("appmessage",
 		function(e) {
 	console.log("Message Payload = " + e.payload.biggest);
@@ -108,6 +118,9 @@ Pebble.addEventListener("appmessage",
 	Pebble.sendAppMessage({"biggest": "-1"});
 });
 
+/*
+ * Monitor the closing of the config/display screen so as we can do a reset if needed
+ */
 Pebble.addEventListener("webviewclosed",
 		function(e) {
 	console.log("webview closed");
@@ -117,6 +130,9 @@ Pebble.addEventListener("webviewclosed",
 		resetInfo();
 });
 
+/*
+ * Show the config/display page - this will show a graph and allow a reset
+ */
 Pebble.addEventListener("showConfiguration",
 		function(e) {
 	console.log("config");
@@ -137,6 +153,9 @@ Pebble.addEventListener("showConfiguration",
 	Pebble.openURL(url);
 });
 
+/*
+ * Unclear if this serves a purpose at all
+ */
 Pebble.addEventListener("configurationClosed",
 		function(e) {
 	console.log("Configuration window returned: " + e.configurationData);

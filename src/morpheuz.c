@@ -1,22 +1,30 @@
 #include "pebble.h"
 #include "morpheuz.h"
 
+#define SAMPLES_IN_ONE_MINUTE 24
+	
 static AppSync sync;
 static uint8_t sync_buffer[512];
-
 int BIGGEST = 1;
-
 uint16_t one_minute_biggest = 0;
 uint8_t sample_sets = 0;
-#define SAMPLES_IN_ONE_MINUTE 24
 
+/*
+ * Error callback from sync
+ */
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
 }
 
+/*
+ * Success callback - actually we do nothing
+ */
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
 }
 
+/*
+ * Pass our sample to javascript for storage
+ */
 static void send_cmd(uint16_t biggest) {
 
   Tuplet value = TupletInteger(BIGGEST, biggest);
@@ -34,8 +42,9 @@ static void send_cmd(uint16_t biggest) {
   app_message_outbox_send();
 }
 
-
-
+/*
+ * Store our samples from each group until we have a minute's worth
+ */
 void store_sample(uint16_t biggest) {
 	if (biggest > one_minute_biggest)
 		one_minute_biggest = biggest;
@@ -47,6 +56,9 @@ void store_sample(uint16_t biggest) {
 	}
 }
 
+/*
+ * Can't be bothered to play with negative numbers
+ */
 uint16_t scale_accel(int16_t val) {
 	int16_t retval = 4000 + val;
 	if (retval < 0)
@@ -54,6 +66,9 @@ uint16_t scale_accel(int16_t val) {
 	return retval;
 }
 
+/*
+ * Process accelerometer data
+ */
 void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
 	// Average the data
@@ -102,6 +117,9 @@ void accel_data_handler(AccelData *data, uint32_t num_samples) {
 	store_sample(biggest);
 }
 
+/*
+ * Initialise comms and accelerometer
+ */
 void init_morpheuz() {
 
 	  const int inbound_size = app_message_inbox_size_maximum();
@@ -120,6 +138,9 @@ void init_morpheuz() {
 	  accel_data_service_subscribe(25, &accel_data_handler);
 }
 
+/*
+ * Close down accelerometer
+ */
 void deinit_morpheuz() {
 	accel_data_service_unsubscribe();
 }
