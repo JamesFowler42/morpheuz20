@@ -1,0 +1,18 @@
+body {
+   width: 320px;
+   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+h2 {
+}
+
+p {
+font-size: 12px;
+}
+
+#reset {
+  border: none;
+  background-color: transparent;
+  color: blue;
+  font-size: 14px;
+}

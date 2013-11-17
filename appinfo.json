@@ -1,0 +1,25 @@
+{
+  "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
+  "shortName": "Morpheuz",
+  "longName": "Morpheuz",
+  "capabilities": [ "configurable" ],
+  "companyName": "James Fowler",
+  "versionCode": 1,
+  "versionLabel": "1.0.0",
+  "watchapp": {
+    "watchface": true
+  },
+  "appKeys": {
+    "biggest": 1
+  },
+  "resources": {
+    "media": [
+      {
+        "menuIcon": true,
+        "type": "png",
+        "name": "IMAGE_MENU_ICON",
+        "file": "images/menu_icon_simplicity.png"
+      }
+    ]
+  }
+}
