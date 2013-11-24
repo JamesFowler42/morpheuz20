@@ -4,10 +4,34 @@
 #define SAMPLES_IN_ONE_MINUTE 24
 	
 static AppSync sync;
-static uint8_t sync_buffer[512];
-int BIGGEST = 1;
+static uint8_t sync_buffer[BUFF_SIZE];
+
 uint16_t one_minute_biggest = 0;
 uint8_t sample_sets = 0;
+
+#define ALARM_MAX 30
+uint8_t alarm_count;
+
+/*
+ * Fire alarm
+ */
+static void fire_alarm() {
+	alarm_count = 0;
+	reset_tick_service(true);
+}
+
+/*
+ * Do the alarm if needed
+ */
+void do_alarm() {
+	if (alarm_count >= ALARM_MAX) {
+		reset_tick_service(false);
+		return;
+	}
+	vibes_double_pulse();
+	vibes_long_pulse();
+	alarm_count++;
+}
 
 /*
  * Error callback from sync
@@ -20,6 +44,16 @@ static void sync_error_callback(DictionaryResult dict_error, AppMessageResult ap
  * Success callback - actually we do nothing
  */
 static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
+  int32_t alarm_now = 0;
+  switch (key) {
+    case ALARM:
+      alarm_now = new_tuple->value->int32;
+	  if (alarm_now == 1) {
+		  APP_LOG(APP_LOG_LEVEL_DEBUG, "firing alarm");
+		  fire_alarm();
+	  }
+      break;
+  }
 }
 
 /*
@@ -121,14 +155,17 @@ void accel_data_handler(AccelData *data, uint32_t num_samples) {
  * Initialise comms and accelerometer
  */
 void init_morpheuz() {
+	
+	  alarm_count = ALARM_MAX;
 
-	  const int inbound_size = app_message_inbox_size_maximum();
-	  const int outbound_size = app_message_outbox_size_maximum();
+	  const int inbound_size = BUFF_SIZE;
+	  const int outbound_size = BUFF_SIZE;
 
 	  app_message_open(inbound_size, outbound_size);
 
 	  Tuplet initial_values[] = {
 		  TupletInteger(BIGGEST, 0),
+		  TupletInteger(ALARM, 0),
 	  };
 
 	  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),

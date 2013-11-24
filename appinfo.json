@@ -1,11 +1,12 @@
 {
-    "versionLabel": "0.1.0",
+    "versionLabel": "0.5.0",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
-        "biggest": 1
+        "biggest": 1,
+        "alarm": 2
     },
     "longName": "Morpheuz",
-    "versionCode": 1,
+    "versionCode": 2,
     "capabilities": [
         "configurable"
     ],
@@ -17,15 +18,15 @@
     "resources": {
         "media": [
             {
+                "type": "png",
+                "name": "IMAGE_LOGO",
+                "file": "images/logo.png"
+            },
+            {
                 "menuIcon": true,
                 "type": "png",
                 "name": "IMAGE_ICON",
                 "file": "images/icon.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_LOGO",
-                "file": "images/logo.png"
             }
         ]
     }

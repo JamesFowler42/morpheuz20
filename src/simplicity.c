@@ -37,7 +37,18 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     memmove(time_text, &time_text[1], sizeof(time_text) - 1);
   }
 
+  // Just used to calc size of buffers. Comes back as 23 - going to use 28 to give a little space for movement.
+  //Tuplet initial_values[] = {
+  //		  TupletInteger(BIGGEST, 0),
+  //		  TupletInteger(ALARM, 0),
+  //};
+	
+  //uint32_t test = dict_calc_buffer_size_from_tuplets(initial_values, 2);
+  //snprintf(time_text, sizeof(time_text), "%ld", test);
+
   text_layer_set_text(text_time_layer, time_text);
+	
+  do_alarm();
 
 }
 
@@ -79,6 +90,17 @@ void handle_init(void) {
 
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
   init_morpheuz();
+}
+
+/*
+ * Shorten the tick interval whilst the alarm is going off
+ */
+void reset_tick_service(bool second) {
+	tick_timer_service_unsubscribe();
+	if (second)
+        tick_timer_service_subscribe(SECOND_UNIT, handle_minute_tick);
+	else
+		tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 }
 
 

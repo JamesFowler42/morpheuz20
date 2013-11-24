@@ -62,18 +62,17 @@ function storePointInfo(point) {
 	var day = window.localStorage.getItem("day");
 	if (day == null) {
 		var dayStr = new Date().format("ddMM");
-		var hourStr = new Date().format("hh");
 		var base = new Date().valueOf();
-		console.log("Day not set - dayStr=" + dayStr + ", hourStr=" + hourStr + ", base=" + base);
-		window.localStorage.setItem("day",new Date().format("ddMM"));
-		window.localStorage.setItem("hour",new Date().format("hh"));
-		window.localStorage.setItem("base", new Date().valueOf());
+		console.log("Day not set - dayStr=" + dayStr + ", base=" + base);
+		window.localStorage.setItem("day",dayStr);
+		window.localStorage.setItem("base", base);
 	} else {
 		var today = new Date().format("ddMM");
 		var yesterday = new Date().addDays(-1).format("ddMM");
 		console.log("Day set - checking against today=" + today + ", yesterday=" + yesterday);
-		if (day != today && day != yesterday)
+		if (day != today && day != yesterday) {
 			return;
+		}
    }
    var base = parseInt(window.localStorage.getItem("base"));
    var now = new Date().valueOf();
@@ -81,11 +80,12 @@ function storePointInfo(point) {
    var entry = "P" + offset;
    console.log("Processing base=" + base + ", now=" + now + ", offset=" + offset + ", entry=" + entry);
    
-   if (offset > 32) {
+   if (offset > 36) {
 	   console.log("bailed out. Offset too big");
  	   return;
    }
  
+   // Now store entries
    var valueStr = window.localStorage.getItem(entry);
    if (valueStr == null) {
 	   window.localStorage.setItem(entry,point);
@@ -100,12 +100,78 @@ function storePointInfo(point) {
 }
 
 /*
+ * Perform smart alarm function
+ */
+function smart_alarm(point) {
+	
+	// Are we doing smart alarm thing
+	var smart = window.localStorage.getItem("smart");
+	if (smart == null || smart != 'Y')
+		return 0;
+	
+	// Now has the alarm been sounded yet
+	var goneOff = window.localStorage.getItem("goneOff");
+    if (goneOff != null)
+		return 0;
+	
+   // Work out the average
+   var total = 0;
+   var novals = 0;
+   for (var i=0; i < 36; i++) {
+	  var entry = "P" + i;	
+	  var valueStr = window.localStorage.getItem(entry);
+	  if (valueStr != null) {
+		novals++;
+		total = total + parseInt(valueStr);
+	  } 
+	}
+	if (novals == 0)
+		novals = 1;
+   var threshold = total / novals;	
+   console.log("threshold=" + threshold);
+	
+	// Are we in the right timeframe
+	var fromhr = window.localStorage.getItem("fromhr");
+	var tohr = window.localStorage.getItem("tohr");
+	var frommin = window.localStorage.getItem("frommin");
+	var tomin = window.localStorage.getItem("tomin");
+
+	var from = fromhr + frommin;
+	var to = tohr + tomin;
+	
+	var now = new Date().format("hhmm");
+
+	console.log("from=" + from + ", to=" + to + ", now=" + now);
+	if (now >= from && now < to) {
+		
+		// Has the current point exceeded the threshold value
+		if (point > threshold) {
+			window.localStorage.setItem("goneOff","Y");
+			return 1;
+		} else {
+			return 0;
+		}
+	}
+
+	var before = new Date().addMinutes(-1).format("hhmm");
+	var after = new Date().addMinutes(1).format("hhmm");
+	// Or failing that have we hit the last minute we can
+	if (now == to || before == to || after == to) { 
+		window.localStorage.setItem("goneOff","Y");
+		return 1;
+	}
+	
+	// None of the above
+	return 0;
+}
+
+/*
  * Process ready from the watch
  */
 Pebble.addEventListener("ready",
 		function(e) {
 	console.log("Ready");
-	Pebble.sendAppMessage({"biggest": "-1"});
+	Pebble.sendAppMessage({"biggest": "-1", "alarm": 0});
 });
 
 /*
@@ -114,8 +180,10 @@ Pebble.addEventListener("ready",
 Pebble.addEventListener("appmessage",
 		function(e) {
 	console.log("Message Payload = " + e.payload.biggest);
-	storePointInfo(parseInt(e.payload.biggest));
-	Pebble.sendAppMessage({"biggest": "-1"});
+	var point = parseInt(e.payload.biggest);
+	storePointInfo(point);
+    var alarm = smart_alarm(point);
+	Pebble.sendAppMessage({"biggest": "-1", "alarm": alarm});
 });
 
 /*
@@ -125,9 +193,17 @@ Pebble.addEventListener("webviewclosed",
 		function(e) {
 	console.log("webview closed");
 	console.log(e.type);
-	var config = e.response;
-	if (config == "reset")
+	if (e.response == null)
+		return;
+	var dataElems = e.response.split("!");
+	if (dataElems[0] == "reset") {
 		resetInfo();
+		window.localStorage.setItem("smart",dataElems[1]);
+		window.localStorage.setItem("fromhr",dataElems[2]);
+		window.localStorage.setItem("frommin",dataElems[3]);
+		window.localStorage.setItem("tohr",dataElems[4]);
+		window.localStorage.setItem("tomin",dataElems[5]);
+	}
 });
 
 /*
@@ -136,10 +212,9 @@ Pebble.addEventListener("webviewclosed",
 Pebble.addEventListener("showConfiguration",
 		function(e) {
 	console.log("config");
-	var day = window.localStorage.getItem("day");
-	var hour = window.localStorage.getItem("hour");
+	var base = window.localStorage.getItem("base");
 	var graph = "";
-	for (var i=0; i < 32; i++) {
+	for (var i=0; i < 36; i++) {
 		var entry = "P" + i;	
 		var valueStr = window.localStorage.getItem(entry);
 		if (valueStr == null) {
@@ -148,7 +223,14 @@ Pebble.addEventListener("showConfiguration",
 			graph = graph + valueStr + "!";
 		}
 	}
-	var url = "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view.html?day=" + day + "&hour=" + hour + "&graph=" + graph;
+	var fromhr = window.localStorage.getItem("fromhr");
+	var tohr = window.localStorage.getItem("tohr");
+	var frommin = window.localStorage.getItem("frommin");
+	var tomin = window.localStorage.getItem("tomin");
+	var smart = window.localStorage.getItem("smart");
+			
+	var url = "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view2.html?base=" + base + "&graph=" + graph + 
+		      "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart;
 	console.log("url=" + url);
 	Pebble.openURL(url);
 });
@@ -159,6 +241,4 @@ Pebble.addEventListener("showConfiguration",
 Pebble.addEventListener("configurationClosed",
 		function(e) {
 	console.log("Configuration window returned: " + e.configurationData);
-	if (e.configurationData == "reset")
-		resetInfo();
 });
