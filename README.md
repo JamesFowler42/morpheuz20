@@ -14,3 +14,14 @@ Tests so far indicate it is not profligate with Pebble battery power, using the 
 It's simple to install. There is no iOS or Android app to buy, nothing to sign up for and it's free.
 
 Please enjoy and let me know how you get on.
+
+Version 0.5.0
+=============
+Added smart alarm facility - specify a period of time during which it is acceptable to be woken. The smart alarm will wake you if you are stiring, but let you sleep to the last moment if you are in deep sleep.
+Time tick marks on the graph.
+
+Version 0.1.0
+=============
+Original version.
+
+
