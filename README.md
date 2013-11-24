@@ -17,8 +17,17 @@ Please enjoy and let me know how you get on.
 
 Version 0.5.0
 =============
-Added smart alarm facility - specify a period of time during which it is acceptable to be woken. The smart alarm will wake you if you are stiring, but let you sleep to the last moment if you are in deep sleep.
-Time tick marks on the graph.
+Added Smart Alarm. Set a time period from the earliest time to the latest time you wish to be woken and Morpheuz will wake you during that period with 30 seconds of vibration. It will attempt to alarm when you are restless rather than in a deep sleep. Unless it has already done so it will alarm at the end of the period.
+
+Added a time scale to the sleep activity graph.
+
+Extended the monitoring timeframe to 9 hours.
+
+PLEASE NOTE: This is beta software on a beta OS. Whilst I am confident Morpheuz will not attempt to alarm outside the period specified, there is a possibility that it may not alarm at all. Please ensure that you set a backup alarm. During testing I've had the watch face swap during the night and this disables monitoring and the alarm function.
+
+Also note, the new timeframe is only saved when the "Reset and Go" button is pressed, not when "Done" is pressed.
+
+The vibration can be cancelled by switching to another watch face.
 
 Version 0.1.0
 =============
