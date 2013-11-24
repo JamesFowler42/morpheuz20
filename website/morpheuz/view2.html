@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+<!-- Graph page for version 0.5.0 of Morpheuz -->
 <head>
 <title>Morpheuz Sleep Monitor</title>
 <link rel="stylesheet" type="text/css" href="standard.css" />
@@ -200,6 +201,7 @@
                                              renderer:$.jqplot.DateAxisRenderer, 
                                              tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
                                              tickOptions:{formatString:'%R', angle: -30, fontSize: '8pt'},
+                                             tickInterval:'1 hour',
 						// Turn off "padding".  This will allow data point to lie on the
 						// edges of the grid.  Default padding is 1.2 and will keep all
 						// points inside the bounds of the grid.
