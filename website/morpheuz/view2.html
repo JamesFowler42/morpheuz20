@@ -3,7 +3,31 @@
 <!-- Graph page for version 0.5.0 of Morpheuz -->
 <head>
 <title>Morpheuz Sleep Monitor</title>
-<link rel="stylesheet" type="text/css" href="standard.css" />
+<style>
+body {
+   width: 320px;
+   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+h2 {
+}
+
+p {
+font-size: 12px;
+}
+
+#reset {
+  border: none;
+  background-color: transparent;
+  color: rgb(0,122,255);
+  font-size: 17px;
+  font-weight: 500;
+  margin-left:0px;
+  text-align:left;
+  border-left:0px;
+  padding-left:0px
+}
+</style>
 <script language="javascript" type="text/javascript"
 	src="jqplot/jquery.min.js"></script>
 <script language="javascript" type="text/javascript"
@@ -24,11 +48,6 @@
 	<form action="">
 		<h3>Morpheuz Sleep Monitor</h3>
 		<div id="chart1" style="width: 320px; height: 250px;"></div>
-		<p>Morpheuz will record for 9 hours following each reset and then
-			no more.</p>
-		<button id="reset" type="button">Reset & Go</button>
-		<p>Press reset, settle down to sleep and come back in the morning
-			to see how restless your were.</p>
 		<p>
 			<label for="smartalarm">Smart Alarm:</label> <input id="smartalarm"
 				type="checkbox" />
@@ -96,6 +115,7 @@
 				<option>45</option>
 			</select>
 		</p>
+		<button id="reset" type="button">Save & Reset</button>
 	</form>
 	<script language='javascript' type="text/javascript">
 		Date.prototype.format = function(format) //author: meizz
@@ -175,6 +195,8 @@
 			var element = new Array();
                       element[0] = startPoint;
                       element[1] = parseInt(splitup[i]);
+                      if (element[1] == -1) 
+				element[1] = null;
 			more[i] = element;
                       startPoint = startPoint.addMinutes(15);
                }
@@ -182,7 +204,9 @@
 		$(document).ready(function() {
 			var plot2 = $.jqplot('chart1', [more], {
 				series : [ {
-					showMarker : false
+					showMarker : false,
+                                     breakOnNull : true,
+                                     color: 'rgb(0,122,255)'
 				} ],
 				// You can specify options for all axes on the plot at once with
 				// the axesDefaults object.  Here, we're using a canvas renderer
@@ -240,6 +264,7 @@
 					+ '!' + tominpart;
                       }
 		}
-	</script>
+
+    </script>
 </body>
 </html>
