@@ -1,32 +1,32 @@
 {
-    "versionLabel": "0.5.0",
+    "versionLabel": "0.5.1",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "biggest": 1,
         "alarm": 2
     },
-    "longName": "Morpheuz",
-    "versionCode": 2,
+    "longName": "Morpheuz Sleep Monitor",
+    "versionCode": 3,
     "capabilities": [
         "configurable"
     ],
     "shortName": "Morpheuz",
     "companyName": "James Fowler",
     "watchapp": {
-        "watchface": true
+        "watchface": false
     },
     "resources": {
         "media": [
-            {
-                "type": "png",
-                "name": "IMAGE_LOGO",
-                "file": "images/logo.png"
-            },
             {
                 "menuIcon": true,
                 "type": "png",
                 "name": "IMAGE_ICON",
                 "file": "images/icon.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_LOGO",
+                "file": "images/logo.png"
             }
         ]
     }

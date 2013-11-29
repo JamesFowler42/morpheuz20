@@ -7,20 +7,38 @@ TextLayer *text_time_layer;
 Layer *line_layer;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap = NULL;
+bool g_second = false;
+int alert_code = 0;
 
+/*
+ * Remember an issue we've spotted
+ */
+void set_alert_code(int new_alert_code) {
+	alert_code = alert_code | new_alert_code;
+}
+
+/*
+ * Draw line
+ */
 void line_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 }
 
+/*
+ * Process clockface
+ */
 void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Need to be static because they're used by the system later.
   static char time_text[] = "00:00";
   static char date_text[] = "Xxxxxxxxx 00";
-
+                             
   char *time_format;
-
-  strftime(date_text, sizeof(date_text), "%B %e", tick_time);
+  
+  if (alert_code == 0)	
+	  strftime(date_text, sizeof(date_text), "%B %e", tick_time);
+  else
+	  snprintf(date_text, sizeof(date_text), "Issue: %d", alert_code);
   text_layer_set_text(text_date_layer, date_text);
 
   if (clock_is_24h_style()) {
@@ -52,12 +70,18 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 }
 
+/*
+ * Shutdown
+ */
 void handle_deinit(void) {
   gbitmap_destroy(logo_bitmap);
   tick_timer_service_unsubscribe();
   deinit_morpheuz();
 }
 
+/*
+ * Startup
+ */
 void handle_init(void) {
   window = window_create();
   window_stack_push(window, true /* Animated */);
@@ -70,20 +94,20 @@ void handle_init(void) {
   logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
   bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
 
-  text_date_layer = text_layer_create(GRect(8, 80, 144-8, 168-80));
+  text_date_layer = text_layer_create(GRect(8, 80, 144-8, WINDOW_HEIGHT-80));
   text_layer_set_text_color(text_date_layer, GColorWhite);
   text_layer_set_background_color(text_date_layer, GColorClear);
   text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
   layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
 
-  text_time_layer = text_layer_create(GRect(0, 104, 144, 168-104));
+  text_time_layer = text_layer_create(GRect(0, 104, 144, WINDOW_HEIGHT-104));
   text_layer_set_text_color(text_time_layer, GColorWhite);
   text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
   text_layer_set_background_color(text_time_layer, GColorClear);
   text_layer_set_font(text_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
   layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
 
-  GRect line_frame = GRect(8, 109, 139, 2);
+  GRect line_frame = GRect(8, 109, 144-16, 2);
   line_layer = layer_create(line_frame);
   layer_set_update_proc(line_layer, line_layer_update_callback);
   layer_add_child(window_layer, line_layer);
@@ -96,6 +120,9 @@ void handle_init(void) {
  * Shorten the tick interval whilst the alarm is going off
  */
 void reset_tick_service(bool second) {
+	if (second == g_second)
+		return;
+	g_second = second;
 	tick_timer_service_unsubscribe();
 	if (second)
         tick_timer_service_subscribe(SECOND_UNIT, handle_minute_tick);
@@ -103,7 +130,9 @@ void reset_tick_service(bool second) {
 		tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 }
 
-
+/*
+ * Main
+ */
 int main(void) {
   handle_init();
 

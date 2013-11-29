@@ -218,7 +218,7 @@ Pebble.addEventListener("showConfiguration",
 		var entry = "P" + i;	
 		var valueStr = window.localStorage.getItem(entry);
 		if (valueStr == null) {
-			graph = graph + "0!";
+			graph = graph + "-1!";
 		} else {
 			graph = graph + valueStr + "!";
 		}

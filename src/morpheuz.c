@@ -1,16 +1,14 @@
 #include "pebble.h"
 #include "morpheuz.h"
 
-#define SAMPLES_IN_ONE_MINUTE 24
-	
 static AppSync sync;
 static uint8_t sync_buffer[BUFF_SIZE];
-
 uint16_t one_minute_biggest = 0;
 uint8_t sample_sets = 0;
-
-#define ALARM_MAX 30
 uint8_t alarm_count;
+bool already_open = false;
+time_t last_comms;
+time_t last_accel;
 
 /*
  * Fire alarm
@@ -21,14 +19,39 @@ static void fire_alarm() {
 }
 
 /*
+ * Reset the application to try and keep everything working
+ */
+void reset() {
+	if (bluetooth_connection_service_peek()) {
+		deinit_morpheuz();
+		init_morpheuz();
+	}
+}
+
+/*
  * Do the alarm if needed
  */
 void do_alarm() {
+
+	// Self monitoring - if the comms or the accelerometer stop working reset the app so we can continue
+	time_t now = time(NULL);
+	bool reset_needed = false;
+	if (last_comms < (now - DISTRESS_WAIT_SEC)) {
+		set_alert_code(1);
+		reset_needed = true;
+	}
+	if (last_accel < (now - DISTRESS_WAIT_SEC)) {
+		set_alert_code(2);
+		reset_needed = true;
+	}
+	if (reset_needed)
+		reset();
+	
+	// Alarm handling
 	if (alarm_count >= ALARM_MAX) {
 		reset_tick_service(false);
 		return;
 	}
-	vibes_double_pulse();
 	vibes_long_pulse();
 	alarm_count++;
 }
@@ -38,6 +61,7 @@ void do_alarm() {
  */
 static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
+  last_comms = 0; // Force an issue
 }
 
 /*
@@ -54,6 +78,8 @@ static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tup
 	  }
       break;
   }
+  // Self monitor memory
+  last_comms = time(NULL);
 }
 
 /*
@@ -105,6 +131,9 @@ uint16_t scale_accel(int16_t val) {
  */
 void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
+	// Self monitor memory
+	last_accel = time(NULL);
+	
 	// Average the data
 	uint32_t avg_x = 0;
 	uint32_t avg_y = 0;
@@ -157,12 +186,18 @@ void accel_data_handler(AccelData *data, uint32_t num_samples) {
 void init_morpheuz() {
 	
 	  alarm_count = ALARM_MAX;
+	
+	  last_comms = time(NULL);
+      last_accel = time(NULL);
 
-	  const int inbound_size = BUFF_SIZE;
+	if (!already_open) {
+ 	  const int inbound_size = BUFF_SIZE;
 	  const int outbound_size = BUFF_SIZE;
 
 	  app_message_open(inbound_size, outbound_size);
-
+	  already_open = true;
+	}
+	
 	  Tuplet initial_values[] = {
 		  TupletInteger(BIGGEST, 0),
 		  TupletInteger(ALARM, 0),
@@ -180,4 +215,5 @@ void init_morpheuz() {
  */
 void deinit_morpheuz() {
 	accel_data_service_unsubscribe();
+	app_sync_deinit(&sync);
 }
