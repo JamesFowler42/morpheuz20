@@ -15,8 +15,15 @@ It's simple to install. There is no iOS or Android app to buy, nothing to sign u
 
 Please enjoy and let me know how you get on.
 
+Version 0.5.1
+-------------
+* Watchapp not watchface.
+* Automatic self monitoring to reboot comms and accelerometer if problems occur
+* Better graphing - gaps where no data found.
+* Removed bug with resetting timer service repeatedly - could have resulted in poor battery life.
+
 Version 0.5.0
-=============
+-------------
 Added Smart Alarm. Set a time period from the earliest time to the latest time you wish to be woken and Morpheuz will wake you during that period with 30 seconds of vibration. It will attempt to alarm when you are restless rather than in a deep sleep. Unless it has already done so it will alarm at the end of the period.
 
 Added a time scale to the sleep activity graph.
@@ -30,7 +37,7 @@ Also note, the new timeframe is only saved when the "Reset and Go" button is pre
 The vibration can be cancelled by switching to another watch face.
 
 Version 0.1.0
-=============
+-------------
 Original version.
 
 
