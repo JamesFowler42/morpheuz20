@@ -15,7 +15,7 @@ It's simple to install. There is no iOS or Android app to buy, nothing to sign u
 
 Please enjoy and let me know how you get on.
 
-Version 0.5.1
+Version 0.6.0
 -------------
 * Watchapp not watchface.
 * Automatic self monitoring to reboot comms and accelerometer if problems occur
