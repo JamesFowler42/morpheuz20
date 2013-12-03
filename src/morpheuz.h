@@ -8,7 +8,7 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 	
-#define VERSION "v0.7"
+#define VERSION "v0.8"
 	
 #define BUFF_SIZE 28
 	

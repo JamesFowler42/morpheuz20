@@ -2,10 +2,10 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "v0.7",
+	var cfg = { version : "v0.8",
 			    limit: 54,
 			    divisor: 600000,
-			    html: "view3.html" };
+			    html: "view4.html" };
 	return cfg;
 }
 /**
