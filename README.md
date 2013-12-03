@@ -15,6 +15,10 @@ It's simple to install. There is no iOS or Android app to buy, nothing to sign u
 
 Please enjoy and let me know how you get on.
 
+Version 0.8.0
+-------------
+* Copy option - copies as CSV data in a mailto (appears as an email document)
+
 Version 0.7.0
 -------------
 * Battery meter on screen at all times
