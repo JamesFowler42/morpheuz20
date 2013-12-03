@@ -15,6 +15,13 @@ It's simple to install. There is no iOS or Android app to buy, nothing to sign u
 
 Please enjoy and let me know how you get on.
 
+Version 0.7.0
+-------------
+* Battery meter on screen at all times
+* Version shown on watch face and in config window
+* Date (ISO format) shown on graph
+* Resolution of graph now 1 point per 10 mins not 1 point per 15 mins.
+
 Version 0.6.0
 -------------
 * Watchapp not watchface.
