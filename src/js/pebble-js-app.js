@@ -1,3 +1,13 @@
+/*
+ * Constants
+ */
+function mConst() {
+	var cfg = { version : "v0.7",
+			    limit: 54,
+			    divisor: 600000,
+			    html: "view3.html" };
+	return cfg;
+}
 /**
  * Various date functions
  */
@@ -76,11 +86,11 @@ function storePointInfo(point) {
    }
    var base = parseInt(window.localStorage.getItem("base"));
    var now = new Date().valueOf();
-   var offset = Math.floor((now - base) / 900000);
+   var offset = Math.floor((now - base) / mConst().divisor);
    var entry = "P" + offset;
    console.log("Processing base=" + base + ", now=" + now + ", offset=" + offset + ", entry=" + entry);
    
-   if (offset > 36) {
+   if (offset > mConst().limit) {
 	   console.log("bailed out. Offset too big");
  	   return;
    }
@@ -117,7 +127,7 @@ function smart_alarm(point) {
    // Work out the average
    var total = 0;
    var novals = 0;
-   for (var i=0; i < 36; i++) {
+   for (var i=0; i < mConst().limit; i++) {
 	  var entry = "P" + i;	
 	  var valueStr = window.localStorage.getItem(entry);
 	  if (valueStr != null) {
@@ -214,7 +224,7 @@ Pebble.addEventListener("showConfiguration",
 	console.log("config");
 	var base = window.localStorage.getItem("base");
 	var graph = "";
-	for (var i=0; i < 36; i++) {
+	for (var i=0; i < mConst().limit; i++) {
 		var entry = "P" + i;	
 		var valueStr = window.localStorage.getItem(entry);
 		if (valueStr == null) {
@@ -229,8 +239,8 @@ Pebble.addEventListener("showConfiguration",
 	var tomin = window.localStorage.getItem("tomin");
 	var smart = window.localStorage.getItem("smart");
 			
-	var url = "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view2.html?base=" + base + "&graph=" + graph + 
-		      "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart;
+	var url = "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/" + mConst().html + "?base=" + base + "&graph=" + graph + 
+		      "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version;
 	console.log("url=" + url);
 	Pebble.openURL(url);
 });

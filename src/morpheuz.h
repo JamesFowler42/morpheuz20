@@ -8,6 +8,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 	
+#define VERSION "v0.7"
+	
 #define BUFF_SIZE 28
 	
 enum MorpKey {
@@ -18,7 +20,7 @@ enum MorpKey {
 #define SAMPLES_IN_ONE_MINUTE 24
 #define ALARM_MAX 30
 #define DISTRESS_WAIT_SEC 120
-#define WINDOW_HEIGHT 152
+#define WINDOW_HEIGHT 168
 
 void init_morpheuz();
 void deinit_morpheuz();
