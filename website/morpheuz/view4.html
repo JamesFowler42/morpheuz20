@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html>
+<!-- Graph page for version 0.8.0 of Morpheuz -->
+<head>
+<title>Morpheuz Sleep Monitor</title>
+<style>
+body {
+   width: 320px;
+   font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
+
+h2 {
+font-size: 17px;
+}
+
+p {
+font-size: 12px;
+}
+
+#version {
+font-size: 6px;
+width: 310px;
+text-align: right;
+display:block;
+position: relative;
+top:-14px
+}
+
+#reset {
+  border: none;
+  background-color: transparent;
+  color: rgb(0,122,255);
+  font-size: 17px;
+  font-weight: 500;
+  margin-left:0px;
+  text-align:left;
+  border-left:0px;
+  padding-left:0px;
+}
+
+#copy {
+  border: none;
+  background-color: transparent;
+  color: rgb(0,122,255);
+  font-size: 17px;
+  font-weight: 500;
+  margin-left:0px;
+  text-align:left;
+  border-left:0px;
+  padding-left:0px;
+  text-decoration: none;
+}
+</style>
+<script language="javascript" type="text/javascript"
+	src="jqplot/jquery.min.js"></script>
+<script language="javascript" type="text/javascript"
+	src="jqplot/jquery.jqplot.min.js"></script>
+<link rel="stylesheet" type="text/css" href="jqplot/jquery.jqplot.css" />
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+
+<script type="text/javascript" src="jqplot/plugins/jqplot.dateAxisRenderer.min.js"></script>
+<script type="text/javascript" src="jqplot/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript" src="jqplot/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script type="text/javascript" src="jqplot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
+<script type="text/javascript" src="jqplot/plugins/jqplot.barRenderer.min.js"></script>
+</head>
+<body>
+	<form action="">
+		<h2 id="title">Morpheuz Sleep Monitor</h2>
+		<div id="chart1" style="width: 320px; height: 250px;"></div>
+		<p>
+			<label for="smartalarm">Smart Alarm:</label> <input id="smartalarm"
+				type="checkbox" />
+		</p>
+		<p>
+			<label for="smartalarm">Period:</label> <select id="safromhour">
+				<option>00</option>
+				<option>01</option>
+				<option>02</option>
+				<option>03</option>
+				<option>04</option>
+				<option>05</option>
+				<option selected>06</option>
+				<option>07</option>
+				<option>08</option>
+				<option>09</option>
+				<option>10</option>
+				<option>11</option>
+				<option>12</option>
+				<option>13</option>
+				<option>14</option>
+				<option>15</option>
+				<option>16</option>
+				<option>17</option>
+				<option>18</option>
+				<option>19</option>
+				<option>20</option>
+				<option>21</option>
+				<option>22</option>
+				<option>23</option>
+			</select> : <select id="safrommin">
+				<option>00</option>
+				<option>15</option>
+				<option selected>30</option>
+				<option>45</option>
+			</select> to <select id="satohour">
+				<option>00</option>
+				<option>01</option>
+				<option>02</option>
+				<option>03</option>
+				<option>04</option>
+				<option>05</option>
+				<option>06</option>
+				<option selected>07</option>
+				<option>08</option>
+				<option>09</option>
+				<option>10</option>
+				<option>11</option>
+				<option>12</option>
+				<option>13</option>
+				<option>14</option>
+				<option>15</option>
+				<option>16</option>
+				<option>17</option>
+				<option>18</option>
+				<option>19</option>
+				<option>20</option>
+				<option>21</option>
+				<option>22</option>
+				<option>23</option>
+			</select> : <select id="satomin">
+				<option>00</option>
+				<option selected>15</option>
+				<option>30</option>
+				<option>45</option>
+			</select>
+		</p>
+		<button id="reset" type="button">Save & Reset</button>
+		<a id="copy" href="mailto:?subject=Greetings%20from%20Cupertino!&body=Wish%20you%20were%20here!">Copy</a>
+               <span id="version">v0.5</span>
+	</form>
+	<script language='javascript' type="text/javascript">
+		Date.prototype.format = function(format) //author: meizz
+		{
+			var o = {
+				"M+" : this.getMonth() + 1, //month
+				"d+" : this.getDate(), //day
+				"h+" : this.getHours(), //hour
+				"i+" : this.getHours() + 1, //hour + 1
+				"m+" : this.getMinutes(), //minute
+				"s+" : this.getSeconds(), //second
+				"q+" : Math.floor((this.getMonth() + 3) / 3), //quarter
+				"S" : this.getMilliseconds()
+			//millisecond
+			}
+
+			if (/(y+)/.test(format))
+				format = format.replace(RegExp.$1, (this.getFullYear() + "")
+						.substr(4 - RegExp.$1.length));
+			for ( var k in o)
+				if (new RegExp("(" + k + ")").test(format))
+					format = format.replace(RegExp.$1,
+							RegExp.$1.length == 1 ? o[k] : ("00" + o[k])
+									.substr(("" + o[k]).length));
+			return format;
+		}
+
+              Date.prototype.addMinutes = function(minutes) {
+                        var copiedDate = new Date(this.getTime());
+                        return new Date(copiedDate.getTime() + minutes * 60000);
+              }
+
+		function setSelectedValue(selectObj, valueToSet) {
+			for (var i = 0; i < selectObj.options.length; i++) {
+				if (selectObj.options[i].text == valueToSet) {
+					selectObj.options[i].selected = true;
+					return;
+				}
+			}
+		}
+		function getSelectedValue(selectObj) {
+			return selectObj.options[selectObj.selectedIndex].value;
+		}
+
+		function getParameterByName(name) {
+			name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+			var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex
+					.exec(location.search);
+			return results == null ? "" : decodeURIComponent(results[1]
+					.replace(/\+/g, " "));
+		}
+
+		var baseStr = getParameterByName('base');
+               var base = new Date().valueOf();
+		if (baseStr != "" && baseStr != 'null') {
+			base = parseInt(baseStr);
+               }
+		var graph = getParameterByName("graph");
+		var fromhr = getParameterByName("fromhr");
+		var frommin = getParameterByName("frommin");
+		var tohr = getParameterByName("tohr");
+		var tomin = getParameterByName("tomin");
+		var smart = getParameterByName("smart");
+               var vers = getParameterByName("vers");
+
+		document.getElementById('smartalarm').checked = smart == 'Y';
+		setSelectedValue(document.getElementById('safromhour'), fromhr);
+		setSelectedValue(document.getElementById('safrommin'), frommin);
+		setSelectedValue(document.getElementById('satohour'), tohr);
+		setSelectedValue(document.getElementById('satomin'), tomin);
+               document.getElementById("version").innerText = vers;
+
+               var startPoint = new Date(base);
+
+		var splitup = graph.split("!");
+               var more = new Array();
+
+		for (var i=0; i<splitup.length; i++) {
+			if (splitup[i] == '')
+				continue;
+			var element = new Array();
+                      element[0] = startPoint;
+                      element[1] = parseInt(splitup[i]);
+                      if (element[1] == -1) 
+				element[1] = null;
+			more[i] = element;
+                      startPoint = startPoint.addMinutes(10);
+               }
+
+		$(document).ready(function() {
+			var plot2 = $.jqplot('chart1', [more], {
+				series : [ {
+					showMarker : false,
+                                     breakOnNull : true,
+                                     color: 'rgb(0,122,255)',
+					label: new Date(base).format('yyyy-MM-dd')
+				} ],
+				// You can specify options for all axes on the plot at once with
+				// the axesDefaults object.  Here, we're using a canvas renderer
+				// to draw the axis label which allows rotated text.
+				axesDefaults : {
+					labelRenderer : $.jqplot.CanvasAxisLabelRenderer,
+					showTicks : false,
+					showTickMarks : false,
+				},
+                             legend: {
+                                       show: true,
+                                       location: 'ne',   
+                                       xoffset: 12,     
+                                       yoffset: 12,    
+                              },
+				// An axes object holds options for all axes.
+				// Allowable axes are xaxis, x2axis, yaxis, y2axis, y3axis, ...
+				// Up to 9 y axes are supported.
+				axes : {
+					// options for each axis are specified in seperate option objects.
+					xaxis : {
+                                             renderer:$.jqplot.DateAxisRenderer, 
+                                             tickRenderer: $.jqplot.CanvasAxisTickRenderer ,
+                                             tickOptions:{formatString:'%R', angle: -30, fontSize: '8pt'},
+                                             tickInterval:'1 hour',
+						// Turn off "padding".  This will allow data point to lie on the
+						// edges of the grid.  Default padding is 1.2 and will keep all
+						// points inside the bounds of the grid.
+						pad : 0,
+					       showTicks : true,
+					       showTickMarks : true,
+                                            min: new Date(base)
+					},
+					yaxis : {
+						label : "Movement",
+						min : -50,
+						max : 4000,
+					}
+				}
+			});
+		});
+
+               // Prepare the copy link
+               var timePoint = new Date(base);
+	       var body = '&body=';
+		
+		var first = true;
+		for (var i=0; i<splitup.length; i++) {
+			if (splitup[i] == '')
+				continue;
+                      if (!first)
+				body = body + ',';
+			else
+				first = false;
+                      body = body + timePoint.format('hh:MM');
+                      timePoint = timePoint.addMinutes(10);
+               }
+
+               body = body + '%0D%0A';
+		
+		first = true;
+		for (var i=0; i<splitup.length; i++) {
+			if (splitup[i] == '')
+				continue;
+                      if (!first)
+				body = body + ',';
+			else
+				first = false;
+                      body = body + splitup[i];
+               }
+
+               body = body + '%0D%0A';
+
+		var mailto = 'mailto:?subject=Morpheuz-' + new Date(base).format('yyyy-MM-dd') + '.csv' + body;
+
+		document.getElementById('copy').href = mailto;
+
+		document.getElementById('reset').onclick = function() {
+			var smartpart = document.getElementById('smartalarm').checked ? 'Y'
+					: 'N';
+			var fromhrpart = getSelectedValue(document
+					.getElementById('safromhour'));
+			var fromminpart = getSelectedValue(document
+					.getElementById('safrommin'));
+			var tohrpart = getSelectedValue(document.getElementById('satohour'));
+			var tominpart = getSelectedValue(document.getElementById('satomin'));
+
+			if ((fromhrpart + ":" + fromminpart) >= (tohrpart + ":" + tominpart)) {
+				document.getElementById('safromhour').style.border='1px solid red';
+		               document.getElementById('safrommin').style.border='1px solid red';
+		               document.getElementById('satohour').style.border='1px solid red';
+		               document.getElementById('satomin').style.border='1px solid red';
+                      } else {
+			window.location.href = "pebblejs://close#reset" + '!' + smartpart
+					+ '!' + fromhrpart + '!' + fromminpart + '!' + tohrpart
+					+ '!' + tominpart;
+                      }
+		}
+ </script>
+</body>
+</html>
