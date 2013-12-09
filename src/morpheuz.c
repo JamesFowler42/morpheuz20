@@ -1,14 +1,42 @@
+/* 
+ * Morpheuz Sleep Monitor
+ *
+ * Copyright (c) 2013 James Fowler
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "pebble.h"
 #include "morpheuz.h"
 
-static AppSync sync;
-static uint8_t sync_buffer[BUFF_SIZE];
-uint16_t one_minute_biggest = 0;
+uint16_t two_minute_biggest = 0;
 uint8_t sample_sets = 0;
 uint8_t alarm_count;
-bool already_open = false;
-time_t last_comms;
 time_t last_accel;
+
+static int32_t last_alarm = 0;
+static int32_t last_from = -1;
+static int32_t last_to = -1;
+
+static uint32_t inbound_size;
+static uint32_t outbound_size;
+
 
 /*
  * Fire alarm
@@ -18,35 +46,12 @@ static void fire_alarm() {
 	reset_tick_service(true);
 }
 
-/*
- * Reset the application to try and keep everything working
- */
-void reset() {
-	if (bluetooth_connection_service_peek()) {
-		deinit_morpheuz();
-		init_morpheuz();
-	}
-}
 
 /*
  * Do the alarm if needed
  */
 void do_alarm() {
 
-	// Self monitoring - if the comms or the accelerometer stop working reset the app so we can continue
-	time_t now = time(NULL);
-	bool reset_needed = false;
-	if (last_comms < (now - DISTRESS_WAIT_SEC)) {
-		set_alert_code(1);
-		reset_needed = true;
-	}
-	if (last_accel < (now - DISTRESS_WAIT_SEC)) {
-		set_alert_code(2);
-		reset_needed = true;
-	}
-	if (reset_needed)
-		reset();
-	
 	// Alarm handling
 	if (alarm_count >= ALARM_MAX) {
 		reset_tick_service(false);
@@ -57,37 +62,66 @@ void do_alarm() {
 }
 
 /*
- * Error callback from sync
+ * Set the on-screen status text
  */
-static void sync_error_callback(DictionaryResult dict_error, AppMessageResult app_message_error, void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Sync Error: %d", app_message_error);
-  last_comms = 0; // Force an issue
+static void set_smart_status(int32_t sa_from, int32_t sa_to) {
+	static char status_text[15];
+	bool sa_smart = (sa_from != -1 && sa_to != -1);
+	if (sa_smart) {
+	  snprintf(status_text, sizeof(status_text), "%02ld:%02ld - %02ld:%02ld", sa_from >> 8, sa_from & 0xff, sa_to >> 8, sa_to & 0xff);
+	} else {
+	  strncpy(status_text, "", sizeof(status_text));
+	}
+	set_smart_status_on_screen(sa_smart, status_text);
 }
 
 /*
- * Success callback - actually we do nothing
+ * Incoming message dropped handler
  */
-static void sync_tuple_changed_callback(const uint32_t key, const Tuple* new_tuple, const Tuple* old_tuple, void* context) {
-  int32_t alarm_now = 0;
-  switch (key) {
-    case ALARM:
-      alarm_now = new_tuple->value->int32;
-	  if (alarm_now == 1) {
-		  APP_LOG(APP_LOG_LEVEL_DEBUG, "firing alarm");
+static void in_dropped_handler(AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Dropped: %d", reason);
+}
+
+/*
+ * Outgoing message failed handler
+ */
+static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Failed to Send: %d", reason);
+}
+
+/*
+ * Incoming message handler
+ */
+static void in_received_handler(DictionaryIterator *iter, void *context) {
+  Tuple *alarm_tuple = dict_find(iter, ALARM);
+  Tuple *from_tuple = dict_find(iter, FROM);
+  Tuple *to_tuple = dict_find(iter, TO);
+
+  if (alarm_tuple) {
+	  last_alarm = alarm_tuple->value->int32;
+	  if (last_alarm == 1) {
 		  fire_alarm();
-	  }
-      break;
+	  } 
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Alarm received");
   }
-  // Self monitor memory
-  last_comms = time(NULL);
+  if (from_tuple) {
+  	  last_from = from_tuple->value->int32;
+	  set_smart_status(last_from, last_to);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
+  }
+  if (to_tuple) {
+  	  last_to = to_tuple->value->int32;
+	  set_smart_status(last_from, last_to);
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
+  }
 }
 
 /*
- * Pass our sample to javascript for storage
+ * Send a message to javascript
  */
 static void send_cmd(uint16_t biggest) {
-
-  Tuplet value = TupletInteger(BIGGEST, biggest);
+	
+  Tuplet biggest_tuple = TupletInteger(BIGGEST, biggest);
 
   DictionaryIterator *iter;
   app_message_outbox_begin(&iter);
@@ -96,30 +130,52 @@ static void send_cmd(uint16_t biggest) {
     return;
   }
 
-  dict_write_tuplet(iter, &value);
+  dict_write_tuplet(iter, &biggest_tuple);
   dict_write_end(iter);
 
   app_message_outbox_send();
 }
 
 /*
- * Store our samples from each group until we have a minute's worth
+ * Accurate buffer size count
  */
-void store_sample(uint16_t biggest) {
-	if (biggest > one_minute_biggest)
-		one_minute_biggest = biggest;
+static void in_out_size_calc() {
+
+  Tuplet out_values[] = {
+        TupletInteger(BIGGEST, 0)
+  };
+        
+  outbound_size = dict_calc_buffer_size_from_tuplets(out_values, ARRAY_LENGTH(out_values)) + FUDGE;
+	
+  Tuplet in_values[] = {
+        TupletInteger(ALARM, 0),
+        TupletInteger(FROM, 0),
+        TupletInteger(TO, 0)
+  };
+        
+  inbound_size = dict_calc_buffer_size_from_tuplets(in_values, ARRAY_LENGTH(in_values)) + FUDGE;
+	
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbound buffer: %ld, Outbound buffer: %ld", inbound_size, outbound_size);
+}
+	
+/*
+ * Store our samples from each group until we have two minute's worth
+ */
+static void store_sample(uint16_t biggest) {
+	if (biggest > two_minute_biggest)
+		two_minute_biggest = biggest;
 	sample_sets++;
-	if (sample_sets > SAMPLES_IN_ONE_MINUTE) {
-		send_cmd(one_minute_biggest);
+	if (sample_sets > SAMPLES_IN_TWO_MINUTES) {
+		send_cmd(two_minute_biggest);
 		sample_sets = 0;
-		one_minute_biggest = 0;
+		two_minute_biggest = 0;
 	}
 }
 
 /*
  * Can't be bothered to play with negative numbers
  */
-uint16_t scale_accel(int16_t val) {
+static uint16_t scale_accel(int16_t val) {
 	int16_t retval = 4000 + val;
 	if (retval < 0)
 		retval = 0;
@@ -129,7 +185,7 @@ uint16_t scale_accel(int16_t val) {
 /*
  * Process accelerometer data
  */
-void accel_data_handler(AccelData *data, uint32_t num_samples) {
+static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
 	// Self monitor memory
 	last_accel = time(NULL);
@@ -181,31 +237,50 @@ void accel_data_handler(AccelData *data, uint32_t num_samples) {
 }
 
 /*
+ * Reset the application to try and keep everything working
+ */
+static void reset() {
+	  accel_data_service_unsubscribe();
+	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
+	  accel_data_service_subscribe(25, &accel_data_handler);
+}
+
+/*
+ *	Self monitoring - if the accelerometer stop working reset the app so we can continue
+ */
+void self_monitor() {
+	
+	// Get time
+	time_t now = time(NULL);
+
+	// Or the accelerometer function having been dead for a while
+	if (last_accel < (now - DISTRESS_WAIT_SEC)) {
+		reset();
+	}
+
+}
+
+/*
  * Initialise comms and accelerometer
  */
 void init_morpheuz() {
 	
 	  alarm_count = ALARM_MAX;
 	
-	  last_comms = time(NULL);
       last_accel = time(NULL);
-
-	if (!already_open) {
- 	  const int inbound_size = BUFF_SIZE;
-	  const int outbound_size = BUFF_SIZE;
-
-	  app_message_open(inbound_size, outbound_size);
-	  already_open = true;
-	}
 	
-	  Tuplet initial_values[] = {
-		  TupletInteger(BIGGEST, 0),
-		  TupletInteger(ALARM, 0),
-	  };
+	  // Register message handlers
+  	  app_message_register_inbox_received(in_received_handler);
+  	  app_message_register_inbox_dropped(in_dropped_handler);
+  	  app_message_register_outbox_failed(out_failed_handler);
+  
+	  // Size calc
+	  in_out_size_calc();
+	
+	  // Open buffers
+	  app_message_open(inbound_size, outbound_size);
 
-	  app_sync_init(&sync, sync_buffer, sizeof(sync_buffer), initial_values, ARRAY_LENGTH(initial_values),
-	      sync_tuple_changed_callback, sync_error_callback, NULL);
-
+	  // Accelerometer
 	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 	  accel_data_service_subscribe(25, &accel_data_handler);
 }
@@ -215,5 +290,4 @@ void init_morpheuz() {
  */
 void deinit_morpheuz() {
 	accel_data_service_unsubscribe();
-	app_sync_deinit(&sync);
 }

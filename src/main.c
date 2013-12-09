@@ -1,3 +1,27 @@
+/* 
+ * Morpheuz Sleep Monitor
+ *
+ * Copyright (c) 2013 James Fowler
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
 #include "pebble.h"
 #include "morpheuz.h"
 
@@ -9,21 +33,55 @@ Layer *line_layer;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap = NULL;
 bool g_second = false;
-int alert_code = 0;
 static uint8_t battery_level;
 static bool battery_plugged;
 
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
 static Layer *battery_layer;
+static bool g_smart_flag = false;
+static BitmapLayer *alarm_layer;
+static GBitmap *alarm_bitmap;
+static char date_text[] = "Xxxxxxxxx 00   ";
+                         //00:00 - 00:00
+
+/*
+ * Show the date
+ */
+static void show_date() {
+	time_t now = time(NULL);
+	struct tm *time = localtime(&now);
+    strftime(date_text, sizeof(date_text), "%B %e", time);
+	text_layer_set_text(text_date_layer, date_text);
+}
+
+/*
+ * Set the smart alarm status details
+ */
+void set_smart_status_on_screen(bool sa_smart, char *smart_text) {
+    if (!sa_smart) {
+		if (g_smart_flag) {
+			text_layer_set_text_alignment(text_date_layer, GTextAlignmentLeft);
+	  		layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
+			show_date();
+		}
+    } else {
+		if (!g_smart_flag) {
+      		text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
+	  		layer_set_hidden(bitmap_layer_get_layer(alarm_layer), false);
+		}
+	    strncpy(date_text, smart_text, sizeof(date_text));
+	    text_layer_set_text(text_date_layer, date_text);
+    }
+	g_smart_flag = sa_smart;
+}
 
 /*
  * Battery icon callback handler
  */
-void battery_layer_update_callback(Layer *layer, GContext *ctx) {
+static void battery_layer_update_callback(Layer *layer, GContext *ctx) {
 
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-
   if (!battery_plugged) {
     graphics_draw_bitmap_in_rect(ctx, icon_battery, GRect(0, 0, 24, 12));
     graphics_context_set_stroke_color(ctx, GColorBlack);
@@ -34,23 +92,19 @@ void battery_layer_update_callback(Layer *layer, GContext *ctx) {
   }
 }
 
-void battery_state_handler(BatteryChargeState charge) {
+/*
+ * Battery state change
+ */
+static void battery_state_handler(BatteryChargeState charge) {
 	battery_level = charge.charge_percent;
 	battery_plugged = charge.is_plugged;
 	layer_mark_dirty(battery_layer);
 }
 
 /*
- * Remember an issue we've spotted
- */
-void set_alert_code(int new_alert_code) {
-	alert_code = alert_code | new_alert_code;
-}
-
-/*
  * Draw line
  */
-void line_layer_update_callback(Layer *layer, GContext* ctx) {
+static void line_layer_update_callback(Layer *layer, GContext* ctx) {
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 }
@@ -58,18 +112,15 @@ void line_layer_update_callback(Layer *layer, GContext* ctx) {
 /*
  * Process clockface
  */
-void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Need to be static because they're used by the system later.
   static char time_text[] = "00:00";
-  static char date_text[] = "Xxxxxxxxx 00";
                              
   char *time_format;
   
-  if (alert_code == 0)	
-	  strftime(date_text, sizeof(date_text), "%B %e", tick_time);
-  else
-	  snprintf(date_text, sizeof(date_text), "Issue: %d", alert_code);
-  text_layer_set_text(text_date_layer, date_text);
+  if (!g_smart_flag) {
+	show_date();
+  } 
 
   if (clock_is_24h_style()) {
     time_format = "%R";
@@ -85,16 +136,9 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     memmove(time_text, &time_text[1], sizeof(time_text) - 1);
   }
 
-  // Just used to calc size of buffers. Comes back as 23 - going to use 28 to give a little space for movement.
-  //Tuplet initial_values[] = {
-  //		  TupletInteger(BIGGEST, 0),
-  //		  TupletInteger(ALARM, 0),
-  //};
-	
-  //uint32_t test = dict_calc_buffer_size_from_tuplets(initial_values, 2);
-  //snprintf(time_text, sizeof(time_text), "%ld", test);
-
   text_layer_set_text(text_time_layer, time_text);
+
+  self_monitor();
 	
   do_alarm();
 
@@ -103,10 +147,11 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 /*
  * Shutdown
  */
-void handle_deinit(void) {
+static void handle_deinit(void) {
   gbitmap_destroy(icon_battery);
   gbitmap_destroy(icon_battery_charge);
   gbitmap_destroy(logo_bitmap);
+  gbitmap_destroy(alarm_bitmap);
   tick_timer_service_unsubscribe();
   deinit_morpheuz();
 }
@@ -114,7 +159,7 @@ void handle_deinit(void) {
 /*
  * Startup
  */
-void handle_init(void) {
+static void handle_init(void) {
   static char version[] = VERSION;
 	
   window = window_create();
@@ -124,7 +169,7 @@ void handle_init(void) {
 
   Layer *window_layer = window_get_root_layer(window);
 	
-  logo_layer = bitmap_layer_create(GRect(0, 5, 144, 80));
+  logo_layer = bitmap_layer_create(GRect(0, 10, 144, 80));
   layer_add_child(window_layer, bitmap_layer_get_layer(logo_layer));
   logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
   bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
@@ -136,7 +181,7 @@ void handle_init(void) {
   text_layer_set_font(text_version_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
   layer_add_child(window_layer, text_layer_get_layer(text_version_layer));
   text_layer_set_text(text_version_layer, version);
-
+	
   text_date_layer = text_layer_create(GRect(8, 85, 144-8, WINDOW_HEIGHT-85));
   text_layer_set_text_color(text_date_layer, GColorWhite);
   text_layer_set_background_color(text_date_layer, GColorClear);
@@ -147,8 +192,14 @@ void handle_init(void) {
   text_layer_set_text_color(text_time_layer, GColorWhite);
   text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
   text_layer_set_background_color(text_time_layer, GColorClear);
-  text_layer_set_font(text_time_layer, fonts_get_system_font(FONT_KEY_BITHAM_42_BOLD));
+  text_layer_set_font(text_time_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38)));
   layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
+	
+  alarm_layer = bitmap_layer_create(GRect(11, 98, 8, 12));
+  layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));
+  alarm_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_ICON);
+  bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
+  layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
 
   GRect line_frame = GRect(8, 114, 144-16, 2);
   line_layer = layer_create(line_frame);
