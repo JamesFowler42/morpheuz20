@@ -5,15 +5,22 @@ Morpheuz Sleep Monitor
 
 Do you ever wonder how well you sleep? The Morpheuz Sleep Monitor uses the Pebble's built in accelerometer to monitor your night's sleep and provide a graph of how much you moved overnight.
 
-Morpheuz is a watch face that provides simple date and time. However in the background it monitors movement and periodically transmits this information to your iPhone or Android phone, where the Javascript application stores it. Using the configuration page from the Pebble iOS or Android app brings up a graph of that information and allows it to be reset for the next night.
+Morpheuz is a watch app that provides a simple clock. However in the background it monitors movement and periodically transmits this information to your iPhone or Android phone, where the Javascript application stores it. Using the configuration page from the Pebble iOS or Android app brings up a graph of that information and allows it to be reset for the next night.
 
-No data is stored anywhere other than on the phone.
+No data is stored anywhere other than on your phone.
 
 Tests so far indicate it is not profligate with Pebble battery power, using the hardware to capture samples over 2.5 second intervals, processing these without display updates and then summarising and pushing to the phone every minute.
 
 It's simple to install. There is no iOS or Android app to buy, nothing to sign up for and it's free.
 
 Please enjoy and let me know how you get on.
+
+Version 1.0.0
+---------------
+* Better graphics
+* Smart alarm times on watch screen
+* Nicer fonts
+* Now includes MIT Licence.
 
 Version 0.8.0
 -------------
