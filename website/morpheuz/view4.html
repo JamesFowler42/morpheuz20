@@ -74,6 +74,9 @@ top:-14px
   padding-left:0px;
   text-decoration: none;
 }
+.textbox {
+  width:45px;
+}
 </style>
 <script language="javascript" type="text/javascript"
 	src="jqplot/jquery.min.js"></script>
@@ -100,7 +103,7 @@ top:-14px
 				type="checkbox" />
 		</p>
 		<p>
-			<label for="smartalarm">Period:</label> <select id="safromhour">
+			<label for="smartalarm">Period:</label> <select id="safromhour" style="display:none">
 				<option>00</option>
 				<option>01</option>
 				<option>02</option>
@@ -125,12 +128,12 @@ top:-14px
 				<option>21</option>
 				<option>22</option>
 				<option>23</option>
-			</select> : <select id="safrommin">
+			</select><input type="text" id="safromhourtxt" style="display:none" class="textbox" maxlength="2"/> : <select id="safrommin"  style="display:none">
 				<option>00</option>
 				<option>15</option>
 				<option selected>30</option>
 				<option>45</option>
-			</select> to <select id="satohour">
+			</select><input type="text" id="safrommintxt" style="display:none" class="textbox" maxlength="2"/> to <select id="satohour"  style="display:none">
 				<option>00</option>
 				<option>01</option>
 				<option>02</option>
@@ -155,12 +158,12 @@ top:-14px
 				<option>21</option>
 				<option>22</option>
 				<option>23</option>
-			</select> : <select id="satomin">
+			</select><input type="text" id="satohourtxt" style="display:none" class="textbox" maxlength="2"/> : <select id="satomin"  style="display:none">
 				<option>00</option>
 				<option selected>15</option>
 				<option>30</option>
 				<option>45</option>
-			</select>
+			</select><input type="text" id="satomintxt" style="display:none" class="textbox" maxlength="2"/>
 		</p>
 		<button id="reset" type="button">Save & Reset</button>
 		<a id="copy" href="mailto:?subject=Greetings%20from%20Cupertino!&body=Wish%20you%20were%20here!">Copy</a>
@@ -198,6 +201,7 @@ top:-14px
               }
 
 		function setSelectedValue(selectObj, valueToSet) {
+                      selectObj.style.display='inline';
 			for (var i = 0; i < selectObj.options.length; i++) {
 				if (selectObj.options[i].text == valueToSet) {
 					selectObj.options[i].selected = true;
@@ -205,8 +209,27 @@ top:-14px
 				}
 			}
 		}
+		function setTextValue(selectObj, valueToSet) {
+                      selectObj.style.display='inline';
+                      if (valueToSet.length < 2)
+                          valueToSet = "0" + valueToSet;
+                      selectObj.value = valueToSet;
+               }
+
 		function getSelectedValue(selectObj) {
 			return selectObj.options[selectObj.selectedIndex].value;
+		}
+
+		function getTextValue(selectObj, hour) {
+			var value = parseInt(selectObj.value);
+         		if (isNaN(value) || (hour && (value < 0 || value > 23)) || (!hour && (value < 0 || value > 59))) {
+				selectObj.style.border='1px solid red';
+				return "X";
+			}
+			var strRtn = String(value);
+                      if (strRtn.length < 2)
+				strRtn = "0" + strRtn;
+			return strRtn;
 		}
 
 		function getParameterByName(name) {
@@ -216,6 +239,8 @@ top:-14px
 			return results == null ? "" : decodeURIComponent(results[1]
 					.replace(/\+/g, " "));
 		}
+
+		document.ios = navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i);
 
 		var baseStr = getParameterByName('base');
                var base = new Date().valueOf();
@@ -231,10 +256,19 @@ top:-14px
                var vers = getParameterByName("vers");
 
 		document.getElementById('smartalarm').checked = smart == 'Y';
-		setSelectedValue(document.getElementById('safromhour'), fromhr);
-		setSelectedValue(document.getElementById('safrommin'), frommin);
-		setSelectedValue(document.getElementById('satohour'), tohr);
-		setSelectedValue(document.getElementById('satomin'), tomin);
+
+		if (document.ios) {
+		  setSelectedValue(document.getElementById('safromhour'), fromhr);
+		  setSelectedValue(document.getElementById('safrommin'), frommin);
+		  setSelectedValue(document.getElementById('satohour'), tohr);
+		  setSelectedValue(document.getElementById('satomin'), tomin);
+               } else {
+		  setTextValue(document.getElementById('safromhourtxt'), fromhr);
+		  setTextValue(document.getElementById('safrommintxt'), frommin);
+		  setTextValue(document.getElementById('satohourtxt'), tohr);
+		  setTextValue(document.getElementById('satomintxt'), tomin);
+		}
+		
                document.getElementById("version").innerText = vers;
 
                var startPoint = new Date(base);
@@ -339,20 +373,34 @@ top:-14px
 		document.getElementById('copy').href = mailto;
 
 		document.getElementById('reset').onclick = function() {
-			var smartpart = document.getElementById('smartalarm').checked ? 'Y'
-					: 'N';
-			var fromhrpart = getSelectedValue(document
-					.getElementById('safromhour'));
-			var fromminpart = getSelectedValue(document
-					.getElementById('safrommin'));
-			var tohrpart = getSelectedValue(document.getElementById('satohour'));
-			var tominpart = getSelectedValue(document.getElementById('satomin'));
+			var smartpart = document.getElementById('smartalarm').checked ? 'Y' : 'N';
+			var fromhrpart = "";
+			var fromminpart = "";
+			var tohrpart = "";
+			var tominpart = "";
+			if (document.ios) {
+				fromhrpart = getSelectedValue(document.getElementById('safromhour'));
+			       fromminpart = getSelectedValue(document.getElementById('safrommin'));
+			       tohrpart = getSelectedValue(document.getElementById('satohour'));
+			       tominpart = getSelectedValue(document.getElementById('satomin'));
+			} else {
+				fromhrpart = getTextValue(document.getElementById('safromhourtxt'), true);
+			       fromminpart = getTextValue(document.getElementById('safrommintxt'), false);
+			       tohrpart = getTextValue(document.getElementById('satohourtxt'), true);
+			       tominpart = getTextValue(document.getElementById('satomintxt'),  false);
+				if (fromhrpart == "X" || fromminpart == "X" || tohrpart == "X" || tominpart == "X")
+					return;
+			}
 
-			if ((fromhrpart + ":" + fromminpart) >= (tohrpart + ":" + tominpart)) {
+			if  ((fromhrpart + ":" + fromminpart) >= (tohrpart + ":" + tominpart)) {
 				document.getElementById('safromhour').style.border='1px solid red';
 		               document.getElementById('safrommin').style.border='1px solid red';
 		               document.getElementById('satohour').style.border='1px solid red';
 		               document.getElementById('satomin').style.border='1px solid red';
+				document.getElementById('safromhourtxt').style.border='1px solid red';
+		               document.getElementById('safrommintxt').style.border='1px solid red';
+		               document.getElementById('satohourtxt').style.border='1px solid red';
+		               document.getElementById('satomintxt').style.border='1px solid red';
                       } else {
 			window.location.href = "pebblejs://close#reset" + '!' + smartpart
 					+ '!' + fromhrpart + '!' + fromminpart + '!' + tohrpart
