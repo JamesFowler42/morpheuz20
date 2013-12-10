@@ -1,19 +1,30 @@
 Description
 
-Morpheuz Sleep Monitor
-====================
+Morpheuz Sleep Monitor with Smart Alarm
+=======================================
 
 Do you ever wonder how well you sleep? The Morpheuz Sleep Monitor uses the Pebble's built in accelerometer to monitor your night's sleep and provide a graph of how much you moved overnight.
 
-Morpheuz is a watch app that provides a simple clock. However in the background it monitors movement and periodically transmits this information to your iPhone or Android phone, where the Javascript application stores it. Using the configuration page from the Pebble iOS or Android app brings up a graph of that information and allows it to be reset for the next night.
+Morpheuz is a watch app that monitors your movement and periodically transmits this information to your iPhone or Android phone, where the Javascript component within the Pebble app stores it. The Morpheuz configuration page in the Pebble app shows a graph, allows the setting of a smart alarm and resetting for the next night.
 
-No data is stored anywhere other than on your phone.
+The "smart alarm" defines your earliest and latest wake up times. Morpheuz will do a 30 second watch vibration if you stir during that time period or, should you remain motionless, at the end of that time period.
 
-Tests so far indicate it is not profligate with Pebble battery power, using the hardware to capture samples over 2.5 second intervals, processing these without display updates and then summarising and pushing to the phone every minute.
+No data is stored anywhere other than on the phone. Data is sent to the configuration page for graphing but this stores no information.
 
 It's simple to install. There is no iOS or Android app to buy, nothing to sign up for and it's free.
 
+Graph page: http://raw.github.com/JamesFowler42/morpheuz20/master/config-screen.png
+
 Please enjoy and let me know how you get on.
+
+Notes
+-------
+1. Power consumption on the watch was low during testing, as data sets are collected every 2.5 seconds and then transmitted to the phone every two minutes. 
+
+2. Currently with Pebble OS Beta2 there are issues with Javascript apps on Android - the Pebble app needs to be topmost and the configuration page has problems. I expect this will be resolved in later versions of the Pebble app and firmware but at present I am unable to circumvent these problems. iOS works well.
+
+3. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
+
 
 Version 1.0.0
 ---------------
