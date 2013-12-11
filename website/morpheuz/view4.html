@@ -77,6 +77,10 @@ top:-14px
 .textbox {
   width:45px;
 }
+table.jqplot-table-legend {
+  background-color: white !important;
+  z-index: 10;
+}
 </style>
 <script language="javascript" type="text/javascript"
 	src="jqplot/jquery.min.js"></script>
@@ -93,6 +97,7 @@ top:-14px
 <script type="text/javascript" src="jqplot/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.categoryAxisRenderer.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.barRenderer.min.js"></script>
+<script type="text/javascript" src="jqplot/plugins/jqplot.canvasOverlay.min.js"></script>
 </head>
 <body>
 	<form action="">
@@ -211,9 +216,7 @@ top:-14px
 		}
 		function setTextValue(selectObj, valueToSet) {
                       selectObj.style.display='inline';
-                      if (valueToSet.length < 2)
-                          valueToSet = "0" + valueToSet;
-                      selectObj.value = valueToSet;
+                      selectObj.value = fixLen(valueToSet,2);
                }
 
 		function getSelectedValue(selectObj) {
@@ -226,11 +229,14 @@ top:-14px
 				selectObj.style.border='1px solid red';
 				return "X";
 			}
-			var strRtn = String(value);
-                      if (strRtn.length < 2)
-				strRtn = "0" + strRtn;
-			return strRtn;
+			return fixLen(String(value),2);
 		}
+
+		function fixLen(inStr, size) {
+			if (inStr == null || inStr.length > 1)
+                         return inStr;
+                      return '0' + inStr;
+               }
 
 		function getParameterByName(name) {
 			name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
@@ -255,7 +261,9 @@ top:-14px
 		var smart = getParameterByName("smart");
                var vers = getParameterByName("vers");
 
-		document.getElementById('smartalarm').checked = smart == 'Y';
+		var smartOn = smart == 'Y';
+
+		document.getElementById('smartalarm').checked = smartOn;
 
 		if (document.ios) {
 		  setSelectedValue(document.getElementById('safromhour'), fromhr);
@@ -288,8 +296,59 @@ top:-14px
                       startPoint = startPoint.addMinutes(10);
                }
 
+               var canvasOverlayConf;
+		if (smartOn) {
+                      var fromstr = fixLen(fromhr,2) + ":" + fixLen(frommin,2);
+                      var tostr = fixLen(tohr,2) + ":" + fixLen(tomin,2);
+			var smartStartPoint = new Date(base);
+			var early = null;
+                      var late = null;
+			for (var i=0; i<splitup.length; i++) {
+			    var teststr1 = smartStartPoint.format("hh:mm");
+                          var smartStartPoint1 = smartStartPoint;
+                      	    smartStartPoint = smartStartPoint.addMinutes(10);
+			    var teststr2 = smartStartPoint.format("hh:mm");
+		           if (early == null && fromstr >= teststr1 && fromstr <= teststr2)
+                              early = smartStartPoint1;
+		           if (late == null && tostr >= teststr1 && tostr <= teststr2)
+                              late = smartStartPoint1;
+                          if (late != null && early != null) 
+				break;
+                      }
+			if (early != null && late != null) {
+			canvasOverlayConf = {
+                                  show: true,
+                                  objects: [
+                                     {dashedVerticalLine: {
+                                         name: "start",
+                                         x: early,
+                                         lineWidth: 1,
+                                         yOffset: 0,
+					    dashPattern: [1, 4],
+                                         color: 'rgb(114, 36, 216)',
+                                         shadow: false
+                                     }},
+                                     {dashedVerticalLine: {
+                                         name: "end",
+                                         x: late,
+                                         lineWidth: 1,
+                                         yOffset: 0,
+					    dashPattern: [1, 4],
+                                         color: 'rgb(255, 59, 48)',
+                                         shadow: false
+                                     }}
+				     ]
+                              };
+			}
+		}
+
 		$(document).ready(function() {
 			var plot2 = $.jqplot('chart1', [more], {
+                              grid: {
+ 					background: '#ffffff'
+                              },
+                              animate: true,
+                              canvasOverlay : canvasOverlayConf,
 				series : [ {
 					showMarker : false,
                                      breakOnNull : true,
@@ -306,9 +365,7 @@ top:-14px
 				},
                              legend: {
                                        show: true,
-                                       location: 'ne',   
-                                       xoffset: 12,     
-                                       yoffset: 12,    
+                                       location: 'ne'
                               },
 				// An axes object holds options for all axes.
 				// Allowable axes are xaxis, x2axis, yaxis, y2axis, y3axis, ...
