@@ -25,6 +25,13 @@ Notes
 
 3. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
 
+Version 1.1.0
+-------------
+* Compiled for 2.0 beta3
+* Improved graphing adding trend line
+* CSV mailto: now vertical
+* Minutes on CSV now minutes not months.
+* Serious code tidyup on web hosted side
 
 Version 1.0.0
 ---------------
