@@ -26,10 +26,10 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "v1.0",
-			    limit: 54,
-			    divisor: 600000,
-			    url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view4.html" };
+	var cfg = { version : "v1.1",
+			limit: 54,
+			divisor: 600000,
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view5.html" };
 	return cfg;
 }
 /**
@@ -58,27 +58,27 @@ Date.prototype.format = function(format) //author: meizz
 }
 
 Date.prototype.addDays = function (num) {
-    var value = this.valueOf();
-    value += 86400000 * num;
-    return new Date(value);
+	var value = this.valueOf();
+	value += 86400000 * num;
+	return new Date(value);
 }
 
 Date.prototype.addSeconds = function (num) {
-    var value = this.valueOf();
-    value += 1000 * num;
-    return new Date(value);
+	var value = this.valueOf();
+	value += 1000 * num;
+	return new Date(value);
 }
 
 Date.prototype.addMinutes = function (num) {
-    var value = this.valueOf();
-    value += 60000 * num;
-    return new Date(value);
+	var value = this.valueOf();
+	value += 60000 * num;
+	return new Date(value);
 }
 
 Date.prototype.addHours = function (num) {
-    var value = this.valueOf();
-    value += 3600000 * num;
-    return new Date(value);
+	var value = this.valueOf();
+	value += 3600000 * num;
+	return new Date(value);
 }
 
 /*
@@ -97,67 +97,67 @@ function resetInfo() {
  * Store data returned from the watch
  */
 function storePointInfo(point) {
-	
-   // Wrong day filter
-   var day = window.localStorage.getItem("day");
-   var today = new Date().format("ddMM");
-   var yesterday = new Date().addDays(-1).format("ddMM");
-   if (day != today && day != yesterday) {
+
+	// Wrong day filter
+	var day = window.localStorage.getItem("day");
+	var today = new Date().format("ddMM");
+	var yesterday = new Date().addDays(-1).format("ddMM");
+	if (day != today && day != yesterday) {
 		return;
-   }
-	
-   // Locate correct entry
-   var base = parseInt(window.localStorage.getItem("base"));
-   var now = new Date().valueOf();
-   var offset = Math.floor((now - base) / mConst().divisor);
-   var entry = "P" + offset;
-   
-   if (offset > mConst().limit) {
- 	   return;
-   }
- 
-   // Now store entries
-   var valueStr = window.localStorage.getItem(entry);
-   if (valueStr == null) {
-	   window.localStorage.setItem(entry,point);
-   } else {
-	   var value = parseInt(valueStr);
-	   if (point > value) {
-		   window.localStorage.setItem(entry,point);
-	   }
-   }
+	}
+
+	// Locate correct entry
+	var base = parseInt(window.localStorage.getItem("base"));
+	var now = new Date().valueOf();
+	var offset = Math.floor((now - base) / mConst().divisor);
+	var entry = "P" + offset;
+
+	if (offset > mConst().limit) {
+		return;
+	}
+
+	// Now store entries
+	var valueStr = window.localStorage.getItem(entry);
+	if (valueStr == null) {
+		window.localStorage.setItem(entry,point);
+	} else {
+		var value = parseInt(valueStr);
+		if (point > value) {
+			window.localStorage.setItem(entry,point);
+		}
+	}
 }
 
 /*
  * Perform smart alarm function
  */
 function smart_alarm(point) {
-	
+
 	// Are we doing smart alarm thing
 	var smart = window.localStorage.getItem("smart");
 	if (smart == null || smart != 'Y')
 		return 0;
-	
+
 	// Now has the alarm been sounded yet
 	var goneOff = window.localStorage.getItem("goneOff");
-    if (goneOff != null)
+	if (goneOff != null)
 		return 0;
-	
-   // Work out the average
-   var total = 0;
-   var novals = 0;
-   for (var i=0; i < mConst().limit; i++) {
-	  var entry = "P" + i;	
-	  var valueStr = window.localStorage.getItem(entry);
-	  if (valueStr != null) {
-		novals++;
-		total = total + parseInt(valueStr);
-	  } 
+
+	// Work out the average
+	var total = 0;
+	var novals = 0;
+	for (var i=0; i < mConst().limit; i++) {
+		var entry = "P" + i;	
+		var valueStr = window.localStorage.getItem(entry);
+		if (valueStr != null) {
+			novals++;
+			total = total + parseInt(valueStr);
+		} 
 	}
 	if (novals == 0)
 		novals = 1;
-   var threshold = total / novals;	
-	
+	var threshold = total / novals;	
+
 	// Are we in the right timeframe
 	var fromhr = window.localStorage.getItem("fromhr");
 	var tohr = window.localStorage.getItem("tohr");
@@ -166,11 +166,11 @@ function smart_alarm(point) {
 
 	var from = fromhr + frommin;
 	var to = tohr + tomin;
-	
+
 	var now = new Date().format("hhmm");
 
 	if (now >= from && now < to) {
-		
+
 		// Has the current point exceeded the threshold value
 		if (point > threshold) {
 			window.localStorage.setItem("goneOff","Y");
@@ -187,7 +187,7 @@ function smart_alarm(point) {
 		window.localStorage.setItem("goneOff","Y");
 		return 1;
 	}
-	
+
 	// None of the above
 	return 0;
 }
@@ -218,7 +218,7 @@ Pebble.addEventListener("appmessage",
 	var point = parseInt(e.payload.biggest);
 	console.log("appmessage biggest=" + point);
 	storePointInfo(point);
-    var alarm = smart_alarm(point);
+	var alarm = smart_alarm(point);
 	if (alarm == 1) {
 		// Only reply to fire the alarm - no reply otherwise
 		Pebble.sendAppMessage({"alarm": 1});
@@ -238,10 +238,10 @@ function returnSmartAlarmSettings() {
 		var from = (fromhr << 8) | frommin;
 		var to = (tohr << 8) | tomin;
 		return {"from": from,
-				"to": to};
+			"to": to};
 	} else {
 		return {"from": -1,
-				"to": -1};
+			"to": -1};
 	}
 }
 
@@ -286,9 +286,9 @@ Pebble.addEventListener("showConfiguration",
 	var frommin = window.localStorage.getItem("frommin");
 	var tomin = window.localStorage.getItem("tomin");
 	var smart = window.localStorage.getItem("smart");
-			
+
 	var url = mConst().url + "?base=" + base + "&graph=" + graph + 
-		      "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version;
+	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version;
 	console.log("url=" + url);
 	Pebble.openURL(url);
 });
@@ -298,5 +298,5 @@ Pebble.addEventListener("showConfiguration",
  */
 Pebble.addEventListener("configurationClosed",
 		function(e) {
-				console.log("configurationClosed");
+	console.log("configurationClosed");
 });

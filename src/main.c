@@ -43,7 +43,7 @@ static bool g_smart_flag = false;
 static BitmapLayer *alarm_layer;
 static GBitmap *alarm_bitmap;
 static char date_text[] = "Xxxxxxxxx 00   ";
-                         //00:00 - 00:00
+//00:00 - 00:00
 
 /*
  * Show the date
@@ -51,7 +51,7 @@ static char date_text[] = "Xxxxxxxxx 00   ";
 static void show_date() {
 	time_t now = time(NULL);
 	struct tm *time = localtime(&now);
-    strftime(date_text, sizeof(date_text), "%B %e", time);
+	strftime(date_text, sizeof(date_text), "%B %e", time);
 	text_layer_set_text(text_date_layer, date_text);
 }
 
@@ -59,20 +59,20 @@ static void show_date() {
  * Set the smart alarm status details
  */
 void set_smart_status_on_screen(bool sa_smart, char *smart_text) {
-    if (!sa_smart) {
+	if (!sa_smart) {
 		if (g_smart_flag) {
 			text_layer_set_text_alignment(text_date_layer, GTextAlignmentLeft);
-	  		layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
+			layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
 			show_date();
 		}
-    } else {
+	} else {
 		if (!g_smart_flag) {
-      		text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
-	  		layer_set_hidden(bitmap_layer_get_layer(alarm_layer), false);
+			text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
+			layer_set_hidden(bitmap_layer_get_layer(alarm_layer), false);
 		}
-	    strncpy(date_text, smart_text, sizeof(date_text));
-	    text_layer_set_text(text_date_layer, date_text);
-    }
+		strncpy(date_text, smart_text, sizeof(date_text));
+		text_layer_set_text(text_date_layer, date_text);
+	}
 	g_smart_flag = sa_smart;
 }
 
@@ -81,15 +81,15 @@ void set_smart_status_on_screen(bool sa_smart, char *smart_text) {
  */
 static void battery_layer_update_callback(Layer *layer, GContext *ctx) {
 
-  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-  if (!battery_plugged) {
-    graphics_draw_bitmap_in_rect(ctx, icon_battery, GRect(0, 0, 24, 12));
-    graphics_context_set_stroke_color(ctx, GColorBlack);
-    graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_rect(ctx, GRect(7, 4, (uint8_t)((battery_level / 100.0) * 11.0), 4), 0, GCornerNone);
-  } else {
-    graphics_draw_bitmap_in_rect(ctx, icon_battery_charge, GRect(0, 0, 24, 12));
-  }
+	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+	if (!battery_plugged) {
+		graphics_draw_bitmap_in_rect(ctx, icon_battery, GRect(0, 0, 24, 12));
+		graphics_context_set_stroke_color(ctx, GColorBlack);
+		graphics_context_set_fill_color(ctx, GColorWhite);
+		graphics_fill_rect(ctx, GRect(7, 4, (uint8_t)((battery_level / 100.0) * 11.0), 4), 0, GCornerNone);
+	} else {
+		graphics_draw_bitmap_in_rect(ctx, icon_battery_charge, GRect(0, 0, 24, 12));
+	}
 }
 
 /*
@@ -105,42 +105,42 @@ static void battery_state_handler(BatteryChargeState charge) {
  * Draw line
  */
 static void line_layer_update_callback(Layer *layer, GContext* ctx) {
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+	graphics_context_set_fill_color(ctx, GColorWhite);
+	graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 }
 
 /*
  * Process clockface
  */
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
-  // Need to be static because they're used by the system later.
-  static char time_text[] = "00:00";
-                             
-  char *time_format;
-  
-  if (!g_smart_flag) {
-	show_date();
-  } 
+	// Need to be static because they're used by the system later.
+	static char time_text[] = "00:00";
 
-  if (clock_is_24h_style()) {
-    time_format = "%R";
-  } else {
-    time_format = "%I:%M";
-  }
+	char *time_format;
 
-  strftime(time_text, sizeof(time_text), time_format, tick_time);
+	if (!g_smart_flag) {
+		show_date();
+	}
 
-  // Kludge to handle lack of non-padded hour format string
-  // for twelve hour clock.
-  if (!clock_is_24h_style() && (time_text[0] == '0')) {
-    memmove(time_text, &time_text[1], sizeof(time_text) - 1);
-  }
+	if (clock_is_24h_style()) {
+		time_format = "%R";
+	} else {
+		time_format = "%I:%M";
+	}
 
-  text_layer_set_text(text_time_layer, time_text);
+	strftime(time_text, sizeof(time_text), time_format, tick_time);
 
-  self_monitor();
-	
-  do_alarm();
+	// Kludge to handle lack of non-padded hour format string
+	// for twelve hour clock.
+	if (!clock_is_24h_style() && (time_text[0] == '0')) {
+		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
+	}
+
+	text_layer_set_text(text_time_layer, time_text);
+
+	self_monitor();
+
+	do_alarm();
 
 }
 
@@ -148,79 +148,79 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
  * Shutdown
  */
 static void handle_deinit(void) {
-  gbitmap_destroy(icon_battery);
-  gbitmap_destroy(icon_battery_charge);
-  gbitmap_destroy(logo_bitmap);
-  gbitmap_destroy(alarm_bitmap);
-  tick_timer_service_unsubscribe();
-  deinit_morpheuz();
+	gbitmap_destroy(icon_battery);
+	gbitmap_destroy(icon_battery_charge);
+	gbitmap_destroy(logo_bitmap);
+	gbitmap_destroy(alarm_bitmap);
+	tick_timer_service_unsubscribe();
+	deinit_morpheuz();
 }
 
 /*
  * Startup
  */
 static void handle_init(void) {
-  static char version[] = VERSION;
-	
-  window = window_create();
-  window_set_fullscreen(window, true);
-  window_stack_push(window, true /* Animated */);
-  window_set_background_color(window, GColorBlack);
+	static char version[] = VERSION;
 
-  Layer *window_layer = window_get_root_layer(window);
-	
-  logo_layer = bitmap_layer_create(GRect(0, 10, 144, 80));
-  layer_add_child(window_layer, bitmap_layer_get_layer(logo_layer));
-  logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
-  bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
-	
-  text_version_layer = text_layer_create(GRect(48, 0, 48, 16));
-  text_layer_set_text_color(text_version_layer, GColorWhite);
-  text_layer_set_background_color(text_version_layer, GColorClear);
-  text_layer_set_text_alignment(text_version_layer, GTextAlignmentCenter);
-  text_layer_set_font(text_version_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-  layer_add_child(window_layer, text_layer_get_layer(text_version_layer));
-  text_layer_set_text(text_version_layer, version);
-	
-  text_date_layer = text_layer_create(GRect(8, 85, 144-8, WINDOW_HEIGHT-85));
-  text_layer_set_text_color(text_date_layer, GColorWhite);
-  text_layer_set_background_color(text_date_layer, GColorClear);
-  text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
-  layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
+	window = window_create();
+	window_set_fullscreen(window, true);
+	window_stack_push(window, true /* Animated */);
+	window_set_background_color(window, GColorBlack);
 
-  text_time_layer = text_layer_create(GRect(0, 109, 144, WINDOW_HEIGHT-109));
-  text_layer_set_text_color(text_time_layer, GColorWhite);
-  text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
-  text_layer_set_background_color(text_time_layer, GColorClear);
-  text_layer_set_font(text_time_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38)));
-  layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
-	
-  alarm_layer = bitmap_layer_create(GRect(11, 98, 8, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));
-  alarm_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_ICON);
-  bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
+	Layer *window_layer = window_get_root_layer(window);
 
-  GRect line_frame = GRect(8, 114, 144-16, 2);
-  line_layer = layer_create(line_frame);
-  layer_set_update_proc(line_layer, line_layer_update_callback);
-  layer_add_child(window_layer, line_layer);
-	
-  icon_battery = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_ICON);
-  icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
+	logo_layer = bitmap_layer_create(GRect(0, 10, 144, 80));
+	layer_add_child(window_layer, bitmap_layer_get_layer(logo_layer));
+	logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
+	bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
 
-  BatteryChargeState initial = battery_state_service_peek();
-  battery_level = initial.charge_percent;
-  battery_plugged = initial.is_plugged;
-  battery_layer = layer_create(GRect(144-26,2,24,12)); //24*12
-  layer_set_update_proc(battery_layer, &battery_layer_update_callback);
-  layer_add_child(window_layer, battery_layer);
+	text_version_layer = text_layer_create(GRect(48, 0, 48, 16));
+	text_layer_set_text_color(text_version_layer, GColorWhite);
+	text_layer_set_background_color(text_version_layer, GColorClear);
+	text_layer_set_text_alignment(text_version_layer, GTextAlignmentCenter);
+	text_layer_set_font(text_version_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
+	layer_add_child(window_layer, text_layer_get_layer(text_version_layer));
+	text_layer_set_text(text_version_layer, version);
 
-  tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+	text_date_layer = text_layer_create(GRect(8, 85, 144-8, WINDOW_HEIGHT-85));
+	text_layer_set_text_color(text_date_layer, GColorWhite);
+	text_layer_set_background_color(text_date_layer, GColorClear);
+	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
 
-  battery_state_service_subscribe(&battery_state_handler);
-	
-  init_morpheuz();
+	text_time_layer = text_layer_create(GRect(0, 109, 144, WINDOW_HEIGHT-109));
+	text_layer_set_text_color(text_time_layer, GColorWhite);
+	text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
+	text_layer_set_background_color(text_time_layer, GColorClear);
+	text_layer_set_font(text_time_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38)));
+	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
+
+	alarm_layer = bitmap_layer_create(GRect(11, 98, 8, 12));
+	layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));
+	alarm_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_ICON);
+	bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
+	layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
+
+	GRect line_frame = GRect(8, 114, 144-16, 2);
+	line_layer = layer_create(line_frame);
+	layer_set_update_proc(line_layer, line_layer_update_callback);
+	layer_add_child(window_layer, line_layer);
+
+	icon_battery = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_ICON);
+	icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
+
+	BatteryChargeState initial = battery_state_service_peek();
+	battery_level = initial.charge_percent;
+	battery_plugged = initial.is_plugged;
+	battery_layer = layer_create(GRect(144-26,2,24,12)); //24*12
+	layer_set_update_proc(battery_layer, &battery_layer_update_callback);
+	layer_add_child(window_layer, battery_layer);
+
+	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+
+	battery_state_service_subscribe(&battery_state_handler);
+
+	init_morpheuz();
 }
 
 /*
@@ -232,7 +232,7 @@ void reset_tick_service(bool second) {
 	g_second = second;
 	tick_timer_service_unsubscribe();
 	if (second)
-        tick_timer_service_subscribe(SECOND_UNIT, handle_minute_tick);
+		tick_timer_service_subscribe(SECOND_UNIT, handle_minute_tick);
 	else
 		tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 }
@@ -241,9 +241,9 @@ void reset_tick_service(bool second) {
  * Main
  */
 int main(void) {
-  handle_init();
+	handle_init();
 
-  app_event_loop();
-  
-  handle_deinit();
+	app_event_loop();
+
+	handle_deinit();
 }
