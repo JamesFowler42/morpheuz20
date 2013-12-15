@@ -26,10 +26,10 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "v1.1",
+	var cfg = { version : "v1.2",
 			limit: 54,
 			divisor: 600000,
-			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view5.html" };
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view012.html" };
 	return cfg;
 }
 /**
@@ -173,7 +173,7 @@ function smart_alarm(point) {
 
 		// Has the current point exceeded the threshold value
 		if (point > threshold) {
-			window.localStorage.setItem("goneOff","Y");
+			window.localStorage.setItem("goneOff",now);
 			return 1;
 		} else {
 			return 0;
@@ -184,7 +184,7 @@ function smart_alarm(point) {
 	var after = new Date().addMinutes(1).format("hhmm");
 	// Or failing that have we hit the last minute we can
 	if (now == to || before == to || after == to) { 
-		window.localStorage.setItem("goneOff","Y");
+		window.localStorage.setItem("goneOff", now);
 		return 1;
 	}
 
@@ -250,7 +250,7 @@ function returnSmartAlarmSettings() {
  */
 Pebble.addEventListener("webviewclosed",
 		function(e) {
-	console.log("webviewclosed");
+	console.log("webviewclosed " + e.response);
 	if (e.response == null)
 		return;
 	var dataElems = e.response.split("!");
@@ -286,9 +286,14 @@ Pebble.addEventListener("showConfiguration",
 	var frommin = window.localStorage.getItem("frommin");
 	var tomin = window.localStorage.getItem("tomin");
 	var smart = window.localStorage.getItem("smart");
+	var goneOff = window.localStorage.getItem("goneOff");
+	if (goneOff == null)
+		goneOff = "N";
 
 	var url = mConst().url + "?base=" + base + "&graph=" + graph + 
-	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version;
+	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin +
+	"&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version + 
+	"&goneoff=" + goneOff;
 	console.log("url=" + url);
 	Pebble.openURL(url);
 });

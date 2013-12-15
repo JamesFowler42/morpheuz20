@@ -37,11 +37,20 @@ static int32_t last_to = -1;
 static uint32_t inbound_size;
 static uint32_t outbound_size;
 
+static time_t last_accel_sec;
+static uint16_t last_accel_ms;
+static time_t changed_focus_or_vibed_sec;
+static uint16_t changed_focus_or_vibed_ms;
+static bool app_has_focus;
+static bool in_alarm_state;
+
 
 /*
  * Fire alarm
  */
 static void fire_alarm() {
+	in_alarm_state = true;
+	time_ms(&changed_focus_or_vibed_sec, &changed_focus_or_vibed_ms);
 	alarm_count = 0;
 	reset_tick_service(true);
 }
@@ -54,9 +63,11 @@ void do_alarm() {
 
 	// Alarm handling
 	if (alarm_count >= ALARM_MAX) {
+		in_alarm_state = false;
 		reset_tick_service(false);
 		return;
 	}
+	time_ms(&changed_focus_or_vibed_sec, &changed_focus_or_vibed_ms);
 	vibes_long_pulse();
 	alarm_count++;
 }
@@ -190,6 +201,19 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 	// Self monitor memory
 	last_accel = time(NULL);
 	
+	bool discard = false;
+
+	// Make sure we didn't loose focus (as this usually means vibration too) during the sample period
+	if (!app_has_focus ||
+		in_alarm_state ||
+		(changed_focus_or_vibed_sec > last_accel_sec) ||
+		(changed_focus_or_vibed_sec == last_accel_sec && changed_focus_or_vibed_ms > last_accel_sec)) {
+		discard = true;
+	}
+
+	// Mark the last accelerometer and stay
+	time_ms(&last_accel_sec, &last_accel_ms);
+
 	// Average the data
 	uint32_t avg_x = 0;
 	uint32_t avg_y = 0;
@@ -233,7 +257,12 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 		if (z> biggest) biggest = z;
 
 	}
-	store_sample(biggest);
+	if (discard) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Discarded %d - lost focus vibration", biggest);
+		store_sample(0); // Keep to timeframe but don't let large value disrupt
+	} else {
+		store_sample(biggest);
+	}
 }
 
 /*
@@ -261,6 +290,14 @@ void self_monitor() {
 }
 
 /*
+ * Check for gain or loss of focus
+ */
+static void focus_handler(bool in_focus) {
+	app_has_focus = in_focus;
+	time_ms(&changed_focus_or_vibed_sec, &changed_focus_or_vibed_ms);
+}
+
+/*
  * Initialise comms and accelerometer
  */
 void init_morpheuz() {
@@ -283,6 +320,13 @@ void init_morpheuz() {
 	  // Accelerometer
 	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 	  accel_data_service_subscribe(25, &accel_data_handler);
+
+	  // Focus service check
+	  app_has_focus = true;
+	  in_alarm_state = false;
+	  time_ms(&last_accel_sec, &last_accel_ms);
+	  app_focus_service_subscribe(focus_handler);
+
 }
 
 /*
@@ -290,4 +334,5 @@ void init_morpheuz() {
  */
 void deinit_morpheuz() {
 	accel_data_service_unsubscribe();
+	app_focus_service_unsubscribe();
 }
