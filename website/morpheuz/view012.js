@@ -139,6 +139,8 @@ var smartOn = smart == 'Y';
 document.getElementById('smartalarm').checked = smartOn;
 
 if (document.ios) {
+        document.getElementById('reset').className='reset';
+        document.getElementById('copy').className='copy';
 	setSelectedValue(document.getElementById('safromhour'), fromhr);
 	setSelectedValue(document.getElementById('safrommin'), frommin);
 	setSelectedValue(document.getElementById('satohour'), tohr);

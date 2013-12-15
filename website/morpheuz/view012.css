@@ -27,7 +27,9 @@ body {
 }
 
 h2 {
+       margin-top: 0px;
 	font-size: 17px;
+       margin-bottom:5px;
 }
 
 p {
@@ -38,12 +40,9 @@ p {
 	font-size: 6px;
 	width: 310px;
 	text-align: right;
-	display: block;
-	position: relative;
-	top: -14px
 }
 
-#reset {
+.reset {
 	border: none;
 	background-color: transparent;
 	color: rgb(0, 122, 255);
@@ -55,7 +54,7 @@ p {
 	padding-left: 0px;
 }
 
-#copy {
+.copy {
 	border: none;
 	background-color: transparent;
 	color: rgb(0, 122, 255);
