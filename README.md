@@ -27,6 +27,7 @@ Notes
 
 Version 1.2.0
 -------------
+* Make config buttons work for Android
 * Ensures that if the app hasn’t got focus then we don’t consider the
 accelerometer data (probably the alarm is going off)
 * Ensure it’s own alarm doesn’t produce a movement spike
