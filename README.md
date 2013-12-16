@@ -25,6 +25,17 @@ Notes
 
 3. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
 
+Version 1.2.0
+-------------
+* Ensures that if the app hasn’t got focus then we don’t consider the
+accelerometer data (probably the alarm is going off)
+* Ensure it’s own alarm doesn’t produce a movement spike
+* Plot the start and end of the smart alarm period, plus now the time
+the smart alarm actually went off.
+* Visual clues to tie the start and end times against the graph
+* Reduced the emphasis of the trend line - which is interesting but not
+*that* interesting.
+
 Version 1.1.0
 -------------
 * Compiled for 2.0 beta3
