@@ -21,9 +21,13 @@ Notes
 -------
 1. Power consumption on the watch was low during testing, as data sets are collected every 2.5 seconds and then transmitted to the phone every two minutes. 
 
-2. Currently with Pebble OS Beta2 there are issues with Javascript apps on Android - the Pebble app needs to be topmost and the configuration page has problems. I expect this will be resolved in later versions of the Pebble app and firmware but at present I am unable to circumvent these problems. iOS works well.
+2. Works well with iOS. There have been problems with the configuration/chart page on Android. Hopefully these should be resolved with the latest release.
 
 3. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
+
+Version 1.4.0
+-------------
+Ensured that parseInt is always called with a radix of 10. Conversion in some browsers (iOS) makes 09 = 9 decimal. In others (Android) makes 09 = 0. 
 
 Version 1.2.0
 -------------
