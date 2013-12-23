@@ -26,10 +26,10 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "v1.2",
+	var cfg = { version : "v1.4",
 			limit: 54,
 			divisor: 600000,
-			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view012.html" };
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view014.html" };
 	return cfg;
 }
 /**
@@ -107,7 +107,7 @@ function storePointInfo(point) {
 	}
 
 	// Locate correct entry
-	var base = parseInt(window.localStorage.getItem("base"));
+	var base = parseInt(window.localStorage.getItem("base"), 10);
 	var now = new Date().valueOf();
 	var offset = Math.floor((now - base) / mConst().divisor);
 	var entry = "P" + offset;
@@ -121,7 +121,7 @@ function storePointInfo(point) {
 	if (valueStr == null) {
 		window.localStorage.setItem(entry,point);
 	} else {
-		var value = parseInt(valueStr);
+		var value = parseInt(valueStr, 10);
 		if (point > value) {
 			window.localStorage.setItem(entry,point);
 		}
@@ -151,7 +151,7 @@ function smart_alarm(point) {
 		var valueStr = window.localStorage.getItem(entry);
 		if (valueStr != null) {
 			novals++;
-			total = total + parseInt(valueStr);
+			total = total + parseInt(valueStr, 10);
 		} 
 	}
 	if (novals == 0)
@@ -215,7 +215,7 @@ Pebble.addEventListener("ready",
  */
 Pebble.addEventListener("appmessage",
 		function(e) {
-	var point = parseInt(e.payload.biggest);
+	var point = parseInt(e.payload.biggest, 10);
 	console.log("appmessage biggest=" + point);
 	storePointInfo(point);
 	var alarm = smart_alarm(point);
@@ -231,10 +231,10 @@ Pebble.addEventListener("appmessage",
 function returnSmartAlarmSettings() {
 	var smartStr = window.localStorage.getItem("smart");
 	if (smartStr != null && smartStr == "Y") {
-		var fromhr = parseInt(window.localStorage.getItem("fromhr"));
-		var tohr = parseInt(window.localStorage.getItem("tohr"));
-		var frommin = parseInt(window.localStorage.getItem("frommin"));
-		var tomin = parseInt(window.localStorage.getItem("tomin"));
+		var fromhr = parseInt(window.localStorage.getItem("fromhr"), 10);
+		var tohr = parseInt(window.localStorage.getItem("tohr"), 10);
+		var frommin = parseInt(window.localStorage.getItem("frommin"), 10);
+		var tomin = parseInt(window.localStorage.getItem("tomin"), 10);
 		var from = (fromhr << 8) | frommin;
 		var to = (tohr << 8) | tomin;
 		return {"from": from,

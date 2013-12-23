@@ -21,31 +21,72 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+body {
+	width: 320px;
+	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+}
 
-#ifndef MORPHEUZ_H_
-#define MORPHEUZ_H_
-	
-#define VERSION "v1.4"
-	
-#define FUDGE 4
-	
-enum MorpKey {
-	BIGGEST = 1,
-    ALARM = 2,
-    FROM = 3,
-    TO = 4
-};		
+h2 {
+       margin-top: 0px;
+	font-size: 17px;
+       margin-bottom:5px;
+}
 
-#define SAMPLES_IN_TWO_MINUTES 48
-#define ALARM_MAX 30
-#define DISTRESS_WAIT_SEC 120
-#define WINDOW_HEIGHT 168
+p {
+	font-size: 12px;
+}
 
-void init_morpheuz();
-void deinit_morpheuz();
-void do_alarm();
-void self_monitor();
-void reset_tick_service(bool second);
-void set_smart_status_on_screen(bool sa_smart, char *smart_text);
+#version {
+	font-size: 6px;
+	width: 310px;
+	text-align: right;
+}
 
-#endif /* MORPHEUZ_H_ */
+.reset {
+	border: none;
+	background-color: transparent;
+	color: rgb(0, 122, 255);
+	font-size: 17px;
+	font-weight: 500;
+	margin-left: 0px;
+	text-align: left;
+	border-left: 0px;
+	padding-left: 0px;
+}
+
+.copy {
+	border: none;
+	background-color: transparent;
+	color: rgb(0, 122, 255);
+	font-size: 17px;
+	font-weight: 500;
+	margin-left: 0px;
+	text-align: left;
+	border-left: 0px;
+	padding-left: 0px;
+	text-decoration: none;
+}
+
+.textbox {
+	width: 45px;
+}
+
+table.jqplot-table-legend {
+	background-color: white !important;
+	z-index: 10;
+	font-size: 8pt !important;
+}
+
+.fromValues {
+  border-top: none;
+  border-right: none;
+  border-left: none;
+  border-bottom: 2px solid rgb(76,217,100);
+}
+
+.toValues {
+  border-top: none;
+  border-right: none;
+  border-left: none;
+  border-bottom: 2px solid rgb(255,59,48);
+}
