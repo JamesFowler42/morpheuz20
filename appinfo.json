@@ -1,5 +1,5 @@
 {
-    "versionLabel": "1.2.0",
+    "versionLabel": "1.4.0",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "biggest": 1,
@@ -8,7 +8,7 @@
         "from": 3
     },
     "longName": "Morpheuz Sleep Monitor",
-    "versionCode": 12,
+    "versionCode": 14,
     "capabilities": [
         "configurable"
     ],
