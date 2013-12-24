@@ -43,12 +43,14 @@
 	src="jqplot/plugins/jqplot.canvasOverlay.min.js"></script>
 <script type="text/javascript"
 	src="jqplot/plugins/jqplot.trendline.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.pieRenderer.min.js"></script>
 </head>
 <body>
 	<form action="">
-               <div id="version">v0.5</div>
+		<div id="version">v0.5</div>
 		<h2 id="title">Morpheuz Sleep Monitor</h2>
-		<div id="chart1" style="width: 320px; height: 250px;"></div>
+		<h3 class="settings">Settings</h3>
 		<p>
 			<label for="smartalarm">Smart Alarm:</label> <input id="smartalarm"
 				type="checkbox" />
@@ -81,14 +83,14 @@
 				<option>22</option>
 				<option>23</option>
 			</select><input type="text" id="safromhourtxt" style="display: none"
-				class="textbox fromValues" maxlength="2" /> : <select id="safrommin"
-				style="display: none" class="fromValues">
+				class="textbox fromValues" maxlength="2" /> : <select
+				id="safrommin" style="display: none" class="fromValues">
 				<option>00</option>
 				<option>15</option>
 				<option selected>30</option>
 				<option>45</option>
 			</select><input type="text" id="safrommintxt" style="display: none"
-				class="textbox fromValues" maxlength="2"/> to <select id="satohour"
+				class="textbox fromValues" maxlength="2" /> to <select id="satohour"
 				style="display: none" class="toValues">
 				<option>00</option>
 				<option>01</option>
@@ -115,20 +117,23 @@
 				<option>22</option>
 				<option>23</option>
 			</select><input type="text" id="satohourtxt" style="display: none"
-				class="textbox toValues" maxlength="2"/> : <select id="satomin"
+				class="textbox toValues" maxlength="2" /> : <select id="satomin"
 				style="display: none" class="toValues">
 				<option>00</option>
 				<option selected>15</option>
 				<option>30</option>
 				<option>45</option>
 			</select><input type="text" id="satomintxt" style="display: none"
-				class="textbox toValues" maxlength="2"/>
+				class="textbox toValues" maxlength="2" />
 		</p>
-		<button id="reset" type="button">Save & Reset</button>
-		<a id="copy" href="mailto:">Copy</a>
-		<br/>
-		<button id="diag1" type="button" style="display:none">Diag1</button>
-		<button id="diag2" type="button" style="display:none">Diag2</button>
+		<p class="buttons">
+			<button id="reset" type="button">Save & Reset</button>
+			<a id="copy" href="mailto:">Copy</a>
+		</p>
+		<h3>Movement</h3>
+		<div id="chart1" style="width: 320px; height: 250px;"></div>
+		<h3>Quality</h3>
+		<div id="chart2" style="width: 320px; height: 250px;"></div>
 	</form>
 	<script type="text/javascript" src='view014.js'></script>
 </body>

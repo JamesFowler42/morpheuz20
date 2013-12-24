@@ -24,16 +24,38 @@
 body {
 	width: 320px;
 	font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
+	margin: 1px;
 }
 
 h2 {
-       margin-top: 0px;
+	text-align: center;
+	position: relative;
+	top: -7px;
+	margin-top: 0px;
 	font-size: 17px;
-       margin-bottom:5px;
+	margin-bottom: 0px;
+}
+
+.settings {
+	margin-top: 0px;
+}
+
+h3 {
+	text-align: center;
+	margin-top: 7px;
+	font-size: 14px;
+	margin-bottom: 0px;
 }
 
 p {
 	font-size: 12px;
+	margin-top: 5px;
+	margin-bottom: 5px;
+}
+
+p.buttons {
+	margin-top: 15px;
+	margin-bottom: 10px;
 }
 
 #version {
@@ -78,15 +100,29 @@ table.jqplot-table-legend {
 }
 
 .fromValues {
-  border-top: none;
-  border-right: none;
-  border-left: none;
-  border-bottom: 2px solid rgb(76,217,100);
+	border-top: none;
+	border-right: none;
+	border-left: none;
+	border-bottom: 2px solid rgb(76, 217, 100);
 }
 
 .toValues {
-  border-top: none;
-  border-right: none;
-  border-left: none;
-  border-bottom: 2px solid rgb(255,59,48);
+	border-top: none;
+	border-right: none;
+	border-left: none;
+	border-bottom: 2px solid rgb(255, 59, 48);
+}
+
+#chart2 {
+	color: black;
+}
+
+#chart1 {
+	color: black;
+}
+
+div.jqplot-pie-series.jqplot-data-label {
+	font-size: 12px;
+	border-radius: 2px;
+	background-color: white;
 }
