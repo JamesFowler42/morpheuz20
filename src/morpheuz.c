@@ -30,27 +30,16 @@ uint8_t sample_sets = 0;
 uint8_t alarm_count;
 time_t last_accel;
 
-static int32_t last_alarm = 0;
 static int32_t last_from = -1;
 static int32_t last_to = -1;
 
 static uint32_t inbound_size;
 static uint32_t outbound_size;
 
-static time_t last_accel_sec;
-static uint16_t last_accel_ms;
-static time_t changed_focus_or_vibed_sec;
-static uint16_t changed_focus_or_vibed_ms;
-static bool app_has_focus;
-static bool in_alarm_state;
-
-
 /*
  * Fire alarm
  */
 static void fire_alarm() {
-	in_alarm_state = true;
-	time_ms(&changed_focus_or_vibed_sec, &changed_focus_or_vibed_ms);
 	alarm_count = 0;
 	reset_tick_service(true);
 }
@@ -63,11 +52,9 @@ void do_alarm() {
 
 	// Alarm handling
 	if (alarm_count >= ALARM_MAX) {
-		in_alarm_state = false;
 		reset_tick_service(false);
 		return;
 	}
-	time_ms(&changed_focus_or_vibed_sec, &changed_focus_or_vibed_ms);
 	vibes_long_pulse();
 	alarm_count++;
 }
@@ -104,16 +91,22 @@ static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reas
  * Incoming message handler
  */
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-  Tuple *alarm_tuple = dict_find(iter, ALARM);
+  Tuple *ctrl_tuple = dict_find(iter, CTRL);
   Tuple *from_tuple = dict_find(iter, FROM);
   Tuple *to_tuple = dict_find(iter, TO);
 
-  if (alarm_tuple) {
-	  last_alarm = alarm_tuple->value->int32;
-	  if (last_alarm == 1) {
+  if (ctrl_tuple) {
+	  int32_t ctrl_value = ctrl_tuple->value->int32;
+	  if (ctrl_value & CTRL_ALARM) {
 		  fire_alarm();
 	  } 
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Alarm received");
+	  if (ctrl_value & CTRL_INVERSE) {
+		  invert_screen(true);
+	  }
+	  if (ctrl_value & CTRL_NORMAL) {
+		  invert_screen(false);
+	  }
+	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Ctrl received");
   }
   if (from_tuple) {
   	  last_from = from_tuple->value->int32;
@@ -159,7 +152,7 @@ static void in_out_size_calc() {
   outbound_size = dict_calc_buffer_size_from_tuplets(out_values, ARRAY_LENGTH(out_values)) + FUDGE;
 	
   Tuplet in_values[] = {
-        TupletInteger(ALARM, 0),
+        TupletInteger(CTRL, 0),
         TupletInteger(FROM, 0),
         TupletInteger(TO, 0)
   };
@@ -200,19 +193,6 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
 	// Self monitor memory
 	last_accel = time(NULL);
-	
-	bool discard = false;
-
-	// Make sure we didn't loose focus (as this usually means vibration too) during the sample period
-	if (!app_has_focus ||
-		in_alarm_state ||
-		(changed_focus_or_vibed_sec > last_accel_sec) ||
-		(changed_focus_or_vibed_sec == last_accel_sec && changed_focus_or_vibed_ms > last_accel_sec)) {
-		discard = true;
-	}
-
-	// Mark the last accelerometer and stay
-	time_ms(&last_accel_sec, &last_accel_ms);
 
 	// Average the data
 	uint32_t avg_x = 0;
@@ -229,6 +209,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 	avg_z = avg_z / num_samples;
 
 	// Work out deviations
+	bool vibrated = false;
 	uint16_t biggest = 0;
 	AccelData *d = data;
 	for (uint32_t i = 0; i < num_samples; i++, d++) {
@@ -256,9 +237,12 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 		if (y > biggest) biggest = y;
 		if (z> biggest) biggest = z;
 
+		// Did we have a bit of a vibration?
+		if (d->did_vibrate)
+			vibrated = true;
 	}
-	if (discard) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Discarded %d - lost focus vibration", biggest);
+	if (vibrated) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Discarded %d - vibration", biggest);
 		store_sample(0); // Keep to timeframe but don't let large value disrupt
 	} else {
 		store_sample(biggest);
@@ -289,13 +273,6 @@ void self_monitor() {
 
 }
 
-/*
- * Check for gain or loss of focus
- */
-static void focus_handler(bool in_focus) {
-	app_has_focus = in_focus;
-	time_ms(&changed_focus_or_vibed_sec, &changed_focus_or_vibed_ms);
-}
 
 /*
  * Initialise comms and accelerometer
@@ -320,12 +297,6 @@ void init_morpheuz() {
 	  // Accelerometer
 	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 	  accel_data_service_subscribe(25, &accel_data_handler);
-
-	  // Focus service check
-	  app_has_focus = true;
-	  in_alarm_state = false;
-	  time_ms(&last_accel_sec, &last_accel_ms);
-	  app_focus_service_subscribe(focus_handler);
 
 }
 

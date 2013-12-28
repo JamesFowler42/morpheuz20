@@ -26,10 +26,13 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "v1.4",
+	var cfg = { version : "v1.5",
 			limit: 54,
 			divisor: 600000,
-			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view014.html" };
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view015.html", 
+			ctrlAlarm: 1,
+			ctrlInverse: 2,
+			ctrlNormal: 4};
 	return cfg;
 }
 /**
@@ -206,6 +209,7 @@ Pebble.addEventListener("ready",
 		window.localStorage.setItem("frommin","30");
 		window.localStorage.setItem("tohr","7");
 		window.localStorage.setItem("tomin","15");
+		window.localStorage.setItem("inverse", "N");
 	}		
 	Pebble.sendAppMessage(returnSmartAlarmSettings());
 });
@@ -221,7 +225,7 @@ Pebble.addEventListener("appmessage",
 	var alarm = smart_alarm(point);
 	if (alarm == 1) {
 		// Only reply to fire the alarm - no reply otherwise
-		Pebble.sendAppMessage({"alarm": 1});
+		Pebble.sendAppMessage({"ctrl": mConst().ctrlAlarm});
 	}
 });
 
@@ -229,6 +233,8 @@ Pebble.addEventListener("appmessage",
  * Return smart alarm setting to watchface
  */
 function returnSmartAlarmSettings() {
+	var inverse = window.localStorage.getItem("inverse");
+	var ctrlValue = (inverse != null && inverse == "Y") ? mConst().ctrlInverse : mConst().ctrlNormal;
 	var smartStr = window.localStorage.getItem("smart");
 	if (smartStr != null && smartStr == "Y") {
 		var fromhr = parseInt(window.localStorage.getItem("fromhr"), 10);
@@ -238,10 +244,12 @@ function returnSmartAlarmSettings() {
 		var from = (fromhr << 8) | frommin;
 		var to = (tohr << 8) | tomin;
 		return {"from": from,
-			"to": to};
+			"to": to, 
+			"ctrl": ctrlValue};
 	} else {
 		return {"from": -1,
-			"to": -1};
+			"to": -1,
+			"ctrl": ctrlValue};
 	}
 }
 
@@ -261,6 +269,7 @@ Pebble.addEventListener("webviewclosed",
 		window.localStorage.setItem("frommin",dataElems[3]);
 		window.localStorage.setItem("tohr",dataElems[4]);
 		window.localStorage.setItem("tomin",dataElems[5]);
+		window.localStorage.setItem("inverse",dataElems[6]);
 		Pebble.sendAppMessage(returnSmartAlarmSettings());
 	}
 });
@@ -289,11 +298,14 @@ Pebble.addEventListener("showConfiguration",
 	var goneOff = window.localStorage.getItem("goneOff");
 	if (goneOff == null)
 		goneOff = "N";
+	var inverse = window.localStorage.getItem("inverse");
+	if (inverse == null)
+		inverse = "N";
 
 	var url = mConst().url + "?base=" + base + "&graph=" + graph + 
 	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin +
 	"&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version + 
-	"&goneoff=" + goneOff;
+	"&goneoff=" + goneOff + "&inverse=" + inverse;
 	console.log("url=" + url);
 	Pebble.openURL(url);
 });

@@ -25,16 +25,22 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 	
-#define VERSION "v1.4"
+#define VERSION "v1.5"
 	
 #define FUDGE 4
 	
 enum MorpKey {
 	BIGGEST = 1,
-    ALARM = 2,
+    CTRL = 2,
     FROM = 3,
     TO = 4
-};		
+};
+
+enum CtrlValues {
+	CTRL_ALARM = 1,
+	CTRL_INVERSE = 2,
+	CTRL_NORMAL = 4
+};
 
 #define SAMPLES_IN_TWO_MINUTES 48
 #define ALARM_MAX 30
@@ -47,5 +53,6 @@ void do_alarm();
 void self_monitor();
 void reset_tick_service(bool second);
 void set_smart_status_on_screen(bool sa_smart, char *smart_text);
+void invert_screen(bool inverse);
 
 #endif /* MORPHEUZ_H_ */

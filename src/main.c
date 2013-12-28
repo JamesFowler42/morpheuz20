@@ -35,6 +35,7 @@ static GBitmap *logo_bitmap = NULL;
 bool g_second = false;
 static uint8_t battery_level;
 static bool battery_plugged;
+InverterLayer *full_inverse_layer;
 
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
@@ -220,7 +221,19 @@ static void handle_init(void) {
 
 	battery_state_service_subscribe(&battery_state_handler);
 
+	full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
+	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
+	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
+
+
 	init_morpheuz();
+}
+
+/*
+ * Invert screen
+ */
+void invert_screen(bool inverse) {
+	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), !inverse);
 }
 
 /*
