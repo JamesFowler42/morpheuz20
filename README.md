@@ -21,9 +21,15 @@ Notes
 -------
 1. Power consumption on the watch was low during testing, as data sets are collected every 2.5 seconds and then transmitted to the phone every two minutes. 
 
-2. Works well with iOS. There have been problems with the configuration/chart page on Android. Hopefully these should be resolved with the latest release.
+2. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
 
-3. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
+Version 1.5.0
+-------------
+* SDK2 BETA4
+* Use Pebble accelerometer vibration indication - much simpler than my
+original technique
+* Add inverse display
+* Improved algorithm for determining sleep quality
 
 Version 1.4.0
 -------------
