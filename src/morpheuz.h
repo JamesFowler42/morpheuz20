@@ -25,9 +25,16 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 	
-#define VERSION "v1.5"
+#define VERSION "1.6"
 	
 #define FUDGE 4
+
+#define POWER_NAP_MINUTES 27
+#define POWER_NAP_SETTLE 2
+#define POWER_NAP_SETTLE_THRESHOLD 1000
+
+#define POWER_NAP_SETTLE_TIME "Power nap"
+#define POWER_NAP_RUNNING     "Power nap: %d"
 	
 enum MorpKey {
 	BIGGEST = 1,
@@ -47,12 +54,19 @@ enum CtrlValues {
 #define DISTRESS_WAIT_SEC 120
 #define WINDOW_HEIGHT 168
 
-void init_morpheuz();
+void init_morpheuz(Window *window);
 void deinit_morpheuz();
 void do_alarm();
 void self_monitor();
 void reset_tick_service(bool second);
-void set_smart_status_on_screen(bool sa_smart, char *smart_text);
+void set_smart_status_on_screen(bool show_special_text, char *special_text);
 void invert_screen(bool inverse);
+void power_nap_countdown();
+void power_nap_check(uint16_t biggest);
+void click_config_provider(Window *window);
+void set_smart_status();
+void fire_alarm();
+void power_nap_reset();
+void show_comms_state(bool connected);
 
 #endif /* MORPHEUZ_H_ */

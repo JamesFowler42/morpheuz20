@@ -39,34 +39,40 @@ static uint32_t outbound_size;
 /*
  * Fire alarm
  */
-static void fire_alarm() {
+void fire_alarm() {
 	alarm_count = 0;
 	reset_tick_service(true);
 }
-
 
 /*
  * Do the alarm if needed
  */
 void do_alarm() {
 
-	// Alarm handling
+	// Already hit the limit
 	if (alarm_count >= ALARM_MAX) {
-		reset_tick_service(false);
 		return;
 	}
+
+	// Vibrate
 	vibes_long_pulse();
 	alarm_count++;
+
+	// Reset timers and powernap if needed
+	if (alarm_count >= ALARM_MAX) {
+		reset_tick_service(false);
+		power_nap_reset();
+	}
 }
 
 /*
  * Set the on-screen status text
  */
-static void set_smart_status(int32_t sa_from, int32_t sa_to) {
+void set_smart_status() {
 	static char status_text[15];
-	bool sa_smart = (sa_from != -1 && sa_to != -1);
+	bool sa_smart = (last_from != -1 && last_to != -1);
 	if (sa_smart) {
-	  snprintf(status_text, sizeof(status_text), "%02ld:%02ld - %02ld:%02ld", sa_from >> 8, sa_from & 0xff, sa_to >> 8, sa_to & 0xff);
+	  snprintf(status_text, sizeof(status_text), "%02ld:%02ld - %02ld:%02ld", last_from >> 8, last_from & 0xff, last_to >> 8, last_to & 0xff);
 	} else {
 	  strncpy(status_text, "", sizeof(status_text));
 	}
@@ -85,6 +91,14 @@ static void in_dropped_handler(AppMessageResult reason, void *context) {
  */
 static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Failed to Send: %d", reason);
+  show_comms_state(false);
+}
+
+/*
+ * Outgoing message success handler
+ */
+static void out_sent_handler(DictionaryIterator *iterator, void *context) {
+	show_comms_state(true);
 }
 
 /*
@@ -96,6 +110,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *to_tuple = dict_find(iter, TO);
 
   if (ctrl_tuple) {
+	  show_comms_state(true);
 	  int32_t ctrl_value = ctrl_tuple->value->int32;
 	  if (ctrl_value & CTRL_ALARM) {
 		  fire_alarm();
@@ -110,12 +125,12 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   }
   if (from_tuple) {
   	  last_from = from_tuple->value->int32;
-	  set_smart_status(last_from, last_to);
+	  set_smart_status();
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
   }
   if (to_tuple) {
   	  last_to = to_tuple->value->int32;
-	  set_smart_status(last_from, last_to);
+	  set_smart_status();
 	  APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
   }
 }
@@ -161,7 +176,7 @@ static void in_out_size_calc() {
 	
   APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbound buffer: %ld, Outbound buffer: %ld", inbound_size, outbound_size);
 }
-	
+
 /*
  * Store our samples from each group until we have two minute's worth
  */
@@ -170,6 +185,7 @@ static void store_sample(uint16_t biggest) {
 		two_minute_biggest = biggest;
 	sample_sets++;
 	if (sample_sets > SAMPLES_IN_TWO_MINUTES) {
+		power_nap_check(two_minute_biggest);
 		send_cmd(two_minute_biggest);
 		sample_sets = 0;
 		two_minute_biggest = 0;
@@ -273,11 +289,10 @@ void self_monitor() {
 
 }
 
-
 /*
  * Initialise comms and accelerometer
  */
-void init_morpheuz() {
+void init_morpheuz(Window *window) {
 	
 	  alarm_count = ALARM_MAX;
 	
@@ -287,6 +302,7 @@ void init_morpheuz() {
   	  app_message_register_inbox_received(in_received_handler);
   	  app_message_register_inbox_dropped(in_dropped_handler);
   	  app_message_register_outbox_failed(out_failed_handler);
+  	  app_message_register_outbox_sent(out_sent_handler);
   
 	  // Size calc
 	  in_out_size_calc();
@@ -298,6 +314,8 @@ void init_morpheuz() {
 	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 	  accel_data_service_subscribe(25, &accel_data_handler);
 
+	  // Set click provider
+	  window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
 }
 
 /*

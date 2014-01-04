@@ -26,10 +26,10 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "v1.5",
+	var cfg = { version : "1.6",
 			limit: 54,
 			divisor: 600000,
-			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view015.html", 
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view016.html", 
 			ctrlAlarm: 1,
 			ctrlInverse: 2,
 			ctrlNormal: 4};

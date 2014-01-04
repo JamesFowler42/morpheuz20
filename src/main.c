@@ -32,19 +32,24 @@ TextLayer *text_time_layer;
 Layer *line_layer;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap = NULL;
+static GBitmap *bluetooth_bitmap = NULL;
+static GBitmap *comms_bitmap = NULL;
 bool g_second = false;
 static uint8_t battery_level;
 static bool battery_plugged;
 InverterLayer *full_inverse_layer;
+static BitmapLayer *bluetooth_layer;
+static BitmapLayer *comms_layer;
 
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
 static Layer *battery_layer;
-static bool g_smart_flag = false;
+static bool g_show_special_text = false;
 static BitmapLayer *alarm_layer;
 static GBitmap *alarm_bitmap;
 static char date_text[] = "Xxxxxxxxx 00   ";
 //00:00 - 00:00
+
 
 /*
  * Show the date
@@ -59,22 +64,22 @@ static void show_date() {
 /*
  * Set the smart alarm status details
  */
-void set_smart_status_on_screen(bool sa_smart, char *smart_text) {
-	if (!sa_smart) {
-		if (g_smart_flag) {
+void set_smart_status_on_screen(bool show_special_text, char *special_text) {
+	if (!show_special_text) {
+		if (g_show_special_text) {
 			text_layer_set_text_alignment(text_date_layer, GTextAlignmentLeft);
 			layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
 			show_date();
 		}
 	} else {
-		if (!g_smart_flag) {
+		if (!g_show_special_text) {
 			text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
 			layer_set_hidden(bitmap_layer_get_layer(alarm_layer), false);
 		}
-		strncpy(date_text, smart_text, sizeof(date_text));
+		strncpy(date_text, special_text, sizeof(date_text));
 		text_layer_set_text(text_date_layer, date_text);
 	}
-	g_smart_flag = sa_smart;
+	g_show_special_text = show_special_text;
 }
 
 /*
@@ -119,7 +124,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 	char *time_format;
 
-	if (!g_smart_flag) {
+	if (!g_show_special_text) {
 		show_date();
 	}
 
@@ -143,6 +148,8 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 	do_alarm();
 
+	power_nap_countdown();
+
 }
 
 /*
@@ -152,9 +159,27 @@ static void handle_deinit(void) {
 	gbitmap_destroy(icon_battery);
 	gbitmap_destroy(icon_battery_charge);
 	gbitmap_destroy(logo_bitmap);
+	gbitmap_destroy(bluetooth_bitmap);
+	gbitmap_destroy(comms_bitmap);
 	gbitmap_destroy(alarm_bitmap);
 	tick_timer_service_unsubscribe();
+	battery_state_service_unsubscribe();
+	bluetooth_connection_service_unsubscribe();
 	deinit_morpheuz();
+}
+
+/*
+ * Bluetooth connection status
+ */
+static void bluetooth_state_handler(bool connected) {
+	layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer), !connected);
+}
+
+/*
+ * Comms connection status
+ */
+void show_comms_state(bool connected) {
+	layer_set_hidden(bitmap_layer_get_layer(comms_layer), !connected);
 }
 
 /*
@@ -213,20 +238,33 @@ static void handle_init(void) {
 	BatteryChargeState initial = battery_state_service_peek();
 	battery_level = initial.charge_percent;
 	battery_plugged = initial.is_plugged;
-	battery_layer = layer_create(GRect(144-26,2,24,12)); //24*12
+	battery_layer = layer_create(GRect(144-26,4,24,12)); //24*12
 	layer_set_update_proc(battery_layer, &battery_layer_update_callback);
 	layer_add_child(window_layer, battery_layer);
+
+	bluetooth_layer = bitmap_layer_create(GRect(144-26-10, 4, 9, 12));
+	layer_add_child(window_layer, bitmap_layer_get_layer(bluetooth_layer));
+	bluetooth_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_ICON);
+	bitmap_layer_set_bitmap(bluetooth_layer, bluetooth_bitmap);
+	layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer), !bluetooth_connection_service_peek());
+
+	comms_layer = bitmap_layer_create(GRect(144-26-14-10, 4, 9, 12));
+	layer_add_child(window_layer, bitmap_layer_get_layer(comms_layer));
+	comms_bitmap = gbitmap_create_with_resource(RESOURCE_ID_COMMS_ICON);
+	bitmap_layer_set_bitmap(comms_layer, comms_bitmap);
+	layer_set_hidden(bitmap_layer_get_layer(comms_layer), false);
 
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
 	battery_state_service_subscribe(&battery_state_handler);
 
+	bluetooth_connection_service_subscribe(bluetooth_state_handler);
+
 	full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
 	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
 	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
 
-
-	init_morpheuz();
+	init_morpheuz(window);
 }
 
 /*
