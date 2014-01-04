@@ -23,6 +23,12 @@ Notes
 
 2. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
 
+Version 1.6.0
+-------------
+* Power nap
+* Bluetooth and comms indication
+* Hourly statistics
+
 Version 1.5.0
 -------------
 * SDK2 BETA4
