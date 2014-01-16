@@ -22,6 +22,18 @@
  * THE SOFTWARE.
  */
 
+/*
+ * Constants
+ */
+function mConst() {
+	var cfg = {
+		awakeAbove : 1000,
+		lightAbove : 120,
+		sampleIntervalMins : 10
+	};
+	return cfg;
+}
+
 function hrsmin(value) {
 	var hours = Math.floor(value / 60);
 	var minutes = value % 60;
@@ -151,7 +163,7 @@ document.getElementById('inverse').checked = inverseOn;
 
 if (document.ios) {
 	document.getElementById('reset').className = 'reset';
-	document.getElementById('copy').className = 'copy';
+	document.getElementById('mail').className = 'copy';
 	setSelectedValue(document.getElementById('safromhour'), fromhr);
 	setSelectedValue(document.getElementById('safrommin'), frommin);
 	setSelectedValue(document.getElementById('satohour'), tohr);
@@ -180,7 +192,7 @@ for (var i = 0; i < splitup.length; i++) {
 	if (element[1] == -1)
 		element[1] = null;
 	more[i] = element;
-	startPoint = startPoint.addMinutes(10);
+	startPoint = startPoint.addMinutes(mConst().sampleIntervalMins);
 }
 
 // Work out where the start and stop of the wake-up period should go
@@ -195,7 +207,8 @@ if (smartOn) {
 	for (var i = 0; i < splitup.length; i++) {
 		var teststr1 = smartStartPoint.format("hhmm");
 		var smartStartPoint1 = smartStartPoint;
-		smartStartPoint = smartStartPoint.addMinutes(10);
+		smartStartPoint = smartStartPoint
+				.addMinutes(mConst().sampleIntervalMins);
 		var teststr2 = smartStartPoint.format("hhmm");
 		if (early == null && fromstr >= teststr1 && fromstr <= teststr2)
 			early = smartStartPoint1;
@@ -250,47 +263,41 @@ if (smartOn) {
 
 // Get the full set of data up to the wake up point.
 // Ignore nulls
-var set2 = new Array();
 var pieStartPoint = new Date(base);
 var points = 0;
 var total = 0;
 var awake = 0;
+var deep = 0;
+var light = 0;
 for (var i = 0; i < splitup.length; i++) {
 	if (splitup[i] == '')
 		continue;
 	var data = parseInt(splitup[i], 10);
 	var teststr1 = pieStartPoint.format("hhmm");
 	var pieStartPoint1 = pieStartPoint;
-	pieStartPoint = pieStartPoint.addMinutes(10);
+	pieStartPoint = pieStartPoint.addMinutes(mConst().sampleIntervalMins);
 	var teststr2 = pieStartPoint.format("hhmm");
 	if (goneoff != 'N' && goneoff >= teststr1 && goneoff <= teststr2)
 		break;
 	if (data == -1)
 		continue;
-	if (data > 1000) {
+	if (data > mConst().awakeAbove) {
 		awake++;
-		continue;
-	}
-	set2[points] = data;
-	points++;
-	total = total + data;
-}
-var deep = 0;
-var light = 0;
-if (points != 0) {
-	var average = total / points;
-	for (var i = 0; i < points; i++) {
-		if (set2[i] > average)
-			light++;
-		else
-			deep++;
+	} else if (data > mConst().lightAbove) {
+		light++;
+	} else {
+		deep++;
 	}
 }
 
-document.getElementById('ttotal').textContent = hrsmin((deep + light + awake) * 10);
-document.getElementById('tawake').textContent = hrsmin(awake * 10);
-document.getElementById('tlight').textContent = hrsmin(light * 10);
-document.getElementById('tdeep').textContent = hrsmin(deep * 10);
+document.getElementById('ttotal').textContent = hrsmin((deep + light + awake)
+		* mConst().sampleIntervalMins);
+document.getElementById('tawake').textContent = hrsmin(awake
+		* mConst().sampleIntervalMins);
+document.getElementById('tlight').textContent = hrsmin(light
+		* mConst().sampleIntervalMins);
+document.getElementById('tdeep').textContent = hrsmin(deep
+		* mConst().sampleIntervalMins);
 
 var data2 = [ [ 'Awake?', awake ], [ 'Light', light ], [ 'Deep', deep ] ];
 
@@ -393,18 +400,33 @@ $(document).ready(
 // Prepare the copy link
 var timePoint = new Date(base);
 var body = '&body=';
+var copyBody = '';
 
 for (var i = 0; i < splitup.length; i++) {
 	if (splitup[i] == '')
 		continue;
 	body = body + timePoint.format('hh:mm') + ',' + splitup[i] + '%0D%0A';
-	timePoint = timePoint.addMinutes(10);
+	copyBody = copyBody + timePoint.format('hh:mm') + ',' + splitup[i] + "\r\n";
+	timePoint = timePoint.addMinutes(mConst().sampleIntervalMins);
 }
 
 var mailto = 'mailto:?subject=Morpheuz-' + new Date(base).format('yyyy-MM-dd')
 		+ '.csv' + body;
 
-document.getElementById('copy').href = mailto;
+document.getElementById('mail').href = mailto;
+document.getElementById('copy').value = copyBody;
+
+$("#copy").focus(function() {
+	var $this = $(this);
+	$this.select();
+
+	// Work around Chrome's little problem
+	$this.mouseup(function() {
+		// Prevent further mouseup intervention
+		$this.unbind("mouseup");
+		return false;
+	});
+});
 
 // Handle the Save and reset option
 document.getElementById('reset').onclick = function() {
