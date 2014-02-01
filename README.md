@@ -1,5 +1,3 @@
-Description
-
 Morpheuz Sleep Monitor with Smart Alarm
 =======================================
 
@@ -22,6 +20,15 @@ Notes
 1. Power consumption on the watch was low during testing, as data sets are collected every 2.5 seconds and then transmitted to the phone every two minutes. 
 
 2. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
+
+Version 1.7.0
+-------------
+* Runs without persistent connection to phone
+* Data transfer when connected to phone
+* Reset from watch
+* Progress bar
+* Recording indicator
+* Flashing accelerometer indicator
 
 Version 1.6.0
 -------------
