@@ -25,22 +25,21 @@
 #include "pebble.h"
 #include "morpheuz.h"
 
-Window *window;
-TextLayer *text_version_layer;
-TextLayer *text_date_layer;
-TextLayer *text_time_layer;
-Layer *line_layer;
+static Window *window;
+static TextLayer *text_version_layer;
+static TextLayer *text_date_layer;
+static TextLayer *text_time_layer;
+static Layer *line_layer;
 static BitmapLayer *logo_layer;
 static GBitmap *logo_bitmap = NULL;
 static GBitmap *bluetooth_bitmap = NULL;
 static GBitmap *comms_bitmap = NULL;
-bool g_second = false;
+static bool g_second = false;
 static uint8_t battery_level;
 static bool battery_plugged;
-InverterLayer *full_inverse_layer;
+static InverterLayer *full_inverse_layer;
 static BitmapLayer *bluetooth_layer;
 static BitmapLayer *comms_layer;
-
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
 static Layer *battery_layer;
@@ -50,6 +49,13 @@ static GBitmap *alarm_bitmap;
 static char date_text[] = "Xxxxxxxxx 00   ";
 //00:00 - 00:00
 
+static Layer *progress_layer;
+static uint8_t progress_level;
+static GBitmap *image_progress;
+static Layer *zzz_layer;
+static GBitmap *zzz_icon;
+static BitmapLayer *record_layer;
+static GBitmap *record_bitmap;
 
 /*
  * Show the date
@@ -108,6 +114,25 @@ static void battery_state_handler(BatteryChargeState charge) {
 }
 
 /*
+ * Progress line
+ */
+static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
+	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+	graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 128, 3));
+	graphics_context_set_stroke_color(ctx, GColorBlack);
+	graphics_context_set_fill_color(ctx, GColorWhite);
+	graphics_fill_rect(ctx, GRect(1, 1, (uint8_t)((progress_level / 100.0) * 127.0), 1), 0, GCornerNone);
+}
+
+/*
+ * zzz layer
+ */
+static void zzz_layer_update_callback(Layer *layer, GContext *ctx) {
+	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+	graphics_draw_bitmap_in_rect(ctx, zzz_icon, GRect(0, 0, 18, 12));
+}
+
+/*
  * Draw line
  */
 static void line_layer_update_callback(Layer *layer, GContext* ctx) {
@@ -122,26 +147,11 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 	// Need to be static because they're used by the system later.
 	static char time_text[] = "00:00";
 
-	char *time_format;
-
 	if (!g_show_special_text) {
 		show_date();
 	}
 
-	if (clock_is_24h_style()) {
-		time_format = "%R";
-	} else {
-		time_format = "%I:%M";
-	}
-
-	strftime(time_text, sizeof(time_text), time_format, tick_time);
-
-	// Kludge to handle lack of non-padded hour format string
-	// for twelve hour clock.
-	if (!clock_is_24h_style() && (time_text[0] == '0')) {
-		memmove(time_text, &time_text[1], sizeof(time_text) - 1);
-	}
-
+	clock_copy_time_string	(time_text, sizeof(time_text));
 	text_layer_set_text(text_time_layer, time_text);
 
 	self_monitor();
@@ -156,12 +166,17 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
  * Shutdown
  */
 static void handle_deinit(void) {
+	save_config_data(NULL);
+	save_internal_data();
 	gbitmap_destroy(icon_battery);
 	gbitmap_destroy(icon_battery_charge);
 	gbitmap_destroy(logo_bitmap);
 	gbitmap_destroy(bluetooth_bitmap);
 	gbitmap_destroy(comms_bitmap);
 	gbitmap_destroy(alarm_bitmap);
+	gbitmap_destroy(image_progress);
+	gbitmap_destroy(zzz_icon);
+	gbitmap_destroy(record_bitmap);
 	tick_timer_service_unsubscribe();
 	battery_state_service_unsubscribe();
 	bluetooth_connection_service_unsubscribe();
@@ -183,6 +198,36 @@ void show_comms_state(bool connected) {
 }
 
 /*
+ * Progress indicator position
+ */
+void set_progress(uint8_t progress_percent) {
+	progress_level = progress_percent;
+	layer_mark_dirty(progress_layer);
+}
+
+/*
+ * Toggle zzz
+ */
+void toggle_zzz() {
+	layer_set_hidden(zzz_layer, !layer_get_hidden(zzz_layer));
+}
+
+/*
+ * Show record
+ */
+void show_record(bool recording) {
+	layer_set_hidden(bitmap_layer_get_layer(record_layer), !recording);
+}
+
+/*
+ * Hide version after a few seconds
+ */
+void hide_version(void *data) {
+	layer_set_hidden(text_layer_get_layer(text_version_layer), true);
+}
+
+
+/*
  * Startup
  */
 static void handle_init(void) {
@@ -200,10 +245,10 @@ static void handle_init(void) {
 	logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
 	bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
 
-	text_version_layer = text_layer_create(GRect(48, 0, 48, 16));
+	text_version_layer = text_layer_create(GRect(144-30-2, 13, 28, 16));
 	text_layer_set_text_color(text_version_layer, GColorWhite);
 	text_layer_set_background_color(text_version_layer, GColorClear);
-	text_layer_set_text_alignment(text_version_layer, GTextAlignmentCenter);
+	text_layer_set_text_alignment(text_version_layer, GTextAlignmentRight);
 	text_layer_set_font(text_version_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
 	layer_add_child(window_layer, text_layer_get_layer(text_version_layer));
 	text_layer_set_text(text_version_layer, version);
@@ -252,7 +297,29 @@ static void handle_init(void) {
 	layer_add_child(window_layer, bitmap_layer_get_layer(comms_layer));
 	comms_bitmap = gbitmap_create_with_resource(RESOURCE_ID_COMMS_ICON);
 	bitmap_layer_set_bitmap(comms_layer, comms_bitmap);
-	layer_set_hidden(bitmap_layer_get_layer(comms_layer), false);
+	layer_set_hidden(bitmap_layer_get_layer(comms_layer), true);
+
+	record_layer = bitmap_layer_create(GRect(144-26-14-10-16, 4, 10, 12));
+	layer_add_child(window_layer, bitmap_layer_get_layer(record_layer));
+	record_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ICON_RECORD);
+	bitmap_layer_set_bitmap(record_layer, record_bitmap);
+	layer_set_hidden(bitmap_layer_get_layer(record_layer), true);
+
+	image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
+	progress_level = 0;
+	progress_layer = layer_create(GRect(8,153,128,3));
+	layer_set_update_proc(progress_layer, &progress_layer_update_callback);
+	layer_add_child(window_layer, progress_layer);
+
+	zzz_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ZZZ);
+	zzz_layer = layer_create(GRect(41,11,18,12));
+	layer_set_update_proc(zzz_layer, &zzz_layer_update_callback);
+	layer_add_child(window_layer, zzz_layer);
+
+	read_internal_data();
+	read_config_data();
+
+	set_progress_based_on_persist();
 
 	tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
@@ -264,14 +331,19 @@ static void handle_init(void) {
 	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
 	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
 
+	invert_screen();
+
 	init_morpheuz(window);
+
+	// Hide the version after a bit
+	app_timer_register(VERSION_DISPLAY_MS, hide_version, NULL);
 }
 
 /*
  * Invert screen
  */
-void invert_screen(bool inverse) {
-	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), !inverse);
+void invert_screen() {
+	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), !get_config_data()->invert);
 }
 
 /*

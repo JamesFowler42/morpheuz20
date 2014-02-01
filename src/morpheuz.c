@@ -25,16 +25,57 @@
 #include "pebble.h"
 #include "morpheuz.h"
 
-uint16_t two_minute_biggest = 0;
-uint8_t sample_sets = 0;
-uint8_t alarm_count;
-time_t last_accel;
+static uint16_t two_minute_biggest = 0;
+static uint8_t sample_sets = 0;
+static uint8_t alarm_count;
+static time_t last_accel;
 
 static int32_t last_from = -1;
 static int32_t last_to = -1;
+static bool last_invert = false;
 
 static uint32_t inbound_size;
 static uint32_t outbound_size;
+
+static char version_context[] = "V";
+static char base_context[] = "B";
+static char goneoff_context[] = "G";
+static char point_context[] = "P";
+static char clear_context[] = "P";
+
+/*
+ * Combine two ints as a long
+ */
+static int32_t join_value(int16_t top, int16_t bottom) {
+	int32_t top_as_32 = top;
+	int32_t bottom_as_32 = bottom;
+	return top_as_32 << 16 | bottom_as_32;
+}
+
+/*
+ * Send a message to javascript
+ */
+static bool send_to_phone(const uint32_t key, void *context, int32_t tophone) {
+
+	Tuplet tuplet = TupletInteger(key, tophone);
+
+	DictionaryIterator *iter;
+	app_message_outbox_begin(&iter);
+
+	if (iter == NULL) {
+		return false;
+	}
+
+	app_message_set_context(context);
+
+	dict_write_tuplet(iter, &tuplet);
+	dict_write_end(iter);
+
+	app_message_outbox_send();
+
+	return true;
+}
+
 
 /*
  * Fire alarm
@@ -70,34 +111,38 @@ void do_alarm() {
  */
 void set_smart_status() {
 	static char status_text[15];
-	bool sa_smart = (last_from != -1 && last_to != -1);
-	if (sa_smart) {
-	  snprintf(status_text, sizeof(status_text), "%02ld:%02ld - %02ld:%02ld", last_from >> 8, last_from & 0xff, last_to >> 8, last_to & 0xff);
+	if (get_config_data()->smart) {
+		snprintf(status_text, sizeof(status_text), "%02d:%02d - %02d:%02d", get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
 	} else {
-	  strncpy(status_text, "", sizeof(status_text));
+		strncpy(status_text, "", sizeof(status_text));
 	}
-	set_smart_status_on_screen(sa_smart, status_text);
+	set_smart_status_on_screen(get_config_data()->smart, status_text);
 }
 
 /*
  * Incoming message dropped handler
  */
 static void in_dropped_handler(AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Dropped: %d", reason);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "App Message Dropped: %d", reason);
 }
 
 /*
  * Outgoing message failed handler
  */
 static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "App Message Failed to Send: %d", reason);
-  show_comms_state(false);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "App Message Failed to Send: %d", reason);
+	show_comms_state(false);
+	app_message_set_context(clear_context);
 }
 
 /*
  * Outgoing message success handler
  */
 static void out_sent_handler(DictionaryIterator *iterator, void *context) {
+	if (context == point_context || context == base_context) {
+		app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
+	}
+	app_message_set_context(clear_context);
 	show_comms_state(true);
 }
 
@@ -105,54 +150,90 @@ static void out_sent_handler(DictionaryIterator *iterator, void *context) {
  * Incoming message handler
  */
 static void in_received_handler(DictionaryIterator *iter, void *context) {
-  Tuple *ctrl_tuple = dict_find(iter, CTRL);
-  Tuple *from_tuple = dict_find(iter, FROM);
-  Tuple *to_tuple = dict_find(iter, TO);
+	Tuple *ctrl_tuple = dict_find(iter, KEY_CTRL);
+	Tuple *from_tuple = dict_find(iter, KEY_FROM);
+	Tuple *to_tuple = dict_find(iter, KEY_TO);
 
-  if (ctrl_tuple) {
-	  show_comms_state(true);
-	  int32_t ctrl_value = ctrl_tuple->value->int32;
-	  if (ctrl_value & CTRL_ALARM) {
-		  fire_alarm();
-	  } 
-	  if (ctrl_value & CTRL_INVERSE) {
-		  invert_screen(true);
-	  }
-	  if (ctrl_value & CTRL_NORMAL) {
-		  invert_screen(false);
-	  }
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, "Ctrl received");
-  }
-  if (from_tuple) {
-  	  last_from = from_tuple->value->int32;
-	  set_smart_status();
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
-  }
-  if (to_tuple) {
-  	  last_to = to_tuple->value->int32;
-	  set_smart_status();
-	  APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
-  }
+	if (ctrl_tuple) {
+		show_comms_state(true);
+		int32_t ctrl_value = ctrl_tuple->value->int32;
+		if (ctrl_value & CTRL_RESET) {
+			reset_sleep_period(); // Phone trigger reset
+		}
+		if (ctrl_value & CTRL_INVERSE) {
+			last_invert = true;
+			set_config_data(last_from, last_to, last_invert);
+			invert_screen();
+		}
+		if (ctrl_value & CTRL_NORMAL) {
+			last_invert = false;
+			set_config_data(last_from, last_to, last_invert);
+			invert_screen();
+		}
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Ctrl received - version sent");
+		app_timer_register(SHORT_RETRY_MS, send_version, NULL);
+	}
+	if (from_tuple) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
+		last_from = from_tuple->value->int32;
+		set_config_data(last_from, last_to, last_invert);
+		set_smart_status();
+	}
+	if (to_tuple) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
+		last_to = to_tuple->value->int32;
+		set_config_data(last_from, last_to, last_invert);
+		set_smart_status();
+	}
 }
 
 /*
  * Send a message to javascript
  */
-static void send_cmd(uint16_t biggest) {
-	
-  Tuplet biggest_tuple = TupletInteger(BIGGEST, biggest);
+void send_point(uint8_t point, uint16_t biggest) {
+	int32_t to_phone = join_value(point, biggest);
+	send_to_phone(KEY_POINT, point_context, to_phone);
+}
 
-  DictionaryIterator *iter;
-  app_message_outbox_begin(&iter);
+/*
+ * Send a version to javascript (called via timer)
+ */
+void send_version(void *data) {
 
-  if (iter == NULL) {
-    return;
-  }
+	// Retry after a long delay
+	if (!bluetooth_connection_service_peek()) {
+		app_timer_register(LONG_RETRY_MS, send_version, NULL);
+		return;
+	}
 
-  dict_write_tuplet(iter, &biggest_tuple);
-  dict_write_end(iter);
+	// Send unless the dictionary is unavailable
+	if (!send_to_phone(KEY_VERSION, version_context, VERSION_INT)) {
+		APP_LOG(APP_LOG_LEVEL_WARNING, "Comms busy send_version re-timed");
+		app_timer_register(SHORT_RETRY_MS, send_version, NULL);
+	}
+}
 
-  app_message_outbox_send();
+/*
+ * Send a base to javascript
+ */
+void send_base(uint32_t base) {
+	send_to_phone(KEY_BASE, base_context, base);
+}
+
+/*
+ * Send a gone off to javascript
+ */
+void send_goneoff(void *data) {
+	// Retry after a long delay
+	if (!bluetooth_connection_service_peek()) {
+		app_timer_register(LONG_RETRY_MS, send_version, NULL);
+		return;
+	}
+
+	if (!send_to_phone(KEY_GONEOFF, goneoff_context, get_internal_data()->gone_off)) {
+		APP_LOG(APP_LOG_LEVEL_WARNING, "Comms busy send_base re-timed");
+		app_timer_register(SHORT_RETRY_MS, send_goneoff, NULL);
+	}
 }
 
 /*
@@ -160,21 +241,21 @@ static void send_cmd(uint16_t biggest) {
  */
 static void in_out_size_calc() {
 
-  Tuplet out_values[] = {
-        TupletInteger(BIGGEST, 0)
-  };
-        
-  outbound_size = dict_calc_buffer_size_from_tuplets(out_values, ARRAY_LENGTH(out_values)) + FUDGE;
-	
-  Tuplet in_values[] = {
-        TupletInteger(CTRL, 0),
-        TupletInteger(FROM, 0),
-        TupletInteger(TO, 0)
-  };
-        
-  inbound_size = dict_calc_buffer_size_from_tuplets(in_values, ARRAY_LENGTH(in_values)) + FUDGE;
-	
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "Inbound buffer: %ld, Outbound buffer: %ld", inbound_size, outbound_size);
+	Tuplet out_values[] = {
+			TupletInteger(KEY_POINT, 0)      // Only send one value at a time so this is right
+	};
+
+	outbound_size = dict_calc_buffer_size_from_tuplets(out_values, ARRAY_LENGTH(out_values)) + FUDGE;
+
+	Tuplet in_values[] = {
+			TupletInteger(KEY_CTRL, 0),
+			TupletInteger(KEY_FROM, 0),
+			TupletInteger(KEY_TO, 0)
+	};
+
+	inbound_size = dict_calc_buffer_size_from_tuplets(in_values, ARRAY_LENGTH(in_values)) + FUDGE;
+
+	APP_LOG(APP_LOG_LEVEL_INFO, "Inbound buffer: %ld, Outbound buffer: %ld", inbound_size, outbound_size);
 }
 
 /*
@@ -186,7 +267,7 @@ static void store_sample(uint16_t biggest) {
 	sample_sets++;
 	if (sample_sets > SAMPLES_IN_TWO_MINUTES) {
 		power_nap_check(two_minute_biggest);
-		send_cmd(two_minute_biggest);
+		server_processing(two_minute_biggest);
 		sample_sets = 0;
 		two_minute_biggest = 0;
 	}
@@ -206,6 +287,9 @@ static uint16_t scale_accel(int16_t val) {
  * Process accelerometer data
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
+
+	// Show it's working
+	toggle_zzz();
 
 	// Self monitor memory
 	last_accel = time(NULL);
@@ -269,16 +353,17 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
  * Reset the application to try and keep everything working
  */
 static void reset() {
-	  accel_data_service_unsubscribe();
-	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
-	  accel_data_service_subscribe(25, &accel_data_handler);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Restarting accelerometer");
+	accel_data_service_unsubscribe();
+	accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
+	accel_data_service_subscribe(25, accel_data_handler);
 }
 
 /*
  *	Self monitoring - if the accelerometer stop working reset the app so we can continue
  */
 void self_monitor() {
-	
+
 	// Get time
 	time_t now = time(NULL);
 
@@ -293,29 +378,36 @@ void self_monitor() {
  * Initialise comms and accelerometer
  */
 void init_morpheuz(Window *window) {
-	
-	  alarm_count = ALARM_MAX;
-	
-      last_accel = time(NULL);
-	
-	  // Register message handlers
-  	  app_message_register_inbox_received(in_received_handler);
-  	  app_message_register_inbox_dropped(in_dropped_handler);
-  	  app_message_register_outbox_failed(out_failed_handler);
-  	  app_message_register_outbox_sent(out_sent_handler);
-  
-	  // Size calc
-	  in_out_size_calc();
-	
-	  // Open buffers
-	  app_message_open(inbound_size, outbound_size);
 
-	  // Accelerometer
-	  accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
-	  accel_data_service_subscribe(25, &accel_data_handler);
+	alarm_count = ALARM_MAX;
 
-	  // Set click provider
-	  window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
+	last_accel = time(NULL);
+
+	// Register message handlers
+	app_message_register_inbox_received(in_received_handler);
+	app_message_register_inbox_dropped(in_dropped_handler);
+	app_message_register_outbox_failed(out_failed_handler);
+	app_message_register_outbox_sent(out_sent_handler);
+
+	// Size calc
+	in_out_size_calc();
+
+	// Open buffers
+	app_message_open(inbound_size, outbound_size);
+
+	// Ready to go
+	app_message_set_context(clear_context);
+
+	// Accelerometer
+	accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
+	accel_data_service_subscribe(25, accel_data_handler);
+
+	// Set click provider
+	window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
+
+	// Set the smart status
+	set_smart_status();
+
 }
 
 /*

@@ -94,10 +94,28 @@ static void select_long_up_handler(ClickRecognizerRef recognizer, void *context)
 	// Take no action
 }
 
+/**
+ * Up button click down handler (reset)
+ */
+static void up_long_down_handler(ClickRecognizerRef recognizer, void *context) {
+	// Begin again
+	reset_sleep_period();
+}
+
+/**
+ * Up button click up handler (reset)
+ */
+static void up_long_up_handler(ClickRecognizerRef recognizer, void *context) {
+	// Take no action
+}
+
+
+
 /*
  * Button config
  */
 void click_config_provider(Window *window) {
-  const uint16_t delay_ms = 1500;
-  window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, select_long_up_handler);
+	const uint16_t delay_ms = 1500;
+	window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, select_long_up_handler);
+	window_long_click_subscribe(BUTTON_ID_UP, delay_ms, up_long_down_handler, up_long_up_handler);
 }

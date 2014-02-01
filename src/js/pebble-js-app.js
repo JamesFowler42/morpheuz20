@@ -26,173 +26,46 @@
  * Constants
  */
 function mConst() {
-	var cfg = { version : "1.6",
-			limit: 54,
+	var cfg = { limit: 54,
 			divisor: 600000,
-			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view016.html", 
-			ctrlAlarm: 1,
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view017.html", 
+			ctrlReset: 1,
 			ctrlInverse: 2,
-			ctrlNormal: 4};
+			ctrlNormal: 4
+	};
 	return cfg;
-}
-/**
- * Various date functions
- */
-Date.prototype.format = function(format) //author: meizz
-{
-	var o = {
-			"M+" : this.getMonth()+1, //month
-			"d+" : this.getDate(),    //day
-			"h+" : this.getHours(),   //hour
-			"i+" : this.getHours() + 1,   //hour + 1
-			"m+" : this.getMinutes(), //minute
-			"s+" : this.getSeconds(), //second
-			"q+" : Math.floor((this.getMonth()+3)/3),  //quarter
-			"S" : this.getMilliseconds() //millisecond
-	}
-
-	if(/(y+)/.test(format)) format=format.replace(RegExp.$1,
-			(this.getFullYear()+"").substr(4 - RegExp.$1.length));
-	for(var k in o)if(new RegExp("("+ k +")").test(format))
-		format = format.replace(RegExp.$1,
-				RegExp.$1.length==1 ? o[k] :
-					("00"+ o[k]).substr((""+ o[k]).length));
-	return format;
-}
-
-Date.prototype.addDays = function (num) {
-	var value = this.valueOf();
-	value += 86400000 * num;
-	return new Date(value);
-}
-
-Date.prototype.addSeconds = function (num) {
-	var value = this.valueOf();
-	value += 1000 * num;
-	return new Date(value);
-}
-
-Date.prototype.addMinutes = function (num) {
-	var value = this.valueOf();
-	value += 60000 * num;
-	return new Date(value);
-}
-
-Date.prototype.addHours = function (num) {
-	var value = this.valueOf();
-	value += 3600000 * num;
-	return new Date(value);
 }
 
 /*
  * Reset log
  */
-function resetInfo() {
-	console.log("reset");
+function resetWithPreserve() {
+	console.log("resetWithPreserve");
+	var version = window.localStorage.getItem("version");
+	var fromhr = window.localStorage.getItem("fromhr");
+	var tohr = window.localStorage.getItem("tohr");
+	var frommin = window.localStorage.getItem("frommin");
+	var tomin = window.localStorage.getItem("tomin");
+	var smart = window.localStorage.getItem("smart");
+	var inverse = window.localStorage.getItem("inverse");
 	window.localStorage.clear();
-	var dayStr = new Date().format("ddMM");
-	var base = new Date().valueOf();
-	window.localStorage.setItem("day",dayStr);
-	window.localStorage.setItem("base", base);
+	window.localStorage.setItem("version",version);
+	window.localStorage.setItem("smart",smart);
+	window.localStorage.setItem("fromhr",fromhr);
+	window.localStorage.setItem("frommin",frommin);
+	window.localStorage.setItem("tohr",tohr);
+	window.localStorage.setItem("tomin",tomin);
+	window.localStorage.setItem("inverse", inverse);
 }
 
 /*
  * Store data returned from the watch
  */
-function storePointInfo(point) {
-
-	// Wrong day filter
-	var day = window.localStorage.getItem("day");
-	var today = new Date().format("ddMM");
-	var yesterday = new Date().addDays(-1).format("ddMM");
-	if (day != today && day != yesterday) {
-		return;
-	}
-
-	// Locate correct entry
-	var base = parseInt(window.localStorage.getItem("base"), 10);
-	var now = new Date().valueOf();
-	var offset = Math.floor((now - base) / mConst().divisor);
-	var entry = "P" + offset;
-
-	if (offset > mConst().limit) {
-		return;
-	}
-
-	// Now store entries
-	var valueStr = window.localStorage.getItem(entry);
-	if (valueStr == null) {
-		window.localStorage.setItem(entry,point);
-	} else {
-		var value = parseInt(valueStr, 10);
-		if (point > value) {
-			window.localStorage.setItem(entry,point);
-		}
-	}
-}
-
-/*
- * Perform smart alarm function
- */
-function smart_alarm(point) {
-
-	// Are we doing smart alarm thing
-	var smart = window.localStorage.getItem("smart");
-	if (smart == null || smart != 'Y')
-		return 0;
-
-	// Now has the alarm been sounded yet
-	var goneOff = window.localStorage.getItem("goneOff");
-	if (goneOff != null)
-		return 0;
-
-	// Work out the average
-	var total = 0;
-	var novals = 0;
-	for (var i=0; i < mConst().limit; i++) {
-		var entry = "P" + i;	
-		var valueStr = window.localStorage.getItem(entry);
-		if (valueStr != null) {
-			novals++;
-			total = total + parseInt(valueStr, 10);
-		} 
-	}
-	if (novals == 0)
-		novals = 1;
-	var threshold = total / novals;	
-
-	// Are we in the right timeframe
-	var fromhr = window.localStorage.getItem("fromhr");
-	var tohr = window.localStorage.getItem("tohr");
-	var frommin = window.localStorage.getItem("frommin");
-	var tomin = window.localStorage.getItem("tomin");
-
-	var from = fromhr + frommin;
-	var to = tohr + tomin;
-
-	var now = new Date().format("hhmm");
-
-	if (now >= from && now < to) {
-
-		// Has the current point exceeded the threshold value
-		if (point > threshold) {
-			window.localStorage.setItem("goneOff",now);
-			return 1;
-		} else {
-			return 0;
-		}
-	}
-
-	var before = new Date().addMinutes(-1).format("hhmm");
-	var after = new Date().addMinutes(1).format("hhmm");
-	// Or failing that have we hit the last minute we can
-	if (now == to || before == to || after == to) { 
-		window.localStorage.setItem("goneOff", now);
-		return 1;
-	}
-
-	// None of the above
-	return 0;
+function storePointInfo(point, biggest) {
+	var entry = "P" + point;
+	if (biggest == 0) // Don't pass -1 across the link but 0 really means null
+		biggest = -1; 
+	window.localStorage.setItem(entry,biggest);
 }
 
 /*
@@ -203,15 +76,17 @@ Pebble.addEventListener("ready",
 	console.log("ready");
 	var smartStr = window.localStorage.getItem("smart");
 	if (smartStr == null) {
-		resetInfo();
+		resetWithPreserve();
 		window.localStorage.setItem("smart","N");
 		window.localStorage.setItem("fromhr","6");
 		window.localStorage.setItem("frommin","30");
 		window.localStorage.setItem("tohr","7");
 		window.localStorage.setItem("tomin","15");
 		window.localStorage.setItem("inverse", "N");
-	}		
-	Pebble.sendAppMessage(returnSmartAlarmSettings());
+		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
+	} else {		
+		Pebble.sendAppMessage(returnSmartAlarmSettings(false));
+	}
 });
 
 /*
@@ -219,22 +94,52 @@ Pebble.addEventListener("ready",
  */
 Pebble.addEventListener("appmessage",
 		function(e) {
-	var point = parseInt(e.payload.biggest, 10);
-	console.log("appmessage biggest=" + point);
-	storePointInfo(point);
-	var alarm = smart_alarm(point);
-	if (alarm == 1) {
-		// Only reply to fire the alarm - no reply otherwise
-		Pebble.sendAppMessage({"ctrl": mConst().ctrlAlarm});
+	if (typeof e.payload.keyBase !== 'undefined') {
+		var base = parseInt(e.payload.keyBase, 10);
+		// Watch delivers local time in seconds...
+		base = (base + (new Date().getTimezoneOffset() * 60)) * 1000;
+		console.log("appmessage base=" + base);
+		resetWithPreserve();
+		window.localStorage.setItem("base",base);			
+	}
+	if (typeof e.payload.keyVersion !== 'undefined') {
+		var version = parseInt(e.payload.keyVersion, 10) / 10;
+		console.log("appmessage version=" + version);
+		window.localStorage.setItem("version",version);
+	}
+	if (typeof e.payload.keyGoneoff !== 'undefined') {
+		var goneoffNum = parseInt(e.payload.keyGoneoff, 10);
+		var goneoff = "N";
+		if (goneoffNum != 0) {
+			var hours = Math.floor(goneoffNum / 60);
+			var minutes = goneoffNum - hours * 60;
+			var hoursStr = String(hours);
+			var minutesStr = String(minutes);
+			if (hoursStr.length < 2)
+				hoursStr = "0" + hoursStr;
+			if (minutesStr.length < 2)
+				minutesStr = "0" + minutesStr;
+			goneoff = hoursStr + minutesStr;
+		}
+		console.log("appmessage goneoff=" + goneoff);
+		window.localStorage.setItem("goneOff", goneoff);	
+	}
+	if (typeof e.payload.keyPoint !== 'undefined') {
+		var point = parseInt(e.payload.keyPoint, 10);
+		var top = point >> 16;
+		var bottom = point & 0xFFFF;
+		console.log("appmessage point=" + top + ", biggest=" + bottom);
+		storePointInfo(top, bottom);
 	}
 });
 
 /*
  * Return smart alarm setting to watchface
  */
-function returnSmartAlarmSettings() {
+function returnSmartAlarmSettings(resetVal) {
 	var inverse = window.localStorage.getItem("inverse");
 	var ctrlValue = (inverse != null && inverse == "Y") ? mConst().ctrlInverse : mConst().ctrlNormal;
+	ctrlValue = resetVal ? ctrlValue + mConst().ctrlReset : ctrlValue;
 	var smartStr = window.localStorage.getItem("smart");
 	if (smartStr != null && smartStr == "Y") {
 		var fromhr = parseInt(window.localStorage.getItem("fromhr"), 10);
@@ -243,13 +148,13 @@ function returnSmartAlarmSettings() {
 		var tomin = parseInt(window.localStorage.getItem("tomin"), 10);
 		var from = (fromhr << 8) | frommin;
 		var to = (tohr << 8) | tomin;
-		return {"from": from,
-			"to": to, 
-			"ctrl": ctrlValue};
+		return {"keyFrom": from,
+			"keyTo": to, 
+			"keyCtrl": ctrlValue};
 	} else {
-		return {"from": -1,
-			"to": -1,
-			"ctrl": ctrlValue};
+		return {"keyFrom": -1,
+			"keyTo": -1,
+			"keyCtrl": ctrlValue};
 	}
 }
 
@@ -263,14 +168,14 @@ Pebble.addEventListener("webviewclosed",
 		return;
 	var dataElems = e.response.split("!");
 	if (dataElems[0] == "reset") {
-		resetInfo();
+		resetWithPreserve();
 		window.localStorage.setItem("smart",dataElems[1]);
 		window.localStorage.setItem("fromhr",dataElems[2]);
 		window.localStorage.setItem("frommin",dataElems[3]);
 		window.localStorage.setItem("tohr",dataElems[4]);
 		window.localStorage.setItem("tomin",dataElems[5]);
 		window.localStorage.setItem("inverse",dataElems[6]);
-		Pebble.sendAppMessage(returnSmartAlarmSettings());
+		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
 	}
 });
 
@@ -290,6 +195,7 @@ Pebble.addEventListener("showConfiguration",
 			graph = graph + valueStr + "!";
 		}
 	}
+	var version = window.localStorage.getItem("version");
 	var fromhr = window.localStorage.getItem("fromhr");
 	var tohr = window.localStorage.getItem("tohr");
 	var frommin = window.localStorage.getItem("frommin");
@@ -304,7 +210,7 @@ Pebble.addEventListener("showConfiguration",
 
 	var url = mConst().url + "?base=" + base + "&graph=" + graph + 
 	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin +
-	"&tomin=" + tomin + "&smart=" + smart + "&vers=" + mConst().version + 
+	"&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + 
 	"&goneoff=" + goneOff + "&inverse=" + inverse;
 	console.log("url=" + url);
 	Pebble.openURL(url);

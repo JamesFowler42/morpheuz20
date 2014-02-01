@@ -24,9 +24,13 @@
 
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
-	
-#define VERSION "1.6"
-	
+
+#define VERSION "1.7"
+#define VERSION_INT 17
+
+//#undef APP_LOG
+//#define APP_LOG(level, fmt, args...)
+
 #define FUDGE 4
 
 #define POWER_NAP_MINUTES 27
@@ -35,16 +39,19 @@
 
 #define POWER_NAP_SETTLE_TIME "Power nap"
 #define POWER_NAP_RUNNING     "Power nap: %d"
-	
+
 enum MorpKey {
-	BIGGEST = 1,
-    CTRL = 2,
-    FROM = 3,
-    TO = 4
+	KEY_POINT = 1,
+	KEY_CTRL = 2,
+	KEY_FROM = 3,
+	KEY_TO = 4,
+	KEY_BASE = 5,
+	KEY_VERSION = 6,
+	KEY_GONEOFF = 7
 };
 
 enum CtrlValues {
-	CTRL_ALARM = 1,
+	CTRL_RESET = 1,
 	CTRL_INVERSE = 2,
 	CTRL_NORMAL = 4
 };
@@ -54,13 +61,44 @@ enum CtrlValues {
 #define DISTRESS_WAIT_SEC 120
 #define WINDOW_HEIGHT 168
 
+#define PERSIST_MEMORY_KEY 12121
+#define PERSIST_CONFIG_KEY 12122
+#define PERSIST_MEMORY_MS (5*60*1000)
+#define PERSIST_CONFIG_MS 30000
+#define SHORT_RETRY_MS 200
+#define LONG_RETRY_MS 60000
+#define VERSION_DISPLAY_MS 5000
+
+#define LIMIT 54
+#define DIVISOR 600
+
+typedef struct {
+	uint32_t base;
+	uint16_t gone_off;
+	uint8_t highest_entry;
+	int8_t last_sent;
+	uint16_t points[LIMIT];
+	bool has_been_reset;
+} InternalData;
+
+typedef struct {
+	bool invert;
+	bool smart;
+	uint8_t fromhr;
+	uint8_t frommin;
+	uint8_t tohr;
+	uint8_t tomin;
+	uint32_t from;
+	uint32_t to;
+} ConfigData;
+
 void init_morpheuz(Window *window);
 void deinit_morpheuz();
 void do_alarm();
 void self_monitor();
 void reset_tick_service(bool second);
 void set_smart_status_on_screen(bool show_special_text, char *special_text);
-void invert_screen(bool inverse);
+void invert_screen();
 void power_nap_countdown();
 void power_nap_check(uint16_t biggest);
 void click_config_provider(Window *window);
@@ -68,5 +106,25 @@ void set_smart_status();
 void fire_alarm();
 void power_nap_reset();
 void show_comms_state(bool connected);
+void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert);
+void reset_sleep_period();
+void server_processing(uint16_t biggest);
+void transmit_next_data(void *data);
+void set_progress(uint8_t progress_percent);
+void send_base(uint32_t base);
+void send_goneoff(void *data);
+void send_version(void *data);
+void send_point(uint8_t point, uint16_t biggest);
+void set_progress_based_on_persist();
+void toggle_zzz();
+InternalData *get_internal_data();
+void read_internal_data();
+void save_internal_data();
+void show_record(bool recording);
+void save_config_data(void *data);
+void read_config_data();
+ConfigData *get_config_data();
+
+
 
 #endif /* MORPHEUZ_H_ */
