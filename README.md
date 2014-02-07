@@ -21,6 +21,12 @@ Notes
 
 2. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
 
+Version 1.8.0
+-------------
+* Back button requires long press
+* Clear onscreen notices
+* Alarm can be cancelled by pressing any button
+
 Version 1.7.0
 -------------
 * Runs without persistent connection to phone
