@@ -1,5 +1,5 @@
 {
-    "versionLabel": "1.7.0",
+    "versionLabel": "1.8.0",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -11,7 +11,7 @@
         "keyGoneoff": 7
     },
     "longName": "Morpheuz Sleep Monitor",
-    "versionCode": 17,
+    "versionCode": 18,
     "capabilities": [
         "configurable"
     ],
@@ -26,6 +26,12 @@
                 "characterRegex": "[0-9:. ]",
                 "type": "font",
                 "name": "FONT_DIGITAL_38",
+                "file": "fonts/axaxax-bd-1.ttf"
+            },
+            {
+                "characterRegex": "[a-zA-Z0-9.\\-! ]",
+                "type": "font",
+                "name": "FONT_DIGITAL_16",
                 "file": "fonts/axaxax-bd-1.ttf"
             },
             {
@@ -78,6 +84,11 @@
                 "type": "png",
                 "name": "ICON_RECORD",
                 "file": "images/record.png"
+            },
+            {
+                "type": "png",
+                "name": "NOTICE_BG",
+                "file": "images/notice.png"
             }
             
         ]

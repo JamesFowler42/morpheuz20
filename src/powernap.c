@@ -78,12 +78,14 @@ static void select_long_down_handler(ClickRecognizerRef recognizer, void *contex
 	if (power_nap_mode) {
 		// Turn off power nap
 		power_nap_reset();
+		show_notice(NOTICE_STOPPED_POWER_NAP);
 	} else {
 		// Turn on power nap
 		power_nap_mode = true;
 		power_nap_minute_count = POWER_NAP_MINUTES + 1;
 		power_nap_settle_count = POWER_NAP_SETTLE;
 		set_smart_status_on_screen(true, POWER_NAP_SETTLE_TIME);
+		show_notice(NOTICE_STARTED_POWER_NAP);
 	}
 }
 
@@ -109,7 +111,20 @@ static void up_long_up_handler(ClickRecognizerRef recognizer, void *context) {
 	// Take no action
 }
 
+/**
+ * Back button single click handler
+ */
+static void back_handler(ClickRecognizerRef recognizer, void *context) {
+	show_notice(NOTICE_HOLD_BACK_TO_LEAVE_MORPHEUZ);
+	cancel_alarm();
+}
 
+/*
+ * Single click handler on other buttons
+ */
+static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
+	cancel_alarm();
+}
 
 /*
  * Button config
@@ -118,4 +133,8 @@ void click_config_provider(Window *window) {
 	const uint16_t delay_ms = 1500;
 	window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, select_long_up_handler);
 	window_long_click_subscribe(BUTTON_ID_UP, delay_ms, up_long_down_handler, up_long_up_handler);
+	window_single_click_subscribe(BUTTON_ID_BACK, back_handler);
+	window_single_click_subscribe(BUTTON_ID_SELECT, single_click_handler);
+	window_single_click_subscribe(BUTTON_ID_UP, single_click_handler);
+	window_single_click_subscribe(BUTTON_ID_DOWN, single_click_handler);
 }

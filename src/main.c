@@ -26,7 +26,6 @@
 #include "morpheuz.h"
 
 static Window *window;
-static TextLayer *text_version_layer;
 static TextLayer *text_date_layer;
 static TextLayer *text_time_layer;
 static Layer *line_layer;
@@ -56,6 +55,16 @@ static Layer *zzz_layer;
 static GBitmap *zzz_icon;
 static BitmapLayer *record_layer;
 static GBitmap *record_bitmap;
+
+static Window *notice_window;
+static BitmapLayer *notice_layer;
+static GBitmap *notice_bitmap;
+static TextLayer *notice_text;
+static bool notice_showing = false;
+static GFont notice_font;
+static AppTimer *notice_timer;
+static char version_text[40];
+
 
 /*
  * Show the date
@@ -177,6 +186,8 @@ static void handle_deinit(void) {
 	gbitmap_destroy(image_progress);
 	gbitmap_destroy(zzz_icon);
 	gbitmap_destroy(record_bitmap);
+	gbitmap_destroy(notice_bitmap);
+	fonts_unload_custom_font(notice_font);
 	tick_timer_service_unsubscribe();
 	battery_state_service_unsubscribe();
 	bluetooth_connection_service_unsubscribe();
@@ -220,22 +231,61 @@ void show_record(bool recording) {
 }
 
 /*
- * Hide version after a few seconds
+ * Remove the notice window
  */
-void hide_version(void *data) {
-	layer_set_hidden(text_layer_get_layer(text_version_layer), true);
+static void hide_notice_layer(void *data) {
+	if (notice_showing) {
+		window_stack_remove(notice_window, true);
+		window_destroy(notice_window);
+		notice_showing = false;
+	}
 }
 
+/*
+ * Show the notice window
+ */
+void show_notice(char *message) {
+	if (notice_showing) {
+		text_layer_set_text(notice_text, message);
+		app_timer_cancel(notice_timer);
+		notice_timer = app_timer_register(NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
+		return;
+	}
+
+	notice_showing = true;
+	notice_window = window_create();
+	window_set_fullscreen(notice_window, true);
+	window_stack_push(notice_window, true /* Animated */);
+	window_set_background_color(notice_window, GColorBlack);
+
+	Layer *window_layer = window_get_root_layer(notice_window);
+
+	notice_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
+	layer_add_child(window_layer, bitmap_layer_get_layer(notice_layer));
+
+	bitmap_layer_set_bitmap(notice_layer, notice_bitmap);
+
+	notice_text = text_layer_create(GRect(17, 61, 112, 65));
+	text_layer_set_text_color(notice_text, GColorBlack);
+	text_layer_set_background_color(notice_text, GColorClear);
+	text_layer_set_text_alignment(notice_text, GTextAlignmentCenter);
+	text_layer_set_font(notice_text, notice_font);
+	layer_add_child(window_layer, text_layer_get_layer(notice_text));
+	text_layer_set_text(notice_text, message);
+
+	window_set_click_config_provider(notice_window, (ClickConfigProvider) click_config_provider);
+
+	notice_timer = app_timer_register(NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
+}
 
 /*
  * Startup
  */
 static void handle_init(void) {
-	static char version[] = VERSION;
 
 	window = window_create();
 	window_set_fullscreen(window, true);
-	window_stack_push(window, true /* Animated */);
+
 	window_set_background_color(window, GColorBlack);
 
 	Layer *window_layer = window_get_root_layer(window);
@@ -245,24 +295,16 @@ static void handle_init(void) {
 	logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
 	bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
 
-	text_version_layer = text_layer_create(GRect(144-30-2, 13, 28, 16));
-	text_layer_set_text_color(text_version_layer, GColorWhite);
-	text_layer_set_background_color(text_version_layer, GColorClear);
-	text_layer_set_text_alignment(text_version_layer, GTextAlignmentRight);
-	text_layer_set_font(text_version_layer, fonts_get_system_font(FONT_KEY_GOTHIC_14));
-	layer_add_child(window_layer, text_layer_get_layer(text_version_layer));
-	text_layer_set_text(text_version_layer, version);
-
 	text_date_layer = text_layer_create(GRect(8, 85, 144-8, WINDOW_HEIGHT-85));
 	text_layer_set_text_color(text_date_layer, GColorWhite);
-	text_layer_set_background_color(text_date_layer, GColorClear);
+	text_layer_set_background_color(text_date_layer, GColorBlack);
 	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
 
 	text_time_layer = text_layer_create(GRect(0, 109, 144, WINDOW_HEIGHT-109));
 	text_layer_set_text_color(text_time_layer, GColorWhite);
 	text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
-	text_layer_set_background_color(text_time_layer, GColorClear);
+	text_layer_set_background_color(text_time_layer, GColorBlack);
 	text_layer_set_font(text_time_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38)));
 	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
 
@@ -316,6 +358,15 @@ static void handle_init(void) {
 	layer_set_update_proc(zzz_layer, &zzz_layer_update_callback);
 	layer_add_child(window_layer, zzz_layer);
 
+	full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
+	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
+	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
+
+	notice_bitmap = gbitmap_create_with_resource(RESOURCE_ID_NOTICE_BG);
+	notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+
+	window_stack_push(window, true /* Animated */);
+
 	read_internal_data();
 	read_config_data();
 
@@ -327,17 +378,17 @@ static void handle_init(void) {
 
 	bluetooth_connection_service_subscribe(bluetooth_state_handler);
 
-	full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
-	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
-	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
-
 	invert_screen();
 
 	init_morpheuz(window);
 
-	// Hide the version after a bit
-	app_timer_register(VERSION_DISPLAY_MS, hide_version, NULL);
+	// Show the welcome and version
+	snprintf(version_text, sizeof(version_text), NOTICE_WELCOME, VERSION_TXT);
+	show_notice(version_text);
+
 }
+
+
 
 /*
  * Invert screen

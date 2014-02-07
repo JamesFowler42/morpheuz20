@@ -83,6 +83,7 @@ static bool send_to_phone(const uint32_t key, void *context, int32_t tophone) {
 void fire_alarm() {
 	alarm_count = 0;
 	reset_tick_service(true);
+	show_notice(NOTICE_TIME_TO_WAKE_UP);
 }
 
 /*
@@ -104,6 +105,22 @@ void do_alarm() {
 		reset_tick_service(false);
 		power_nap_reset();
 	}
+}
+
+/*
+ * Cancel alarm - if there is one
+ */
+void cancel_alarm() {
+
+	// Already hit the limit
+	if (alarm_count >= ALARM_MAX) {
+		return;
+	}
+
+	alarm_count = ALARM_MAX - 1;
+
+	show_notice(NOTICE_ALARM_CANCELLED);
+
 }
 
 /*
@@ -154,6 +171,18 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *from_tuple = dict_find(iter, KEY_FROM);
 	Tuple *to_tuple = dict_find(iter, KEY_TO);
 
+	if (from_tuple) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
+		last_from = from_tuple->value->int32;
+		set_config_data(last_from, last_to, last_invert);
+		set_smart_status();
+	}
+	if (to_tuple) {
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
+		last_to = to_tuple->value->int32;
+		set_config_data(last_from, last_to, last_invert);
+		set_smart_status();
+	}
 	if (ctrl_tuple) {
 		show_comms_state(true);
 		int32_t ctrl_value = ctrl_tuple->value->int32;
@@ -173,18 +202,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Ctrl received - version sent");
 		app_timer_register(SHORT_RETRY_MS, send_version, NULL);
 	}
-	if (from_tuple) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
-		last_from = from_tuple->value->int32;
-		set_config_data(last_from, last_to, last_invert);
-		set_smart_status();
-	}
-	if (to_tuple) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
-		last_to = to_tuple->value->int32;
-		set_config_data(last_from, last_to, last_invert);
-		set_smart_status();
-	}
+
 }
 
 /*
@@ -207,7 +225,7 @@ void send_version(void *data) {
 	}
 
 	// Send unless the dictionary is unavailable
-	if (!send_to_phone(KEY_VERSION, version_context, VERSION_INT)) {
+	if (!send_to_phone(KEY_VERSION, version_context, VERSION)) {
 		APP_LOG(APP_LOG_LEVEL_WARNING, "Comms busy send_version re-timed");
 		app_timer_register(SHORT_RETRY_MS, send_version, NULL);
 	}
@@ -415,5 +433,4 @@ void init_morpheuz(Window *window) {
  */
 void deinit_morpheuz() {
 	accel_data_service_unsubscribe();
-	app_focus_service_unsubscribe();
 }

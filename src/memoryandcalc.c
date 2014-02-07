@@ -29,6 +29,7 @@ static InternalData internal_data;
 static ConfigData config_data;
 bool save_config_requested = false;
 static InternalData orig_internal_data;
+static bool no_record_warning = true;
 
 /*
  * Calculate hour and minutes as mins
@@ -168,6 +169,11 @@ void reset_sleep_period() {
 	internal_data.last_sent = -1;
 	internal_data.has_been_reset = true;
 	show_record(false);
+	if (config_data.smart) {
+		show_notice(NOTICE_TIMER_RESET_ALARM);
+	} else {
+		show_notice(NOTICE_TIMER_RESET_NOALARM);
+	}
 }
 
 /*
@@ -181,6 +187,10 @@ static void store_point_info(uint16_t point) {
 
 	if (offset > LIMIT) {
 		show_record(false);
+		if (no_record_warning) {
+			show_notice(NOTICE_END_OF_RECORDING);
+			no_record_warning = false;
+		}
 		return;
 	}
 
@@ -307,6 +317,10 @@ void transmit_next_data(void *data) {
 void server_processing(uint16_t biggest) {
 	if (!internal_data.has_been_reset) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Not been reset. Will not store until reset pressed");
+		if (no_record_warning) {
+			show_notice(NOTICE_RESET_TO_START_USING);
+			no_record_warning = false;
+		}
 	}
 	store_point_info(biggest);
 	if (smart_alarm(biggest)) {

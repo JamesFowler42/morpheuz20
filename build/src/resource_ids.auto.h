@@ -12,6 +12,7 @@ typedef enum {
   INVALID_RESOURCE = 0,
   DEFAULT_MENU_ICON = 0, // Friendly synonym for use in `PBL_APP_INFO()` calls
   RESOURCE_ID_FONT_DIGITAL_38,
+  RESOURCE_ID_FONT_DIGITAL_16,
   RESOURCE_ID_ALARM_ICON,
   RESOURCE_ID_IMAGE_ICON,
   RESOURCE_ID_BATTERY_CHARGE,
@@ -22,11 +23,13 @@ typedef enum {
   RESOURCE_ID_IMAGE_PROGRESS,
   RESOURCE_ID_ICON_ZZZ,
   RESOURCE_ID_ICON_RECORD,
+  RESOURCE_ID_NOTICE_BG,
 
 } ResourceId;
 
 static const uint32_t resource_crc_table[] = {
   3670241364,
+  3378429592,
   3537364773,
   1756744976,
   4179654150,
@@ -37,5 +40,6 @@ static const uint32_t resource_crc_table[] = {
   2650465087,
   529175997,
   2853105637,
+  49914570,
 };
 

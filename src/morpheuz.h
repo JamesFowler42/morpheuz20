@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION "1.7"
-#define VERSION_INT 17
+#define VERSION 18
+#define VERSION_TXT "1.8"
 
 //#undef APP_LOG
 //#define APP_LOG(level, fmt, args...)
@@ -39,6 +39,16 @@
 
 #define POWER_NAP_SETTLE_TIME "Power nap"
 #define POWER_NAP_RUNNING     "Power nap: %d"
+#define NOTICE_TIMER_RESET_ALARM "Sleep well!\nChart reset\nAlarm set"
+#define NOTICE_TIMER_RESET_NOALARM "Sleep well!\nChart reset\nNO ALARM"
+#define NOTICE_STARTED_POWER_NAP "\nPower nap\nstarted"
+#define NOTICE_STOPPED_POWER_NAP "\nPower nap\nstopped"
+#define NOTICE_TIME_TO_WAKE_UP "\nTime to\nwake up!"
+#define NOTICE_HOLD_BACK_TO_LEAVE_MORPHEUZ "Hold back\nbutton\nto close\nMorpheuz"
+#define NOTICE_WELCOME "Morpheuz\nSleep Monitor\nVersion %s"
+#define NOTICE_ALARM_CANCELLED "\nAlarm\nCancelled"
+#define NOTICE_END_OF_RECORDING "End of recording\nReset to start again"
+#define NOTICE_RESET_TO_START_USING "Reset to start\nrecording"
 
 enum MorpKey {
 	KEY_POINT = 1,
@@ -68,6 +78,7 @@ enum CtrlValues {
 #define SHORT_RETRY_MS 200
 #define LONG_RETRY_MS 60000
 #define VERSION_DISPLAY_MS 5000
+#define NOTICE_DISPLAY_MS 7000
 
 #define LIMIT 54
 #define DIVISOR 600
@@ -124,7 +135,7 @@ void show_record(bool recording);
 void save_config_data(void *data);
 void read_config_data();
 ConfigData *get_config_data();
-
-
+void show_notice(char *message);
+void cancel_alarm();
 
 #endif /* MORPHEUZ_H_ */
