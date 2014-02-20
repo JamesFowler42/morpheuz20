@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 18
-#define VERSION_TXT "1.8"
+#define VERSION 19
+#define VERSION_TXT "1.9"
 
 //#undef APP_LOG
 //#define APP_LOG(level, fmt, args...)
@@ -36,6 +36,8 @@
 #define POWER_NAP_MINUTES 27
 #define POWER_NAP_SETTLE 2
 #define POWER_NAP_SETTLE_THRESHOLD 1000
+#define SNOOZE_PERIOD_MS (5*60*1000)
+#define FLASH_ALARM_MS 2000
 
 #define POWER_NAP_SETTLE_TIME "Power nap"
 #define POWER_NAP_RUNNING     "Power nap: %d"
@@ -44,11 +46,11 @@
 #define NOTICE_STARTED_POWER_NAP "\nPower nap\nstarted"
 #define NOTICE_STOPPED_POWER_NAP "\nPower nap\nstopped"
 #define NOTICE_TIME_TO_WAKE_UP "\nTime to\nwake up!"
-#define NOTICE_HOLD_BACK_TO_LEAVE_MORPHEUZ "Hold back\nbutton\nto close\nMorpheuz"
 #define NOTICE_WELCOME "Morpheuz\nSleep Monitor\nVersion %s"
 #define NOTICE_ALARM_CANCELLED "\nAlarm\nCancelled"
 #define NOTICE_END_OF_RECORDING "End of recording\nReset to start again"
 #define NOTICE_RESET_TO_START_USING "Reset to start\nrecording"
+#define NOTICE_SNOOZE_ACTIVATED "\nSnooze\n5 minutes"
 
 enum MorpKey {
 	KEY_POINT = 1,
@@ -67,7 +69,6 @@ enum CtrlValues {
 };
 
 #define SAMPLES_IN_TWO_MINUTES 48
-#define ALARM_MAX 30
 #define DISTRESS_WAIT_SEC 120
 #define WINDOW_HEIGHT 168
 
@@ -77,8 +78,8 @@ enum CtrlValues {
 #define PERSIST_CONFIG_MS 30000
 #define SHORT_RETRY_MS 200
 #define LONG_RETRY_MS 60000
-#define VERSION_DISPLAY_MS 5000
 #define NOTICE_DISPLAY_MS 7000
+#define KEYBOARD_DISPLAY_MS 7000
 
 #define LIMIT 54
 #define DIVISOR 600
@@ -105,16 +106,13 @@ typedef struct {
 
 void init_morpheuz(Window *window);
 void deinit_morpheuz();
-void do_alarm();
 void self_monitor();
-void reset_tick_service(bool second);
 void set_smart_status_on_screen(bool show_special_text, char *special_text);
 void invert_screen();
 void power_nap_countdown();
 void power_nap_check(uint16_t biggest);
 void click_config_provider(Window *window);
 void set_smart_status();
-void fire_alarm();
 void power_nap_reset();
 void show_comms_state(bool connected);
 void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert);
@@ -136,6 +134,11 @@ void save_config_data(void *data);
 void read_config_data();
 ConfigData *get_config_data();
 void show_notice(char *message);
-void cancel_alarm();
+bool cancel_alarm();
+void fire_alarm();
+bool snooze_alarm();
+void init_alarm();
+void show_keyboard();
+void set_alarm_icon(bool show_icon);
 
 #endif /* MORPHEUZ_H_ */

@@ -27,7 +27,7 @@
 
 static uint16_t two_minute_biggest = 0;
 static uint8_t sample_sets = 0;
-static uint8_t alarm_count;
+
 static time_t last_accel;
 
 static int32_t last_from = -1;
@@ -77,51 +77,7 @@ static bool send_to_phone(const uint32_t key, void *context, int32_t tophone) {
 }
 
 
-/*
- * Fire alarm
- */
-void fire_alarm() {
-	alarm_count = 0;
-	reset_tick_service(true);
-	show_notice(NOTICE_TIME_TO_WAKE_UP);
-}
 
-/*
- * Do the alarm if needed
- */
-void do_alarm() {
-
-	// Already hit the limit
-	if (alarm_count >= ALARM_MAX) {
-		return;
-	}
-
-	// Vibrate
-	vibes_long_pulse();
-	alarm_count++;
-
-	// Reset timers and powernap if needed
-	if (alarm_count >= ALARM_MAX) {
-		reset_tick_service(false);
-		power_nap_reset();
-	}
-}
-
-/*
- * Cancel alarm - if there is one
- */
-void cancel_alarm() {
-
-	// Already hit the limit
-	if (alarm_count >= ALARM_MAX) {
-		return;
-	}
-
-	alarm_count = ALARM_MAX - 1;
-
-	show_notice(NOTICE_ALARM_CANCELLED);
-
-}
 
 /*
  * Set the on-screen status text
@@ -140,14 +96,14 @@ void set_smart_status() {
  * Incoming message dropped handler
  */
 static void in_dropped_handler(AppMessageResult reason, void *context) {
-	APP_LOG(APP_LOG_LEVEL_ERROR, "App Message Dropped: %d", reason);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "App Msg Drop %d", reason);
 }
 
 /*
  * Outgoing message failed handler
  */
 static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-	APP_LOG(APP_LOG_LEVEL_ERROR, "App Message Failed to Send: %d", reason);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "App Msg Send Fail %d", reason);
 	show_comms_state(false);
 	app_message_set_context(clear_context);
 }
@@ -172,13 +128,13 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 	Tuple *to_tuple = dict_find(iter, KEY_TO);
 
 	if (from_tuple) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "From received");
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Got from");
 		last_from = from_tuple->value->int32;
 		set_config_data(last_from, last_to, last_invert);
 		set_smart_status();
 	}
 	if (to_tuple) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "To received");
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Got to");
 		last_to = to_tuple->value->int32;
 		set_config_data(last_from, last_to, last_invert);
 		set_smart_status();
@@ -199,7 +155,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 			set_config_data(last_from, last_to, last_invert);
 			invert_screen();
 		}
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Ctrl received - version sent");
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Got ctrl. Vers sent");
 		app_timer_register(SHORT_RETRY_MS, send_version, NULL);
 	}
 
@@ -249,7 +205,7 @@ void send_goneoff(void *data) {
 	}
 
 	if (!send_to_phone(KEY_GONEOFF, goneoff_context, get_internal_data()->gone_off)) {
-		APP_LOG(APP_LOG_LEVEL_WARNING, "Comms busy send_base re-timed");
+		APP_LOG(APP_LOG_LEVEL_WARNING, "Comms busy send_goneoff re-timed");
 		app_timer_register(SHORT_RETRY_MS, send_goneoff, NULL);
 	}
 }
@@ -273,7 +229,7 @@ static void in_out_size_calc() {
 
 	inbound_size = dict_calc_buffer_size_from_tuplets(in_values, ARRAY_LENGTH(in_values)) + FUDGE;
 
-	APP_LOG(APP_LOG_LEVEL_INFO, "Inbound buffer: %ld, Outbound buffer: %ld", inbound_size, outbound_size);
+	APP_LOG(APP_LOG_LEVEL_INFO, "In buff %ld, Out buff %ld", inbound_size, outbound_size);
 }
 
 /*
@@ -360,7 +316,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 			vibrated = true;
 	}
 	if (vibrated) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Discarded %d - vibration", biggest);
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "Vibe ignore %d", biggest);
 		store_sample(0); // Keep to timeframe but don't let large value disrupt
 	} else {
 		store_sample(biggest);
@@ -371,7 +327,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
  * Reset the application to try and keep everything working
  */
 static void reset() {
-	APP_LOG(APP_LOG_LEVEL_ERROR, "Restarting accelerometer");
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Restart accel");
 	accel_data_service_unsubscribe();
 	accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 	accel_data_service_subscribe(25, accel_data_handler);
@@ -397,7 +353,7 @@ void self_monitor() {
  */
 void init_morpheuz(Window *window) {
 
-	alarm_count = ALARM_MAX;
+	init_alarm();
 
 	last_accel = time(NULL);
 

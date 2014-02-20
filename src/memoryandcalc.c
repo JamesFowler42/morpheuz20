@@ -43,15 +43,15 @@ static uint32_t toMins(uint32_t hour, uint32_t min) {
  */
 void save_internal_data() {
 	if (memcmp(&orig_internal_data, &internal_data, sizeof(internal_data)) != 0) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data (size=%d)",  sizeof(internal_data));
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data (%d)",  sizeof(internal_data));
 		int written = persist_write_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
 		if (written != sizeof(internal_data)) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "save_internal_data did not write (%d returned)", written);
+			APP_LOG(APP_LOG_LEVEL_ERROR, "save_internal_data error (%d)", written);
 		} else {
 			memcpy (&orig_internal_data, &internal_data, sizeof(internal_data));
 		}
 	} else {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data found no change to internal data, so avoided save");
+		APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data no change");
 	}
 }
 
@@ -102,10 +102,10 @@ InternalData *get_internal_data() {
  * Save the config data structure
  */
 void save_config_data(void *data) {
-	APP_LOG(APP_LOG_LEVEL_DEBUG, "save_config_data (size=%d)",  sizeof(config_data));
+	APP_LOG(APP_LOG_LEVEL_DEBUG, "save_config_data (%d)",  sizeof(config_data));
 	int written = persist_write_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
 	if (written != sizeof(config_data)) {
-		APP_LOG(APP_LOG_LEVEL_ERROR, "save_config_data did not write (%d returned)", written);
+		APP_LOG(APP_LOG_LEVEL_ERROR, "save_config_data error (%d)", written);
 	}
 	save_config_requested = false;
 }
@@ -117,7 +117,7 @@ void read_config_data() {
 	if (persist_exists(PERSIST_CONFIG_KEY)) {
 		int read = persist_read_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
 		if (read != sizeof(config_data)) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "read_config_data read wrong size (%d returned)", read);
+			APP_LOG(APP_LOG_LEVEL_ERROR, "read_config_data wrong size (%d)", read);
 			memset(&config_data, 0, sizeof(config_data));
 		}
 	} else {
@@ -306,7 +306,7 @@ void transmit_next_data(void *data) {
 	}
 
 	// Transmit next load of data
-	APP_LOG(APP_LOG_LEVEL_INFO, "transmit_next_data catching up. %d=%d", internal_data.last_sent, internal_data.highest_entry);
+	APP_LOG(APP_LOG_LEVEL_INFO, "transmit_next_data %d<%d", internal_data.last_sent, internal_data.highest_entry);
 	internal_data.last_sent++;
 	send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent]);
 }
@@ -316,7 +316,7 @@ void transmit_next_data(void *data) {
  */
 void server_processing(uint16_t biggest) {
 	if (!internal_data.has_been_reset) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Not been reset. Will not store until reset pressed");
+		APP_LOG(APP_LOG_LEVEL_INFO, "Not reset");
 		if (no_record_warning) {
 			show_notice(NOTICE_RESET_TO_START_USING);
 			no_record_warning = false;

@@ -24,12 +24,13 @@ typedef enum {
   RESOURCE_ID_ICON_ZZZ,
   RESOURCE_ID_ICON_RECORD,
   RESOURCE_ID_NOTICE_BG,
+  RESOURCE_ID_KEYBOARD_BG,
 
 } ResourceId;
 
 static const uint32_t resource_crc_table[] = {
   3670241364,
-  3378429592,
+  1061910085,
   3537364773,
   1756744976,
   4179654150,
@@ -41,5 +42,6 @@ static const uint32_t resource_crc_table[] = {
   529175997,
   2853105637,
   49914570,
+  2151006145,
 };
 

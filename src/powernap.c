@@ -114,16 +114,31 @@ static void up_long_up_handler(ClickRecognizerRef recognizer, void *context) {
 /**
  * Back button single click handler
  */
-static void back_handler(ClickRecognizerRef recognizer, void *context) {
-	show_notice(NOTICE_HOLD_BACK_TO_LEAVE_MORPHEUZ);
-	cancel_alarm();
+static void back_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+	show_keyboard();
 }
 
 /*
- * Single click handler on other buttons
+ * Single click handler on down button
  */
-static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
-	cancel_alarm();
+static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+	if (!snooze_alarm())
+		show_keyboard();
+}
+
+/*
+ * Single click handler on select button
+ */
+static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+	show_keyboard();
+}
+
+/*
+ * Single click handler on up button
+ */
+static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+	if (!cancel_alarm())
+		show_keyboard();
 }
 
 /*
@@ -133,8 +148,8 @@ void click_config_provider(Window *window) {
 	const uint16_t delay_ms = 1500;
 	window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, select_long_up_handler);
 	window_long_click_subscribe(BUTTON_ID_UP, delay_ms, up_long_down_handler, up_long_up_handler);
-	window_single_click_subscribe(BUTTON_ID_BACK, back_handler);
-	window_single_click_subscribe(BUTTON_ID_SELECT, single_click_handler);
-	window_single_click_subscribe(BUTTON_ID_UP, single_click_handler);
-	window_single_click_subscribe(BUTTON_ID_DOWN, single_click_handler);
+	window_single_click_subscribe(BUTTON_ID_BACK, back_single_click_handler);
+	window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
+	window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
+	window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
 }

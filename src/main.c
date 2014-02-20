@@ -26,45 +26,57 @@
 #include "morpheuz.h"
 
 static Window *window;
+static Window *notice_window;
+static Window *keyboard_window;
+
+static Layer *line_layer;
+static Layer *progress_layer;
+static Layer *zzz_layer;
+static Layer *battery_layer;
+
 static TextLayer *text_date_layer;
 static TextLayer *text_time_layer;
-static Layer *line_layer;
+static TextLayer *notice_text;
+static TextLayer *keyboard_time_text;
+
 static BitmapLayer *logo_layer;
+static BitmapLayer *bluetooth_layer;
+static BitmapLayer *comms_layer;
+static BitmapLayer *record_layer;
+static BitmapLayer *notice_layer;
+static BitmapLayer *keyboard_layer;
+static BitmapLayer *alarm_icon_layer;
+static BitmapLayer *alarm_layer;
+
+static InverterLayer *full_inverse_layer;
+static InverterLayer *keyboard_inverter;
+
+static GBitmap *alarm_bitmap;
+static GBitmap *icon_battery;
+static GBitmap *icon_battery_charge;
+static GBitmap *image_progress;
+static GBitmap *zzz_icon;
+static GBitmap *record_bitmap;
+static GBitmap *notice_bitmap;
+static GBitmap *keyboard_bitmap;
 static GBitmap *logo_bitmap = NULL;
 static GBitmap *bluetooth_bitmap = NULL;
 static GBitmap *comms_bitmap = NULL;
-static bool g_second = false;
+
+static GFont notice_font;
+static GFont time_font;
+
+static AppTimer *notice_timer;
+
 static uint8_t battery_level;
 static bool battery_plugged;
-static InverterLayer *full_inverse_layer;
-static BitmapLayer *bluetooth_layer;
-static BitmapLayer *comms_layer;
-static GBitmap *icon_battery;
-static GBitmap *icon_battery_charge;
-static Layer *battery_layer;
 static bool g_show_special_text = false;
-static BitmapLayer *alarm_layer;
-static GBitmap *alarm_bitmap;
 static char date_text[] = "Xxxxxxxxx 00   ";
-//00:00 - 00:00
-
-static Layer *progress_layer;
+//                         00:00 - 00:00
 static uint8_t progress_level;
-static GBitmap *image_progress;
-static Layer *zzz_layer;
-static GBitmap *zzz_icon;
-static BitmapLayer *record_layer;
-static GBitmap *record_bitmap;
-
-static Window *notice_window;
-static BitmapLayer *notice_layer;
-static GBitmap *notice_bitmap;
-static TextLayer *notice_text;
 static bool notice_showing = false;
-static GFont notice_font;
-static AppTimer *notice_timer;
 static char version_text[40];
-
+static bool keyboard_showing = false;
 
 /*
  * Show the date
@@ -154,7 +166,7 @@ static void line_layer_update_callback(Layer *layer, GContext* ctx) {
  */
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 	// Need to be static because they're used by the system later.
-	static char time_text[] = "00:00";
+	static char time_text[] = "00:00  ";
 
 	if (!g_show_special_text) {
 		show_date();
@@ -165,10 +177,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 	self_monitor();
 
-	do_alarm();
-
 	power_nap_countdown();
-
 }
 
 /*
@@ -177,6 +186,20 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 static void handle_deinit(void) {
 	save_config_data(NULL);
 	save_internal_data();
+	window_stack_remove(window, true);
+	inverter_layer_destroy(full_inverse_layer);
+	layer_destroy(zzz_layer);
+	layer_destroy(progress_layer);
+	bitmap_layer_destroy(alarm_icon_layer);
+	bitmap_layer_destroy(record_layer);
+	bitmap_layer_destroy(comms_layer);
+	bitmap_layer_destroy(bluetooth_layer);
+	layer_destroy(battery_layer);
+	layer_destroy(line_layer);
+	bitmap_layer_destroy(alarm_layer);
+	text_layer_destroy(text_time_layer);
+	text_layer_destroy(text_date_layer);
+	bitmap_layer_destroy(logo_layer);
 	gbitmap_destroy(icon_battery);
 	gbitmap_destroy(icon_battery_charge);
 	gbitmap_destroy(logo_bitmap);
@@ -187,11 +210,15 @@ static void handle_deinit(void) {
 	gbitmap_destroy(zzz_icon);
 	gbitmap_destroy(record_bitmap);
 	gbitmap_destroy(notice_bitmap);
+	gbitmap_destroy(keyboard_bitmap);
 	fonts_unload_custom_font(notice_font);
+	fonts_unload_custom_font(time_font);
 	tick_timer_service_unsubscribe();
 	battery_state_service_unsubscribe();
 	bluetooth_connection_service_unsubscribe();
 	deinit_morpheuz();
+	window_destroy(window);
+	APP_LOG(APP_LOG_LEVEL_INFO, "clean stop");
 }
 
 /*
@@ -206,6 +233,13 @@ static void bluetooth_state_handler(bool connected) {
  */
 void show_comms_state(bool connected) {
 	layer_set_hidden(bitmap_layer_get_layer(comms_layer), !connected);
+}
+
+/*
+ * Alarm status icon
+ */
+void set_alarm_icon(bool show_icon) {
+	layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), !show_icon);
 }
 
 /*
@@ -236,6 +270,8 @@ void show_record(bool recording) {
 static void hide_notice_layer(void *data) {
 	if (notice_showing) {
 		window_stack_remove(notice_window, true);
+		text_layer_destroy(notice_text);
+		bitmap_layer_destroy(notice_layer);
 		window_destroy(notice_window);
 		notice_showing = false;
 	}
@@ -245,6 +281,11 @@ static void hide_notice_layer(void *data) {
  * Show the notice window
  */
 void show_notice(char *message) {
+
+	// It's night - want to see message
+	light_enable_interaction();
+
+	// Already showing - change message
 	if (notice_showing) {
 		text_layer_set_text(notice_text, message);
 		app_timer_cancel(notice_timer);
@@ -252,6 +293,7 @@ void show_notice(char *message) {
 		return;
 	}
 
+	// Bring up notice
 	notice_showing = true;
 	notice_window = window_create();
 	window_set_fullscreen(notice_window, true);
@@ -279,6 +321,71 @@ void show_notice(char *message) {
 }
 
 /*
+ * Remove the keyboard window
+ */
+static void hide_keyboard_layer(void *data) {
+	if (keyboard_showing) {
+		window_stack_remove(keyboard_window, true);
+		if (get_config_data()->invert) {
+			inverter_layer_destroy(keyboard_inverter);
+		}
+		text_layer_destroy(keyboard_time_text);
+		bitmap_layer_destroy(keyboard_layer);
+		window_destroy(keyboard_window);
+		keyboard_showing = false;
+	}
+}
+
+/*
+ * Show the keyboard window
+ */
+void show_keyboard() {
+
+	// Need to be static because they're used by the system later.
+	static char time_text[] = "00:00  ";
+
+	// It's night - want to see message
+	light_enable_interaction();
+
+	// Already showing - change message
+	if (keyboard_showing) {
+		return;
+	}
+
+	// Bring up notice
+	keyboard_showing = true;
+	keyboard_window = window_create();
+	window_set_fullscreen(keyboard_window, true);
+	window_stack_push(keyboard_window, true /* Animated */);
+	window_set_background_color(keyboard_window, GColorBlack);
+
+	Layer *window_layer = window_get_root_layer(keyboard_window);
+
+	keyboard_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
+	layer_add_child(window_layer, bitmap_layer_get_layer(keyboard_layer));
+
+	bitmap_layer_set_bitmap(keyboard_layer, keyboard_bitmap);
+
+	keyboard_time_text = text_layer_create(GRect(0, 0, 144, 30));
+	text_layer_set_text_color(keyboard_time_text, GColorWhite);
+	text_layer_set_background_color(keyboard_time_text, GColorBlack);
+	text_layer_set_text_alignment(keyboard_time_text, GTextAlignmentCenter);
+	text_layer_set_font(keyboard_time_text, notice_font);
+	layer_add_child(window_layer, text_layer_get_layer(keyboard_time_text));
+	clock_copy_time_string	(time_text, sizeof(time_text));
+	text_layer_set_text(keyboard_time_text, time_text);
+
+	if (get_config_data()->invert) {
+		keyboard_inverter = inverter_layer_create(GRect(0, 0, 144, 168));
+		layer_add_child(window_layer, inverter_layer_get_layer(keyboard_inverter));
+	}
+
+	window_set_click_config_provider(keyboard_window, (ClickConfigProvider) click_config_provider);
+
+	app_timer_register(KEYBOARD_DISPLAY_MS, hide_keyboard_layer, NULL);
+}
+
+/*
  * Startup
  */
 static void handle_init(void) {
@@ -301,11 +408,12 @@ static void handle_init(void) {
 	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
 
+	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
 	text_time_layer = text_layer_create(GRect(0, 109, 144, WINDOW_HEIGHT-109));
 	text_layer_set_text_color(text_time_layer, GColorWhite);
 	text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
 	text_layer_set_background_color(text_time_layer, GColorBlack);
-	text_layer_set_font(text_time_layer, fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38)));
+	text_layer_set_font(text_time_layer, time_font);
 	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
 
 	alarm_layer = bitmap_layer_create(GRect(11, 98, 8, 12));
@@ -347,6 +455,11 @@ static void handle_init(void) {
 	bitmap_layer_set_bitmap(record_layer, record_bitmap);
 	layer_set_hidden(bitmap_layer_get_layer(record_layer), true);
 
+	alarm_icon_layer = bitmap_layer_create(GRect(144-26-14-10-16-15, 5, 10, 12));
+	layer_add_child(window_layer, bitmap_layer_get_layer(alarm_icon_layer));
+	bitmap_layer_set_bitmap(alarm_icon_layer, alarm_bitmap);
+	layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), true);
+
 	image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
 	progress_level = 0;
 	progress_layer = layer_create(GRect(8,153,128,3));
@@ -364,6 +477,7 @@ static void handle_init(void) {
 
 	notice_bitmap = gbitmap_create_with_resource(RESOURCE_ID_NOTICE_BG);
 	notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+	keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG);
 
 	window_stack_push(window, true /* Animated */);
 
@@ -395,20 +509,6 @@ static void handle_init(void) {
  */
 void invert_screen() {
 	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), !get_config_data()->invert);
-}
-
-/*
- * Shorten the tick interval whilst the alarm is going off
- */
-void reset_tick_service(bool second) {
-	if (second == g_second)
-		return;
-	g_second = second;
-	tick_timer_service_unsubscribe();
-	if (second)
-		tick_timer_service_subscribe(SECOND_UNIT, handle_minute_tick);
-	else
-		tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 }
 
 /*
