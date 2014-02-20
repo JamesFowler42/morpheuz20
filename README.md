@@ -21,6 +21,13 @@ Notes
 
 2. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
 
+Version 1.9.0
+-------------
+* Incremental alarm
+* Snooze
+* Button indication
+* Removed minor memory leak
+
 Version 1.8.0
 -------------
 * Back button requires long press
