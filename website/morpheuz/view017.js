@@ -410,6 +410,23 @@ for (var i = 0; i < splitup.length; i++) {
 	timePoint = timePoint.addMinutes(mConst().sampleIntervalMins);
 }
 
+// Add smart alarm info into CSV data
+if (smartOn) {
+	body = body + 
+               fromhr + ':' + frommin + ',START%0D%0A' +
+               tohr + ':' + tomin + ',END%0D%0A';
+	copyBody = copyBody + 
+               fromhr + ':' + frommin + ',START\r\n' +
+               tohr + ':' + tomin + ',END\r\n';
+	if (goneoff != 'N') {
+	   var goneoffstr = goneoff.substr(0,2) + ':' + goneoff.substr(2,2);
+	    body = body + 
+                 goneoffstr + ',ALARM%0D%0A';
+	    copyBody = copyBody + 
+                 goneoffstr + ',ALARM\r\n';
+	}
+}
+
 var mailto = 'mailto:?subject=Morpheuz-' + new Date(base).format('yyyy-MM-dd')
 		+ '.csv' + body;
 
