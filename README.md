@@ -11,7 +11,7 @@ No data is stored anywhere other than on the phone. Data is sent to the configur
 
 It's simple to install. There is no iOS or Android app to buy, nothing to sign up for and it's free.
 
-Graph page: http://raw.github.com/JamesFowler42/morpheuz20/master/config-screen.png
+Please visit http://www.morpheuz.net for further information.
 
 Please enjoy and let me know how you get on.
 
