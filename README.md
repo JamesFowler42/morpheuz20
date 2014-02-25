@@ -23,10 +23,18 @@ Notes
 
 Version 1.9.0
 -------------
-* Incremental alarm
-* Snooze
-* Button indication
-* Removed minor memory leak
+* Improved alarm icons.
+* Removed battery wasting zzz. If the accelerometer stops then a single attempt will be made to re-register with it and then a full screen message with clear advice will be displayed.
+* Alarm snooze is now 9 minutes (standard on most alarm clocks I’m told - also the same as iOS) rather than the 5 I previously set.
+* Fixed the 12/24 hour problem when set for 12 the time was displayed wrongly.
+* Increased the time font size on the button hint screen - so as pressing a button in the middle of the night shows the time as well as giving a hint as to which buttons are which.
+* Pressing any button again on the button hint screen makes it go away again.
+* New button hint screen appears when a button is single pressed.
+* Alarm is ‘progressive’ starting with a vibe, delay sequence and getting progressively more aggressive. The alarm repeats 3 times with a 1 minute delay between repeats.
+* Alarm can be cancelled by a single press of the up button (matches the alarm app)
+* Alarm can be snoozed by a single press of the down button (matches the alarm app)
+* Alarm indicator in the top bar.
+* Fixed a minor memory leak introduced in earlier releases.
 
 Version 1.8.0
 -------------
