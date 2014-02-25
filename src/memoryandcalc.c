@@ -170,9 +170,9 @@ void reset_sleep_period() {
 	internal_data.has_been_reset = true;
 	show_record(false);
 	if (config_data.smart) {
-		show_notice(NOTICE_TIMER_RESET_ALARM);
+		show_notice(NOTICE_TIMER_RESET_ALARM, false);
 	} else {
-		show_notice(NOTICE_TIMER_RESET_NOALARM);
+		show_notice(NOTICE_TIMER_RESET_NOALARM, false);
 	}
 }
 
@@ -188,7 +188,7 @@ static void store_point_info(uint16_t point) {
 	if (offset > LIMIT) {
 		show_record(false);
 		if (no_record_warning) {
-			show_notice(NOTICE_END_OF_RECORDING);
+			show_notice(NOTICE_END_OF_RECORDING, false);
 			no_record_warning = false;
 		}
 		return;
@@ -318,7 +318,7 @@ void server_processing(uint16_t biggest) {
 	if (!internal_data.has_been_reset) {
 		APP_LOG(APP_LOG_LEVEL_INFO, "Not reset");
 		if (no_record_warning) {
-			show_notice(NOTICE_RESET_TO_START_USING);
+			show_notice(NOTICE_RESET_TO_START_USING, false);
 			no_record_warning = false;
 		}
 	}

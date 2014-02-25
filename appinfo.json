@@ -35,9 +35,20 @@
                 "file": "fonts/axaxax-bd-1.ttf"
             },
             {
+                "characterRegex": "[0-9:. ]",
+                "type": "font",
+                "name": "FONT_DIGITAL_25",
+                "file": "fonts/axaxax-bd-1.ttf"
+            },
+            {
                 "type": "png",
                 "name": "ALARM_ICON",
                 "file": "images/alarm-icon.png"
+            },
+            {
+                "type": "png",
+                "name": "ALARM_RING_ICON",
+                "file": "images/alarm-ring-icon.png"
             },
             {
                 "menuIcon": true,
@@ -74,11 +85,6 @@
                 "type": "png",
                 "name": "IMAGE_PROGRESS",
                 "file": "images/progress.png"
-            },
-            {
-                "type": "png",
-                "name": "ICON_ZZZ",
-                "file": "images/zzz.png"
             },
             {
                 "type": "png",

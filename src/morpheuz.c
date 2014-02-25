@@ -43,6 +43,8 @@ static char goneoff_context[] = "G";
 static char point_context[] = "P";
 static char clear_context[] = "P";
 
+static uint8_t distress_count = 0;
+
 /*
  * Combine two ints as a long
  */
@@ -262,9 +264,6 @@ static uint16_t scale_accel(int16_t val) {
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
-	// Show it's working
-	toggle_zzz();
-
 	// Self monitor memory
 	last_accel = time(NULL);
 
@@ -342,8 +341,13 @@ void self_monitor() {
 	time_t now = time(NULL);
 
 	// Or the accelerometer function having been dead for a while
-	if (last_accel < (now - DISTRESS_WAIT_SEC)) {
-		reset();
+	if ((last_accel < (now - DISTRESS_WAIT_SEC)) && distress_count < 2) {
+		if (distress_count == 0)
+			reset();
+		else if (distress_count == 1)
+			show_fatal(FATAL_ACCEL_CRASH);
+		distress_count++;
+
 	}
 
 }

@@ -70,7 +70,7 @@ static void do_alarm(void *data) {
  */
 void fire_alarm() {
 	alarm_count = 0;
-	show_notice(NOTICE_TIME_TO_WAKE_UP);
+	show_notice(NOTICE_TIME_TO_WAKE_UP, false);
 	do_alarm(NULL);
 	set_alarm_icon(true);
 }
@@ -91,7 +91,7 @@ bool snooze_alarm() {
 	alarm_count = 0;
 
 	// Let us know we're snoozing
-	show_notice(NOTICE_SNOOZE_ACTIVATED);
+	show_notice(NOTICE_SNOOZE_ACTIVATED, false);
 
 	return true;
 }
@@ -113,7 +113,7 @@ bool cancel_alarm() {
 	alarm_count = ARRAY_LENGTH(alarm_pattern);
 
 	// Let the screen know
-	show_notice(NOTICE_ALARM_CANCELLED);
+	show_notice(NOTICE_ALARM_CANCELLED, false);
 
 	// Reset power nap if not already done so
 	power_nap_reset();

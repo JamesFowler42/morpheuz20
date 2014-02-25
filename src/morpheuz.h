@@ -36,7 +36,7 @@
 #define POWER_NAP_MINUTES 27
 #define POWER_NAP_SETTLE 2
 #define POWER_NAP_SETTLE_THRESHOLD 1000
-#define SNOOZE_PERIOD_MS (5*60*1000)
+#define SNOOZE_PERIOD_MS (9*60*1000)
 #define FLASH_ALARM_MS 2000
 
 #define POWER_NAP_SETTLE_TIME "Power nap"
@@ -50,7 +50,9 @@
 #define NOTICE_ALARM_CANCELLED "\nAlarm\nCancelled"
 #define NOTICE_END_OF_RECORDING "End of recording\nReset to start again"
 #define NOTICE_RESET_TO_START_USING "Reset to start\nrecording"
-#define NOTICE_SNOOZE_ACTIVATED "\nSnooze\n5 minutes"
+#define NOTICE_SNOOZE_ACTIVATED "\nSnooze\n9 minutes"
+
+#define FATAL_ACCEL_CRASH "Morpheuz has found an error: The accelerometer is not returning any data. Please contact support from the Pebble app on your phone. Shutdown and restart your Pebble.\nHold back to leave Morpheuz."
 
 enum MorpKey {
 	KEY_POINT = 1,
@@ -69,7 +71,7 @@ enum CtrlValues {
 };
 
 #define SAMPLES_IN_TWO_MINUTES 48
-#define DISTRESS_WAIT_SEC 120
+#define DISTRESS_WAIT_SEC 10
 #define WINDOW_HEIGHT 168
 
 #define PERSIST_MEMORY_KEY 12121
@@ -79,6 +81,7 @@ enum CtrlValues {
 #define SHORT_RETRY_MS 200
 #define LONG_RETRY_MS 60000
 #define NOTICE_DISPLAY_MS 7000
+#define NOTICE_DISPLAY_SHORT_MS 2500
 #define KEYBOARD_DISPLAY_MS 7000
 
 #define LIMIT 54
@@ -133,12 +136,13 @@ void show_record(bool recording);
 void save_config_data(void *data);
 void read_config_data();
 ConfigData *get_config_data();
-void show_notice(char *message);
+void show_notice(char *message, bool short_time);
 bool cancel_alarm();
 void fire_alarm();
 bool snooze_alarm();
 void init_alarm();
 void show_keyboard();
 void set_alarm_icon(bool show_icon);
+void show_fatal(char *message);
 
 #endif /* MORPHEUZ_H_ */

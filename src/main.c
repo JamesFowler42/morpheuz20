@@ -28,16 +28,17 @@
 static Window *window;
 static Window *notice_window;
 static Window *keyboard_window;
+static Window *fatal_window;
 
 static Layer *line_layer;
 static Layer *progress_layer;
-static Layer *zzz_layer;
 static Layer *battery_layer;
 
 static TextLayer *text_date_layer;
 static TextLayer *text_time_layer;
 static TextLayer *notice_text;
 static TextLayer *keyboard_time_text;
+static TextLayer *fatal_text;
 
 static BitmapLayer *logo_layer;
 static BitmapLayer *bluetooth_layer;
@@ -52,10 +53,10 @@ static InverterLayer *full_inverse_layer;
 static InverterLayer *keyboard_inverter;
 
 static GBitmap *alarm_bitmap;
+static GBitmap *alarm_ring_bitmap;
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
 static GBitmap *image_progress;
-static GBitmap *zzz_icon;
 static GBitmap *record_bitmap;
 static GBitmap *notice_bitmap;
 static GBitmap *keyboard_bitmap;
@@ -65,8 +66,10 @@ static GBitmap *comms_bitmap = NULL;
 
 static GFont notice_font;
 static GFont time_font;
+static GFont keyboard_time_font;
 
 static AppTimer *notice_timer;
+static AppTimer *keyboard_timer;
 
 static uint8_t battery_level;
 static bool battery_plugged;
@@ -77,6 +80,7 @@ static uint8_t progress_level;
 static bool notice_showing = false;
 static char version_text[40];
 static bool keyboard_showing = false;
+static bool fatal_showing = false;
 
 /*
  * Show the date
@@ -146,14 +150,6 @@ static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 /*
- * zzz layer
- */
-static void zzz_layer_update_callback(Layer *layer, GContext *ctx) {
-	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-	graphics_draw_bitmap_in_rect(ctx, zzz_icon, GRect(0, 0, 18, 12));
-}
-
-/*
  * Draw line
  */
 static void line_layer_update_callback(Layer *layer, GContext* ctx) {
@@ -166,59 +162,20 @@ static void line_layer_update_callback(Layer *layer, GContext* ctx) {
  */
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 	// Need to be static because they're used by the system later.
-	static char time_text[] = "00:00  ";
+	static char time_text[] = "00:00";
 
 	if (!g_show_special_text) {
 		show_date();
 	}
 
 	clock_copy_time_string	(time_text, sizeof(time_text));
+	if (time_text[4] == ' ')
+		time_text[4] = '\0';
 	text_layer_set_text(text_time_layer, time_text);
 
 	self_monitor();
 
 	power_nap_countdown();
-}
-
-/*
- * Shutdown
- */
-static void handle_deinit(void) {
-	save_config_data(NULL);
-	save_internal_data();
-	window_stack_remove(window, true);
-	inverter_layer_destroy(full_inverse_layer);
-	layer_destroy(zzz_layer);
-	layer_destroy(progress_layer);
-	bitmap_layer_destroy(alarm_icon_layer);
-	bitmap_layer_destroy(record_layer);
-	bitmap_layer_destroy(comms_layer);
-	bitmap_layer_destroy(bluetooth_layer);
-	layer_destroy(battery_layer);
-	layer_destroy(line_layer);
-	bitmap_layer_destroy(alarm_layer);
-	text_layer_destroy(text_time_layer);
-	text_layer_destroy(text_date_layer);
-	bitmap_layer_destroy(logo_layer);
-	gbitmap_destroy(icon_battery);
-	gbitmap_destroy(icon_battery_charge);
-	gbitmap_destroy(logo_bitmap);
-	gbitmap_destroy(bluetooth_bitmap);
-	gbitmap_destroy(comms_bitmap);
-	gbitmap_destroy(alarm_bitmap);
-	gbitmap_destroy(image_progress);
-	gbitmap_destroy(zzz_icon);
-	gbitmap_destroy(record_bitmap);
-	gbitmap_destroy(notice_bitmap);
-	gbitmap_destroy(keyboard_bitmap);
-	fonts_unload_custom_font(notice_font);
-	fonts_unload_custom_font(time_font);
-	tick_timer_service_unsubscribe();
-	battery_state_service_unsubscribe();
-	bluetooth_connection_service_unsubscribe();
-	deinit_morpheuz();
-	window_destroy(window);
-	APP_LOG(APP_LOG_LEVEL_INFO, "clean stop");
 }
 
 /*
@@ -251,13 +208,6 @@ void set_progress(uint8_t progress_percent) {
 }
 
 /*
- * Toggle zzz
- */
-void toggle_zzz() {
-	layer_set_hidden(zzz_layer, !layer_get_hidden(zzz_layer));
-}
-
-/*
  * Show record
  */
 void show_record(bool recording) {
@@ -280,7 +230,10 @@ static void hide_notice_layer(void *data) {
 /*
  * Show the notice window
  */
-void show_notice(char *message) {
+void show_notice(char *message, bool short_time) {
+
+	if (fatal_showing)
+		return;
 
 	// It's night - want to see message
 	light_enable_interaction();
@@ -288,8 +241,7 @@ void show_notice(char *message) {
 	// Already showing - change message
 	if (notice_showing) {
 		text_layer_set_text(notice_text, message);
-		app_timer_cancel(notice_timer);
-		notice_timer = app_timer_register(NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
+		app_timer_reschedule(notice_timer, short_time ? NOTICE_DISPLAY_SHORT_MS : NOTICE_DISPLAY_MS);
 		return;
 	}
 
@@ -317,7 +269,7 @@ void show_notice(char *message) {
 
 	window_set_click_config_provider(notice_window, (ClickConfigProvider) click_config_provider);
 
-	notice_timer = app_timer_register(NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
+	notice_timer = app_timer_register(short_time ? NOTICE_DISPLAY_SHORT_MS : NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
 }
 
 /*
@@ -341,14 +293,18 @@ static void hide_keyboard_layer(void *data) {
  */
 void show_keyboard() {
 
-	// Need to be static because they're used by the system later.
-	static char time_text[] = "00:00  ";
+	if (fatal_showing)
+		return;
 
-	// It's night - want to see message
+	// Need to be static because they're used by the system later.
+	static char time_text[] = "00:00";
+
+	// It's night - want to see message and time
 	light_enable_interaction();
 
-	// Already showing - change message
+	// Already showing - make it vanish quickly
 	if (keyboard_showing) {
+		app_timer_reschedule(keyboard_timer, 200);
 		return;
 	}
 
@@ -370,9 +326,11 @@ void show_keyboard() {
 	text_layer_set_text_color(keyboard_time_text, GColorWhite);
 	text_layer_set_background_color(keyboard_time_text, GColorBlack);
 	text_layer_set_text_alignment(keyboard_time_text, GTextAlignmentCenter);
-	text_layer_set_font(keyboard_time_text, notice_font);
+	text_layer_set_font(keyboard_time_text, keyboard_time_font);
 	layer_add_child(window_layer, text_layer_get_layer(keyboard_time_text));
 	clock_copy_time_string	(time_text, sizeof(time_text));
+	if (time_text[4] == ' ')
+		time_text[4] = '\0';
 	text_layer_set_text(keyboard_time_text, time_text);
 
 	if (get_config_data()->invert) {
@@ -382,7 +340,46 @@ void show_keyboard() {
 
 	window_set_click_config_provider(keyboard_window, (ClickConfigProvider) click_config_provider);
 
-	app_timer_register(KEYBOARD_DISPLAY_MS, hide_keyboard_layer, NULL);
+	keyboard_timer = app_timer_register(KEYBOARD_DISPLAY_MS, hide_keyboard_layer, NULL);
+}
+
+/*
+ * Remove the keyboard window
+ */
+static void hide_fatal_layer() {
+	if (fatal_showing) {
+		window_stack_remove(fatal_window, true);
+		text_layer_destroy(fatal_text);
+		window_destroy(fatal_window);
+		fatal_showing = false;
+	}
+}
+
+/*
+ * Show the fatal error window
+ */
+void show_fatal(char *message) {
+
+	fatal_showing = true;
+
+	// Bring up notice
+	fatal_window = window_create();
+	window_set_fullscreen(fatal_window, true);
+	window_stack_push(fatal_window, false);
+	window_set_background_color(fatal_window, GColorWhite);
+
+	Layer *window_layer = window_get_root_layer(fatal_window);
+
+	fatal_text = text_layer_create(GRect(5, 5, 134, 158));
+	text_layer_set_text_color(fatal_text, GColorBlack);
+	text_layer_set_background_color(fatal_text, GColorWhite);
+	text_layer_set_font(fatal_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
+	layer_add_child(window_layer, text_layer_get_layer(fatal_text));
+	text_layer_set_text(fatal_text, message);
+
+	window_set_click_config_provider(fatal_window, (ClickConfigProvider) click_config_provider);
+
+	vibes_double_pulse();
 }
 
 /*
@@ -416,7 +413,7 @@ static void handle_init(void) {
 	text_layer_set_font(text_time_layer, time_font);
 	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
 
-	alarm_layer = bitmap_layer_create(GRect(11, 98, 8, 12));
+	alarm_layer = bitmap_layer_create(GRect(11, 96, 12, 12));
 	layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));
 	alarm_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_ICON);
 	bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
@@ -455,9 +452,10 @@ static void handle_init(void) {
 	bitmap_layer_set_bitmap(record_layer, record_bitmap);
 	layer_set_hidden(bitmap_layer_get_layer(record_layer), true);
 
-	alarm_icon_layer = bitmap_layer_create(GRect(144-26-14-10-16-15, 5, 10, 12));
+	alarm_ring_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_RING_ICON);
+	alarm_icon_layer = bitmap_layer_create(GRect(144-26-14-10-16-19, 4, 12, 12));
 	layer_add_child(window_layer, bitmap_layer_get_layer(alarm_icon_layer));
-	bitmap_layer_set_bitmap(alarm_icon_layer, alarm_bitmap);
+	bitmap_layer_set_bitmap(alarm_icon_layer, alarm_ring_bitmap);
 	layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), true);
 
 	image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
@@ -466,17 +464,13 @@ static void handle_init(void) {
 	layer_set_update_proc(progress_layer, &progress_layer_update_callback);
 	layer_add_child(window_layer, progress_layer);
 
-	zzz_icon = gbitmap_create_with_resource(RESOURCE_ID_ICON_ZZZ);
-	zzz_layer = layer_create(GRect(41,11,18,12));
-	layer_set_update_proc(zzz_layer, &zzz_layer_update_callback);
-	layer_add_child(window_layer, zzz_layer);
-
 	full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
 	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
 	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
 
 	notice_bitmap = gbitmap_create_with_resource(RESOURCE_ID_NOTICE_BG);
 	notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+	keyboard_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_25));
 	keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG);
 
 	window_stack_push(window, true /* Animated */);
@@ -498,8 +492,55 @@ static void handle_init(void) {
 
 	// Show the welcome and version
 	snprintf(version_text, sizeof(version_text), NOTICE_WELCOME, VERSION_TXT);
-	show_notice(version_text);
+	show_notice(version_text, true);
 
+}
+
+/*
+ * Shutdown
+ */
+static void handle_deinit(void) {
+	save_config_data(NULL);
+	save_internal_data();
+	if (notice_showing)
+		hide_notice_layer(NULL);
+	if (keyboard_showing)
+		hide_keyboard_layer(NULL);
+	if (fatal_showing)
+		hide_fatal_layer();
+	window_stack_remove(window, true);
+	inverter_layer_destroy(full_inverse_layer);
+	layer_destroy(progress_layer);
+	bitmap_layer_destroy(alarm_icon_layer);
+	bitmap_layer_destroy(record_layer);
+	bitmap_layer_destroy(comms_layer);
+	bitmap_layer_destroy(bluetooth_layer);
+	layer_destroy(battery_layer);
+	layer_destroy(line_layer);
+	bitmap_layer_destroy(alarm_layer);
+	text_layer_destroy(text_time_layer);
+	text_layer_destroy(text_date_layer);
+	bitmap_layer_destroy(logo_layer);
+	gbitmap_destroy(icon_battery);
+	gbitmap_destroy(icon_battery_charge);
+	gbitmap_destroy(logo_bitmap);
+	gbitmap_destroy(bluetooth_bitmap);
+	gbitmap_destroy(comms_bitmap);
+	gbitmap_destroy(alarm_bitmap);
+	gbitmap_destroy(alarm_ring_bitmap);
+	gbitmap_destroy(image_progress);
+	gbitmap_destroy(record_bitmap);
+	gbitmap_destroy(notice_bitmap);
+	gbitmap_destroy(keyboard_bitmap);
+	fonts_unload_custom_font(notice_font);
+	fonts_unload_custom_font(keyboard_time_font);
+	fonts_unload_custom_font(time_font);
+	tick_timer_service_unsubscribe();
+	battery_state_service_unsubscribe();
+	bluetooth_connection_service_unsubscribe();
+	deinit_morpheuz();
+	window_destroy(window);
+	APP_LOG(APP_LOG_LEVEL_INFO, "clean stop");
 }
 
 

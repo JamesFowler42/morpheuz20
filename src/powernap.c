@@ -78,14 +78,14 @@ static void select_long_down_handler(ClickRecognizerRef recognizer, void *contex
 	if (power_nap_mode) {
 		// Turn off power nap
 		power_nap_reset();
-		show_notice(NOTICE_STOPPED_POWER_NAP);
+		show_notice(NOTICE_STOPPED_POWER_NAP, false);
 	} else {
 		// Turn on power nap
 		power_nap_mode = true;
 		power_nap_minute_count = POWER_NAP_MINUTES + 1;
 		power_nap_settle_count = POWER_NAP_SETTLE;
 		set_smart_status_on_screen(true, POWER_NAP_SETTLE_TIME);
-		show_notice(NOTICE_STARTED_POWER_NAP);
+		show_notice(NOTICE_STARTED_POWER_NAP, false);
 	}
 }
 
