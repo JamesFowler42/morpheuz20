@@ -34,7 +34,7 @@ static bool no_record_warning = true;
 /*
  * Calculate hour and minutes as mins
  */
-static uint32_t toMins(uint32_t hour, uint32_t min) {
+static uint32_t to_mins(uint32_t hour, uint32_t min) {
 	return hour * 60 + min;
 }
 
@@ -111,6 +111,13 @@ void save_config_data(void *data) {
 }
 
 /*
+ * Clear config if needed
+ */
+static void clear_config_data() {
+	memset(&config_data, 0, sizeof(config_data));
+}
+
+/*
  * Read the config data (or create it if missing)
  */
 void read_config_data() {
@@ -118,10 +125,10 @@ void read_config_data() {
 		int read = persist_read_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
 		if (read != sizeof(config_data)) {
 			APP_LOG(APP_LOG_LEVEL_ERROR, "read_config_data wrong size (%d)", read);
-			memset(&config_data, 0, sizeof(config_data));
+			clear_config_data();
 		}
 	} else {
-		memset(&config_data, 0, sizeof(config_data));
+		clear_config_data();
 	}
 }
 
@@ -141,8 +148,8 @@ void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert) {
 	config_data.frommin = iface_from & 0xff;
 	config_data.tohr = iface_to >> 8;
 	config_data.tomin = iface_to & 0xff;
-	config_data.from = toMins(config_data.fromhr, config_data.frommin);
-	config_data.to = toMins(config_data.tohr , config_data.tomin);
+	config_data.from = to_mins(config_data.fromhr, config_data.frommin);
+	config_data.to = to_mins(config_data.tohr , config_data.tomin);
 	config_data.invert = iface_invert;
 	if (!save_config_requested) {
 		app_timer_register(PERSIST_CONFIG_MS, save_config_data, NULL);
@@ -150,13 +157,10 @@ void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert) {
 	}
 }
 
-
 // Is math.h available?
 static double morp_floor (double x) {
 	return (double) (x < 0.f ? (((int)x) - 1) : ((int) x));
 }
-
-
 
 /*
  * Perform reset - either from watch or phone
@@ -237,7 +241,7 @@ static bool smart_alarm(uint16_t point) {
 	int32_t novals = 0;
 	for (uint8_t i=0; i <= internal_data.highest_entry; i++) {
 		novals++;
-		total = total + internal_data.points[i];
+		total += internal_data.points[i];
 	}
 	if (novals == 0)
 		novals = 1;
@@ -247,7 +251,7 @@ static bool smart_alarm(uint16_t point) {
 
 	time_t timeNow = time(NULL);
 	struct tm *time = localtime(&timeNow);
-	now = toMins(time->tm_hour, time->tm_min);
+	now = to_mins(time->tm_hour, time->tm_min);
 
 	if (now >= config_data.from && now < config_data.to) {
 

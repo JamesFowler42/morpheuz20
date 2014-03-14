@@ -1,5 +1,5 @@
 {
-    "versionLabel": "1.9.0",
+    "versionLabel": "2.0.0",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -11,7 +11,7 @@
         "keyGoneoff": 7
     },
     "longName": "Morpheuz",
-    "versionCode": 19,
+    "versionCode": 20,
     "capabilities": [
         "configurable"
     ],
@@ -84,7 +84,12 @@
             {
                 "type": "png",
                 "name": "IMAGE_PROGRESS",
-                "file": "images/progress.png"
+                "file": "images/progress0.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_PROGRESS_FULL",
+                "file": "images/progress100.png"
             },
             {
                 "type": "png",
@@ -100,6 +105,11 @@
                 "type": "png",
                 "name": "KEYBOARD_BG",
                 "file": "images/keyboard-black.png"
+            },
+            {
+                "type": "png",
+                "name": "KEYBOARD_BG_WHITE",
+                "file": "images/keyboard-white.png"
             }
             
         ]

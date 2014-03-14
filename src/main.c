@@ -30,7 +30,6 @@ static Window *notice_window;
 static Window *keyboard_window;
 static Window *fatal_window;
 
-static Layer *line_layer;
 static Layer *progress_layer;
 static Layer *battery_layer;
 
@@ -50,13 +49,13 @@ static BitmapLayer *alarm_icon_layer;
 static BitmapLayer *alarm_layer;
 
 static InverterLayer *full_inverse_layer;
-static InverterLayer *keyboard_inverter;
 
 static GBitmap *alarm_bitmap;
 static GBitmap *alarm_ring_bitmap;
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
 static GBitmap *image_progress;
+static GBitmap *image_progress_full;
 static GBitmap *record_bitmap;
 static GBitmap *notice_bitmap;
 static GBitmap *keyboard_bitmap;
@@ -81,6 +80,15 @@ static bool notice_showing = false;
 static char version_text[40];
 static bool keyboard_showing = false;
 static bool fatal_showing = false;
+static bool first_time = true;
+
+static const uint32_t const sos_seg[] = { 100, 250, 100, 250, 100, 250,
+                                          200, 250, 200, 250, 200, 250,
+                                          100, 250, 100, 250, 100};
+VibePattern sos = {
+  .durations = sos_seg,
+  .num_segments = ARRAY_LENGTH(sos_seg),
+};
 
 /*
  * Show the date
@@ -98,13 +106,11 @@ static void show_date() {
 void set_smart_status_on_screen(bool show_special_text, char *special_text) {
 	if (!show_special_text) {
 		if (g_show_special_text) {
-			text_layer_set_text_alignment(text_date_layer, GTextAlignmentLeft);
 			layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
 			show_date();
 		}
 	} else {
 		if (!g_show_special_text) {
-			text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
 			layer_set_hidden(bitmap_layer_get_layer(alarm_layer), false);
 		}
 		strncpy(date_text, special_text, sizeof(date_text));
@@ -143,18 +149,8 @@ static void battery_state_handler(BatteryChargeState charge) {
  */
 static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-	graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 128, 3));
-	graphics_context_set_stroke_color(ctx, GColorBlack);
-	graphics_context_set_fill_color(ctx, GColorWhite);
-	graphics_fill_rect(ctx, GRect(1, 1, (uint8_t)((progress_level / 100.0) * 127.0), 1), 0, GCornerNone);
-}
-
-/*
- * Draw line
- */
-static void line_layer_update_callback(Layer *layer, GContext* ctx) {
-	graphics_context_set_fill_color(ctx, GColorWhite);
-	graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+	graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 131, 5));
+	graphics_draw_bitmap_in_rect(ctx, image_progress_full, GRect(0, 0, (uint8_t)((progress_level / 100.0) * 131.0), 5));
 }
 
 /*
@@ -175,7 +171,15 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 	self_monitor();
 
+	if (!first_time) {
+	  every_minute_processing(tick_time->tm_min);
+	} else {
+		first_time = false;
+	}
+
 	power_nap_countdown();
+
+
 }
 
 /*
@@ -272,17 +276,22 @@ void show_notice(char *message, bool short_time) {
 	notice_timer = app_timer_register(short_time ? NOTICE_DISPLAY_SHORT_MS : NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
 }
 
+/**
+ * Vibe to give SOS
+ */
+void vibes_sos() {
+	vibes_enqueue_custom_pattern(sos);
+}
+
 /*
  * Remove the keyboard window
  */
 static void hide_keyboard_layer(void *data) {
 	if (keyboard_showing) {
 		window_stack_remove(keyboard_window, true);
-		if (get_config_data()->invert) {
-			inverter_layer_destroy(keyboard_inverter);
-		}
 		text_layer_destroy(keyboard_time_text);
 		bitmap_layer_destroy(keyboard_layer);
+		gbitmap_destroy(keyboard_bitmap);
 		window_destroy(keyboard_window);
 		keyboard_showing = false;
 	}
@@ -320,11 +329,23 @@ void show_keyboard() {
 	keyboard_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
 	layer_add_child(window_layer, bitmap_layer_get_layer(keyboard_layer));
 
+	if (get_config_data()->invert) {
+		keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG_WHITE);
+	} else {
+		keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG);
+	}
+
 	bitmap_layer_set_bitmap(keyboard_layer, keyboard_bitmap);
 
 	keyboard_time_text = text_layer_create(GRect(0, 0, 144, 30));
-	text_layer_set_text_color(keyboard_time_text, GColorWhite);
-	text_layer_set_background_color(keyboard_time_text, GColorBlack);
+
+	if (get_config_data()->invert) {
+		text_layer_set_text_color(keyboard_time_text, GColorBlack);
+		text_layer_set_background_color(keyboard_time_text, GColorWhite);
+	} else {
+		text_layer_set_text_color(keyboard_time_text, GColorWhite);
+		text_layer_set_background_color(keyboard_time_text, GColorBlack);
+	}
 	text_layer_set_text_alignment(keyboard_time_text, GTextAlignmentCenter);
 	text_layer_set_font(keyboard_time_text, keyboard_time_font);
 	layer_add_child(window_layer, text_layer_get_layer(keyboard_time_text));
@@ -332,11 +353,6 @@ void show_keyboard() {
 	if (time_text[4] == ' ')
 		time_text[4] = '\0';
 	text_layer_set_text(keyboard_time_text, time_text);
-
-	if (get_config_data()->invert) {
-		keyboard_inverter = inverter_layer_create(GRect(0, 0, 144, 168));
-		layer_add_child(window_layer, inverter_layer_get_layer(keyboard_inverter));
-	}
 
 	window_set_click_config_provider(keyboard_window, (ClickConfigProvider) click_config_provider);
 
@@ -356,9 +372,12 @@ static void hide_fatal_layer() {
 }
 
 /*
- * Show the fatal error window
+ * Show the fatal error window and do sos vibes
  */
 void show_fatal(char *message) {
+
+	if (fatal_showing)
+		return;
 
 	fatal_showing = true;
 
@@ -379,7 +398,7 @@ void show_fatal(char *message) {
 
 	window_set_click_config_provider(fatal_window, (ClickConfigProvider) click_config_provider);
 
-	vibes_double_pulse();
+	vibes_sos();
 }
 
 /*
@@ -402,6 +421,7 @@ static void handle_init(void) {
 	text_date_layer = text_layer_create(GRect(8, 85, 144-8, WINDOW_HEIGHT-85));
 	text_layer_set_text_color(text_date_layer, GColorWhite);
 	text_layer_set_background_color(text_date_layer, GColorBlack);
+	text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
 	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
 	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
 
@@ -418,11 +438,6 @@ static void handle_init(void) {
 	alarm_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_ICON);
 	bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
 	layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
-
-	GRect line_frame = GRect(8, 114, 144-16, 2);
-	line_layer = layer_create(line_frame);
-	layer_set_update_proc(line_layer, line_layer_update_callback);
-	layer_add_child(window_layer, line_layer);
 
 	icon_battery = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_ICON);
 	icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
@@ -459,8 +474,9 @@ static void handle_init(void) {
 	layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), true);
 
 	image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
+	image_progress_full = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS_FULL);
 	progress_level = 0;
-	progress_layer = layer_create(GRect(8,153,128,3));
+	progress_layer = layer_create(GRect(6,161,131,5));
 	layer_set_update_proc(progress_layer, &progress_layer_update_callback);
 	layer_add_child(window_layer, progress_layer);
 
@@ -471,7 +487,6 @@ static void handle_init(void) {
 	notice_bitmap = gbitmap_create_with_resource(RESOURCE_ID_NOTICE_BG);
 	notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
 	keyboard_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_25));
-	keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG);
 
 	window_stack_push(window, true /* Animated */);
 
@@ -516,7 +531,6 @@ static void handle_deinit(void) {
 	bitmap_layer_destroy(comms_layer);
 	bitmap_layer_destroy(bluetooth_layer);
 	layer_destroy(battery_layer);
-	layer_destroy(line_layer);
 	bitmap_layer_destroy(alarm_layer);
 	text_layer_destroy(text_time_layer);
 	text_layer_destroy(text_date_layer);
@@ -529,9 +543,9 @@ static void handle_deinit(void) {
 	gbitmap_destroy(alarm_bitmap);
 	gbitmap_destroy(alarm_ring_bitmap);
 	gbitmap_destroy(image_progress);
+	gbitmap_destroy(image_progress_full);
 	gbitmap_destroy(record_bitmap);
 	gbitmap_destroy(notice_bitmap);
-	gbitmap_destroy(keyboard_bitmap);
 	fonts_unload_custom_font(notice_font);
 	fonts_unload_custom_font(keyboard_time_font);
 	fonts_unload_custom_font(time_font);

@@ -25,11 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 19
-#define VERSION_TXT "1.9"
-
-//#undef APP_LOG
-//#define APP_LOG(level, fmt, args...)
+#define VERSION 20
+#define VERSION_TXT "2.0"
 
 #define FUDGE 4
 
@@ -70,7 +67,6 @@ enum CtrlValues {
 	CTRL_NORMAL = 4
 };
 
-#define SAMPLES_IN_TWO_MINUTES 48
 #define DISTRESS_WAIT_SEC 10
 #define WINDOW_HEIGHT 168
 
@@ -128,7 +124,6 @@ void send_goneoff(void *data);
 void send_version(void *data);
 void send_point(uint8_t point, uint16_t biggest);
 void set_progress_based_on_persist();
-void toggle_zzz();
 InternalData *get_internal_data();
 void read_internal_data();
 void save_internal_data();
@@ -144,5 +139,8 @@ void init_alarm();
 void show_keyboard();
 void set_alarm_icon(bool show_icon);
 void show_fatal(char *message);
+void every_minute_processing(int min_no);
+void trigger_config_save();
+void vibes_sos();
 
 #endif /* MORPHEUZ_H_ */

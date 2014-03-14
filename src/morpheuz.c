@@ -25,8 +25,7 @@
 #include "pebble.h"
 #include "morpheuz.h"
 
-static uint16_t two_minute_biggest = 0;
-static uint8_t sample_sets = 0;
+static uint16_t biggest_movement_in_one_minute = 0;
 
 static time_t last_accel;
 
@@ -42,8 +41,6 @@ static char base_context[] = "B";
 static char goneoff_context[] = "G";
 static char point_context[] = "P";
 static char clear_context[] = "P";
-
-static uint8_t distress_count = 0;
 
 /*
  * Combine two ints as a long
@@ -77,9 +74,6 @@ static bool send_to_phone(const uint32_t key, void *context, int32_t tophone) {
 
 	return true;
 }
-
-
-
 
 /*
  * Set the on-screen status text
@@ -160,7 +154,6 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "Got ctrl. Vers sent");
 		app_timer_register(SHORT_RETRY_MS, send_version, NULL);
 	}
-
 }
 
 /*
@@ -238,15 +231,17 @@ static void in_out_size_calc() {
  * Store our samples from each group until we have two minute's worth
  */
 static void store_sample(uint16_t biggest) {
-	if (biggest > two_minute_biggest)
-		two_minute_biggest = biggest;
-	sample_sets++;
-	if (sample_sets > SAMPLES_IN_TWO_MINUTES) {
-		power_nap_check(two_minute_biggest);
-		server_processing(two_minute_biggest);
-		sample_sets = 0;
-		two_minute_biggest = 0;
-	}
+	if (biggest > biggest_movement_in_one_minute)
+		biggest_movement_in_one_minute = biggest;
+}
+
+/*
+ * Do something with samples every minute
+ */
+void every_minute_processing(int min_no) {
+	power_nap_check(biggest_movement_in_one_minute);
+	server_processing(biggest_movement_in_one_minute);
+	biggest_movement_in_one_minute = 0;
 }
 
 /*
@@ -273,16 +268,15 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 	uint32_t avg_z = 0;
 	AccelData *dx = data;
 	for (uint32_t i = 0; i < num_samples; i++, dx++) {
-		avg_x = avg_x + scale_accel(dx->x);
-		avg_y = avg_y + scale_accel(dx->y);
-		avg_z = avg_z + scale_accel(dx->z);
+		avg_x += scale_accel(dx->x);
+		avg_y += scale_accel(dx->y);
+		avg_z += scale_accel(dx->z);
 	}
-	avg_x = avg_x / num_samples;
-	avg_y = avg_y / num_samples;
-	avg_z = avg_z / num_samples;
+	avg_x /= num_samples;
+	avg_y /= num_samples;
+	avg_z /= num_samples;
 
 	// Work out deviations
-	bool vibrated = false;
 	uint16_t biggest = 0;
 	AccelData *d = data;
 	for (uint32_t i = 0; i < num_samples; i++, d++) {
@@ -293,47 +287,31 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 		if (x < avg_x)
 			x = avg_x - x;
 		else
-			x = x - avg_x;
+			x -= avg_x;
 
 		if (y < avg_y)
 			y = avg_y - y;
 		else
-			y = y - avg_y;
+			y -= avg_y;
 
 		if (z < avg_z)
 			z = avg_z - z;
 		else
-			z = z - avg_z;
+			z -= avg_z;
 
-		// Store the largest deviation in the period
-		if (x > biggest) biggest = x;
-		if (y > biggest) biggest = y;
-		if (z> biggest) biggest = z;
+		// Store the worst case for that period
+		if (!(d->did_vibrate)) {
+			if (x > biggest) biggest = x;
+			if (y > biggest) biggest = y;
+			if (z > biggest) biggest = z;
+		}
+	}
 
-		// Did we have a bit of a vibration?
-		if (d->did_vibrate)
-			vibrated = true;
-	}
-	if (vibrated) {
-		APP_LOG(APP_LOG_LEVEL_DEBUG, "Vibe ignore %d", biggest);
-		store_sample(0); // Keep to timeframe but don't let large value disrupt
-	} else {
-		store_sample(biggest);
-	}
+	store_sample(biggest);
 }
 
 /*
- * Reset the application to try and keep everything working
- */
-static void reset() {
-	APP_LOG(APP_LOG_LEVEL_ERROR, "Restart accel");
-	accel_data_service_unsubscribe();
-	accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
-	accel_data_service_subscribe(25, accel_data_handler);
-}
-
-/*
- *	Self monitoring - if the accelerometer stop working reset the app so we can continue
+ *	Self monitoring - if the accelerometer tell the wearer so as they can do something
  */
 void self_monitor() {
 
@@ -341,15 +319,9 @@ void self_monitor() {
 	time_t now = time(NULL);
 
 	// Or the accelerometer function having been dead for a while
-	if ((last_accel < (now - DISTRESS_WAIT_SEC)) && distress_count < 2) {
-		if (distress_count == 0)
-			reset();
-		else if (distress_count == 1)
-			show_fatal(FATAL_ACCEL_CRASH);
-		distress_count++;
-
+	if (last_accel < (now - DISTRESS_WAIT_SEC)) {
+		show_fatal(FATAL_ACCEL_CRASH);
 	}
-
 }
 
 /*
@@ -377,8 +349,8 @@ void init_morpheuz(Window *window) {
 	app_message_set_context(clear_context);
 
 	// Accelerometer
-	accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 	accel_data_service_subscribe(25, accel_data_handler);
+	accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
 
 	// Set click provider
 	window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
