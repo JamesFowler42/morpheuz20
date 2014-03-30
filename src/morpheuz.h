@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 20
-#define VERSION_TXT "2.0"
+#define VERSION 21
+#define VERSION_TXT "2.1"
 
 #define FUDGE 4
 
@@ -35,9 +35,11 @@
 #define POWER_NAP_SETTLE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
 #define FLASH_ALARM_MS 2000
+#define WEEKEND_PERIOD (12*60*60)
 
 #define POWER_NAP_SETTLE_TIME "Power nap"
 #define POWER_NAP_RUNNING     "Power nap: %d"
+#define WEEKEND_TEXT 		  "Weekend"
 #define NOTICE_TIMER_RESET_ALARM "Sleep well!\nChart reset\nAlarm set"
 #define NOTICE_TIMER_RESET_NOALARM "Sleep well!\nChart reset\nNO ALARM"
 #define NOTICE_STARTED_POWER_NAP "\nPower nap\nstarted"
@@ -48,6 +50,9 @@
 #define NOTICE_END_OF_RECORDING "End of recording\nReset to start again"
 #define NOTICE_RESET_TO_START_USING "Reset to start\nrecording"
 #define NOTICE_SNOOZE_ACTIVATED "\nSnooze\n9 minutes"
+#define NOTICE_STARTED_WEEKEND "Weekend mode\nNo alarm for 12hrs"
+#define NOTICE_STOPPED_WEEKEND "Weekend mode cancelled"
+#define NOTICE_NEED_SMART_ALARM "No Smart alarm: no weekend mode!"
 
 #define FATAL_ACCEL_CRASH "Morpheuz has found an error: The accelerometer is not returning any data. Please contact support from the Pebble app on your phone. Shutdown and restart your Pebble.\nHold back to leave Morpheuz."
 
@@ -90,6 +95,7 @@ typedef struct {
 	int8_t last_sent;
 	uint16_t points[LIMIT];
 	bool has_been_reset;
+	bool gone_off_sent;
 } InternalData;
 
 typedef struct {
@@ -101,6 +107,7 @@ typedef struct {
 	uint8_t tomin;
 	uint32_t from;
 	uint32_t to;
+	time_t weekend_until;
 } ConfigData;
 
 void init_morpheuz(Window *window);
@@ -120,7 +127,7 @@ void server_processing(uint16_t biggest);
 void transmit_next_data(void *data);
 void set_progress(uint8_t progress_percent);
 void send_base(uint32_t base);
-void send_goneoff(void *data);
+void send_goneoff();
 void send_version(void *data);
 void send_point(uint8_t point, uint16_t biggest);
 void set_progress_based_on_persist();
@@ -142,5 +149,6 @@ void show_fatal(char *message);
 void every_minute_processing(int min_no);
 void trigger_config_save();
 void vibes_sos();
+void toggle_weekend_mode();
 
 #endif /* MORPHEUZ_H_ */

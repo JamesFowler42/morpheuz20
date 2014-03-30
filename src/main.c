@@ -187,6 +187,8 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
  */
 static void bluetooth_state_handler(bool connected) {
 	layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer), !connected);
+	if (!connected)
+		show_comms_state(false); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
 }
 
 /*
@@ -418,20 +420,20 @@ static void handle_init(void) {
 	logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
 	bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
 
-	text_date_layer = text_layer_create(GRect(8, 85, 144-8, WINDOW_HEIGHT-85));
-	text_layer_set_text_color(text_date_layer, GColorWhite);
-	text_layer_set_background_color(text_date_layer, GColorBlack);
-	text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
-	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
-	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
-
 	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
-	text_time_layer = text_layer_create(GRect(0, 109, 144, WINDOW_HEIGHT-109));
+	text_time_layer = text_layer_create(GRect(0, 109, 144, 42));
 	text_layer_set_text_color(text_time_layer, GColorWhite);
 	text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
 	text_layer_set_background_color(text_time_layer, GColorBlack);
 	text_layer_set_font(text_time_layer, time_font);
 	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
+
+	text_date_layer = text_layer_create(GRect(8, 85, 144-8, 31));
+	text_layer_set_text_color(text_date_layer, GColorWhite);
+	text_layer_set_background_color(text_date_layer, GColorBlack);
+	text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
+	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
+	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
 
 	alarm_layer = bitmap_layer_create(GRect(11, 96, 12, 12));
 	layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));

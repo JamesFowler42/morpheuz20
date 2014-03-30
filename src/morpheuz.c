@@ -81,7 +81,11 @@ static bool send_to_phone(const uint32_t key, void *context, int32_t tophone) {
 void set_smart_status() {
 	static char status_text[15];
 	if (get_config_data()->smart) {
-		snprintf(status_text, sizeof(status_text), "%02d:%02d - %02d:%02d", get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+		if (get_config_data()->weekend_until == 0) {
+			snprintf(status_text, sizeof(status_text), "%02d:%02d - %02d:%02d", get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+		} else {
+			strncpy(status_text, WEEKEND_TEXT, sizeof(status_text));
+		}
 	} else {
 		strncpy(status_text, "", sizeof(status_text));
 	}
@@ -110,6 +114,8 @@ static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reas
 static void out_sent_handler(DictionaryIterator *iterator, void *context) {
 	if (context == point_context || context == base_context) {
 		app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
+	} else if (context == goneoff_context) {
+		get_internal_data()->gone_off_sent = true;
 	}
 	app_message_set_context(clear_context);
 	show_comms_state(true);
@@ -192,17 +198,8 @@ void send_base(uint32_t base) {
 /*
  * Send a gone off to javascript
  */
-void send_goneoff(void *data) {
-	// Retry after a long delay
-	if (!bluetooth_connection_service_peek()) {
-		app_timer_register(LONG_RETRY_MS, send_version, NULL);
-		return;
-	}
-
-	if (!send_to_phone(KEY_GONEOFF, goneoff_context, get_internal_data()->gone_off)) {
-		APP_LOG(APP_LOG_LEVEL_WARNING, "Comms busy send_goneoff re-timed");
-		app_timer_register(SHORT_RETRY_MS, send_goneoff, NULL);
-	}
+void send_goneoff() {
+	send_to_phone(KEY_GONEOFF, goneoff_context, get_internal_data()->gone_off);
 }
 
 /*
@@ -236,9 +233,20 @@ static void store_sample(uint16_t biggest) {
 }
 
 /*
+ * Reset the weekend time
+ */
+static void validate_weekend() {
+	if (get_config_data()->weekend_until > 0 && get_config_data()->weekend_until < time(NULL)) {
+		get_config_data()->weekend_until = 0;
+		set_smart_status();
+	}
+}
+
+/*
  * Do something with samples every minute
  */
 void every_minute_processing(int min_no) {
+	validate_weekend();
 	power_nap_check(biggest_movement_in_one_minute);
 	server_processing(biggest_movement_in_one_minute);
 	biggest_movement_in_one_minute = 0;
@@ -366,3 +374,26 @@ void init_morpheuz(Window *window) {
 void deinit_morpheuz() {
 	accel_data_service_unsubscribe();
 }
+
+/*
+ * Toggle weekend mode
+ */
+void toggle_weekend_mode() {
+	if (!get_config_data()->smart) {
+		show_notice(NOTICE_NEED_SMART_ALARM, false);
+		return;
+	}
+	// Toggle weekend
+	if (get_config_data()->weekend_until > 0) {
+		// Turn off weekend
+		get_config_data()->weekend_until = 0;
+		show_notice(NOTICE_STOPPED_WEEKEND, false);
+		set_smart_status();
+	} else {
+		// Turn on weekend
+		get_config_data()->weekend_until = time(NULL) + WEEKEND_PERIOD;
+		show_notice(NOTICE_STARTED_WEEKEND, false);
+		set_smart_status();
+	}
+}
+

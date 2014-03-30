@@ -112,6 +112,21 @@ static void up_long_up_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 /**
+ * Down button click down handler (weekend)
+ */
+static void down_long_down_handler(ClickRecognizerRef recognizer, void *context) {
+	// Weekend mode
+	toggle_weekend_mode();
+}
+
+/**
+ * Down button click up handler (weekend)
+ */
+static void down_long_up_handler(ClickRecognizerRef recognizer, void *context) {
+	// Take no action
+}
+
+/**
  * Back button single click handler
  */
 static void back_single_click_handler(ClickRecognizerRef recognizer, void *context) {
@@ -148,6 +163,7 @@ void click_config_provider(Window *window) {
 	const uint16_t delay_ms = 1500;
 	window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, select_long_up_handler);
 	window_long_click_subscribe(BUTTON_ID_UP, delay_ms, up_long_down_handler, up_long_up_handler);
+	window_long_click_subscribe(BUTTON_ID_DOWN, delay_ms, down_long_down_handler, down_long_up_handler);
 	window_single_click_subscribe(BUTTON_ID_BACK, back_single_click_handler);
 	window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
 	window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);

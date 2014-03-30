@@ -30,6 +30,7 @@ static ConfigData config_data;
 bool save_config_requested = false;
 static InternalData orig_internal_data;
 static bool no_record_warning = true;
+static uint8_t last_progress_highest_entry = 254;
 
 /*
  * Calculate hour and minutes as mins
@@ -166,17 +167,18 @@ static double morp_floor (double x) {
  * Perform reset - either from watch or phone
  */
 void reset_sleep_period() {
-	vibes_double_pulse();
 	clear_internal_data();
 	time_t now = time(NULL);
 	internal_data.base = now;
 	internal_data.last_sent = -1;
 	internal_data.has_been_reset = true;
 	show_record(false);
-	if (config_data.smart) {
+	if (config_data.smart && config_data.weekend_until == 0) {
 		show_notice(NOTICE_TIMER_RESET_ALARM, false);
+		vibes_double_pulse();
 	} else {
 		show_notice(NOTICE_TIMER_RESET_NOALARM, false);
+		vibes_short_pulse();
 	}
 }
 
@@ -215,8 +217,11 @@ static void store_point_info(uint16_t point) {
  * Set the progress marker
  */
 void set_progress_based_on_persist() {
-	uint8_t pct = (double)internal_data.highest_entry / (double)LIMIT * 100.0;
-	set_progress(pct);
+	if (internal_data.highest_entry != last_progress_highest_entry) {
+		uint8_t pct = (double)internal_data.highest_entry / (double)LIMIT * 100.0;
+		set_progress(pct);
+		last_progress_highest_entry = internal_data.highest_entry;
+	}
 }
 
 /*
@@ -232,28 +237,31 @@ static bool smart_alarm(uint16_t point) {
 	if (!config_data.smart)
 		return false;
 
+	// Not alarming at the moment
+	if (config_data.weekend_until > 0)
+		return false;
+
 	// Now has the alarm been sounded yet
 	if (internal_data.gone_off != 0)
 		return false;
 
-	// Work out the average
-	int32_t total = 0;
-	int32_t novals = 0;
-	for (uint8_t i=0; i <= internal_data.highest_entry; i++) {
-		novals++;
-		total += internal_data.points[i];
-	}
-	if (novals == 0)
-		novals = 1;
-	int32_t threshold = total / novals;
-
 	// Are we in the right timeframe
-
 	time_t timeNow = time(NULL);
 	struct tm *time = localtime(&timeNow);
 	now = to_mins(time->tm_hour, time->tm_min);
 
 	if (now >= config_data.from && now < config_data.to) {
+
+		// Work out the average
+		int32_t total = 0;
+		int32_t novals = 0;
+		for (uint8_t i=0; i <= internal_data.highest_entry; i++) {
+			novals++;
+			total += internal_data.points[i];
+		}
+		if (novals == 0)
+			novals = 1;
+		int32_t threshold = total / novals;
 
 		// Has the current point exceeded the threshold value
 		if (point > threshold) {
@@ -304,8 +312,12 @@ void transmit_next_data(void *data) {
 	if (!bluetooth_connection_service_peek())
 		return;
 
-	// Have we already caught up - if so then there is no need to send anything else
+	// Have we already caught up - if so then finish with the gone off time, if present
 	if (internal_data.last_sent >= internal_data.highest_entry) {
+		if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
+			APP_LOG(APP_LOG_LEVEL_INFO, "send goneoff");
+			send_goneoff();
+		}
 		return;
 	}
 
@@ -329,7 +341,6 @@ void server_processing(uint16_t biggest) {
 	store_point_info(biggest);
 	if (smart_alarm(biggest)) {
 		fire_alarm();
-		app_timer_register(200, send_goneoff, NULL);
 	}
 	transmit_data();
 }
