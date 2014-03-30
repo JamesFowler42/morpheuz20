@@ -13,13 +13,31 @@ It's simple to install. There is no iOS or Android app to buy, nothing to sign u
 
 Please visit http://www.morpheuz.net for further information.
 
-Please enjoy and let me know how you get on.
+Sleep well.
 
-Notes
--------
-1. Power consumption on the watch was low during testing, as data sets are collected every 2.5 seconds and then transmitted to the phone every two minutes. 
+Version 2.1.0
+----------------
+* NEW Weekend mode - One button press prevents the smart alarm going
+off and automatically re-enables it for the next night. Ideal for those
+nights when you go to bed knowing you don't need to get up. Activated
+by a long press on the down button either before or after the long
+press on the reset button.
+* Further battery optimisation - calculation for smart alarm threshold
+was taking place outside of the smart alarm period. This was a waste.
+* Interfacing of the smart alarm actual time is now done as part of the
+assured delivery loop. This prevents the smart alarm actual time being
+lost if the watch app is shut when comms is down.
+* New menu icon - again. Not satisfied with the last one.
+* Reset does a double buzz if the smart alarm is on and a single buzz
+if it is off. As before a total failure gives an SOS buzz.
+* Built with latest SDK
+* Comms icon cannot be at odds with BT icon
 
-2. Whilst the app makes every effort to trigger the alarm please consider using another alarm at the end of your "smart alarm" period. 
+Version 2.0.0
+----------------
+* New graphics; 
+* SOS buzz when accelerometer is not working; 
+* better battery life;
 
 Version 1.9.0
 -------------
