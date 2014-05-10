@@ -24,6 +24,7 @@
 
 #include "pebble.h"
 #include "morpheuz.h"
+#include "language.h"
 
 // Times (in seconds) between each buzz (gives a progressive alarm and gaps between phases)
 static uint8_t alarm_pattern[] = {3,3,2,2,2,2,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,60,
@@ -45,7 +46,7 @@ static void do_alarm(void *data) {
 	}
 
 	// Vibrate
-	vibes_long_pulse();
+	do_vibes(VIBE_LONG);
 
 	// Prepare the time for the next buzz (this gives progressing and phasing)
 	alarm_timer = app_timer_register(((uint16_t)alarm_pattern[alarm_count]) * 1000, do_alarm, NULL);
@@ -70,7 +71,7 @@ static void do_alarm(void *data) {
  */
 void fire_alarm() {
 	alarm_count = 0;
-	show_notice(NOTICE_TIME_TO_WAKE_UP, false);
+	show_notice(NOTICE_TIME_TO_WAKE_UP);
 	do_alarm(NULL);
 	set_alarm_icon(true);
 }
@@ -91,7 +92,7 @@ bool snooze_alarm() {
 	alarm_count = 0;
 
 	// Let us know we're snoozing
-	show_notice(NOTICE_SNOOZE_ACTIVATED, false);
+	show_notice(NOTICE_SNOOZE_ACTIVATED);
 
 	return true;
 }
@@ -113,7 +114,7 @@ bool cancel_alarm() {
 	alarm_count = ARRAY_LENGTH(alarm_pattern);
 
 	// Let the screen know
-	show_notice(NOTICE_ALARM_CANCELLED, false);
+	show_notice(NOTICE_ALARM_CANCELLED);
 
 	// Reset power nap if not already done so
 	power_nap_reset();

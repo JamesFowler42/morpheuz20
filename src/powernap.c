@@ -23,6 +23,7 @@
  */
 #include "pebble.h"
 #include "morpheuz.h"
+#include "language.h"
 
 static bool power_nap_mode = false;
 static int16_t power_nap_minute_count = 0;
@@ -78,21 +79,21 @@ static void select_long_down_handler(ClickRecognizerRef recognizer, void *contex
 	if (power_nap_mode) {
 		// Turn off power nap
 		power_nap_reset();
-		show_notice(NOTICE_STOPPED_POWER_NAP, false);
+		show_notice(NOTICE_STOPPED_POWER_NAP);
 	} else {
 		// Turn on power nap
 		power_nap_mode = true;
 		power_nap_minute_count = POWER_NAP_MINUTES + 1;
 		power_nap_settle_count = POWER_NAP_SETTLE;
 		set_smart_status_on_screen(true, POWER_NAP_SETTLE_TIME);
-		show_notice(NOTICE_STARTED_POWER_NAP, false);
+		show_notice(NOTICE_STARTED_POWER_NAP);
 	}
 }
 
 /**
- * Select button click up handler (power nap)
+ * Long up handler (dummy)
  */
-static void select_long_up_handler(ClickRecognizerRef recognizer, void *context) {
+static void long_up_handler(ClickRecognizerRef recognizer, void *context) {
 	// Take no action
 }
 
@@ -105,25 +106,11 @@ static void up_long_down_handler(ClickRecognizerRef recognizer, void *context) {
 }
 
 /**
- * Up button click up handler (reset)
- */
-static void up_long_up_handler(ClickRecognizerRef recognizer, void *context) {
-	// Take no action
-}
-
-/**
  * Down button click down handler (weekend)
  */
 static void down_long_down_handler(ClickRecognizerRef recognizer, void *context) {
 	// Weekend mode
 	toggle_weekend_mode();
-}
-
-/**
- * Down button click up handler (weekend)
- */
-static void down_long_up_handler(ClickRecognizerRef recognizer, void *context) {
-	// Take no action
 }
 
 /**
@@ -139,6 +126,20 @@ static void back_single_click_handler(ClickRecognizerRef recognizer, void *conte
 static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
 	if (!snooze_alarm())
 		show_keyboard();
+}
+
+/*
+ * Double click handler on select button
+ */
+static void select_double_click_handler(ClickRecognizerRef recognizer, void *context) {
+  set_ignore_on_current_time_segment();
+}
+
+/*
+ * Double click handler on back button
+ */
+static void back_double_click_handler(ClickRecognizerRef recognizer, void *context) {
+  resend_all_data();
 }
 
 /*
@@ -161,9 +162,11 @@ static void up_single_click_handler(ClickRecognizerRef recognizer, void *context
  */
 void click_config_provider(Window *window) {
 	const uint16_t delay_ms = 1500;
-	window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, select_long_up_handler);
-	window_long_click_subscribe(BUTTON_ID_UP, delay_ms, up_long_down_handler, up_long_up_handler);
-	window_long_click_subscribe(BUTTON_ID_DOWN, delay_ms, down_long_down_handler, down_long_up_handler);
+	window_multi_click_subscribe(BUTTON_ID_SELECT, 2, 2, 0, true, select_double_click_handler);
+  window_multi_click_subscribe(BUTTON_ID_BACK, 2, 2, 0, true, back_double_click_handler);
+	window_long_click_subscribe(BUTTON_ID_SELECT, delay_ms, select_long_down_handler, long_up_handler);
+	window_long_click_subscribe(BUTTON_ID_UP, delay_ms, up_long_down_handler, long_up_handler);
+	window_long_click_subscribe(BUTTON_ID_DOWN, delay_ms, down_long_down_handler, long_up_handler);
 	window_single_click_subscribe(BUTTON_ID_BACK, back_single_click_handler);
 	window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
 	window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);

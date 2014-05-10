@@ -24,11 +24,12 @@
 
 #include "pebble.h"
 #include "morpheuz.h"
+#include "language.h"
 
 static InternalData internal_data;
 static ConfigData config_data;
 bool save_config_requested = false;
-static InternalData orig_internal_data;
+static int32_t internal_data_checksum;
 static bool no_record_warning = true;
 static uint8_t last_progress_highest_entry = 254;
 
@@ -43,13 +44,14 @@ static uint32_t to_mins(uint32_t hour, uint32_t min) {
  * Save the internal data structure
  */
 void save_internal_data() {
-	if (memcmp(&orig_internal_data, &internal_data, sizeof(internal_data)) != 0) {
+  int32_t checksum = dirty_checksum(&internal_data, sizeof(internal_data));
+  if (checksum != internal_data_checksum) {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data (%d)",  sizeof(internal_data));
 		int written = persist_write_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
 		if (written != sizeof(internal_data)) {
 			APP_LOG(APP_LOG_LEVEL_ERROR, "save_internal_data error (%d)", written);
 		} else {
-			memcpy (&orig_internal_data, &internal_data, sizeof(internal_data));
+	    internal_data_checksum = checksum;
 		}
 	} else {
 		APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data no change");
@@ -69,7 +71,7 @@ static void save_internal_data_timer(void *data) {
  */
 static void clear_internal_data() {
 	memset(&internal_data, 0, sizeof(internal_data));
-	memset(&orig_internal_data, 1, sizeof(orig_internal_data));
+	internal_data_checksum = 0;
 	internal_data.has_been_reset = false;
 	set_progress_based_on_persist();
 }
@@ -81,10 +83,10 @@ void read_internal_data() {
 	if (persist_exists(PERSIST_MEMORY_KEY)) {
 		int read = persist_read_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
 		if (read != sizeof(internal_data)) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "read_internal_data read wrong size (%d returned)", read);
+			APP_LOG(APP_LOG_LEVEL_ERROR, "read_internal_data wrong size %d", read);
 			clear_internal_data();
 		} else {
-			memcpy (&orig_internal_data, &internal_data, sizeof(internal_data));
+		  internal_data_checksum = dirty_checksum(&internal_data, sizeof(internal_data));
 		}
 	} else {
 		clear_internal_data();
@@ -125,7 +127,7 @@ void read_config_data() {
 	if (persist_exists(PERSIST_CONFIG_KEY)) {
 		int read = persist_read_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
 		if (read != sizeof(config_data)) {
-			APP_LOG(APP_LOG_LEVEL_ERROR, "read_config_data wrong size (%d)", read);
+			APP_LOG(APP_LOG_LEVEL_ERROR, "read_config_data wrong size %d", read);
 			clear_config_data();
 		}
 	} else {
@@ -158,11 +160,6 @@ void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert) {
 	}
 }
 
-// Is math.h available?
-static double morp_floor (double x) {
-	return (double) (x < 0.f ? (((int)x) - 1) : ((int) x));
-}
-
 /*
  * Perform reset - either from watch or phone
  */
@@ -173,13 +170,46 @@ void reset_sleep_period() {
 	internal_data.last_sent = -1;
 	internal_data.has_been_reset = true;
 	show_record(false);
+	show_ignore_state(false);
 	if (config_data.smart && config_data.weekend_until == 0) {
-		show_notice(NOTICE_TIMER_RESET_ALARM, false);
-		vibes_double_pulse();
+		show_notice(NOTICE_TIMER_RESET_ALARM);
+	  do_vibes(VIBE_DOUBLE);
 	} else {
-		show_notice(NOTICE_TIMER_RESET_NOALARM, false);
-		vibes_short_pulse();
+		show_notice(NOTICE_TIMER_RESET_NOALARM);
+	  do_vibes(VIBE_SHORT);
 	}
+}
+
+/*
+ * Force data resend
+ */
+void resend_all_data() {
+  show_notice(NOTICE_DATA_WILL_BE_RESENT_SHORTLY);
+  internal_data.last_sent = -1;
+  internal_data.gone_off_sent = false;
+}
+
+/*
+ * Set ignore on current time segment
+ */
+void set_ignore_on_current_time_segment() {
+
+  time_t now = time(NULL);
+
+  int32_t offset = (now - internal_data.base) / DIVISOR;
+
+  if (offset >= LIMIT || offset < 0) {
+    show_ignore_state(false);
+    return;
+  }
+
+  internal_data.ignore[offset] = !internal_data.ignore[offset];
+  show_ignore_state(internal_data.ignore[offset]);
+
+  if (internal_data.ignore[offset])
+    show_notice(NOTICE_IGNORING);
+  else
+    show_notice(NOTICE_NOT_IGNORING);
 }
 
 /*
@@ -189,18 +219,20 @@ static void store_point_info(uint16_t point) {
 
 	time_t now = time(NULL);
 
-	int32_t offset = morp_floor((now - internal_data.base) / DIVISOR);
+	int32_t offset = (now - internal_data.base) / DIVISOR;
 
-	if (offset > LIMIT) {
+	if (offset >= LIMIT || offset < 0) {
 		show_record(false);
+		show_ignore_state(false);
 		if (no_record_warning) {
-			show_notice(NOTICE_END_OF_RECORDING, false);
+			show_notice(NOTICE_END_OF_RECORDING);
 			no_record_warning = false;
 		}
 		return;
 	}
 
 	show_record(true);
+  show_ignore_state(internal_data.ignore[offset]);
 
 	// Remember the highest entry
 	internal_data.highest_entry = offset;
@@ -218,8 +250,7 @@ static void store_point_info(uint16_t point) {
  */
 void set_progress_based_on_persist() {
 	if (internal_data.highest_entry != last_progress_highest_entry) {
-		uint8_t pct = (double)internal_data.highest_entry / (double)LIMIT * 100.0;
-		set_progress(pct);
+		set_progress(internal_data.highest_entry + 1);
 		last_progress_highest_entry = internal_data.highest_entry;
 	}
 }
@@ -256,8 +287,10 @@ static bool smart_alarm(uint16_t point) {
 		int32_t total = 0;
 		int32_t novals = 0;
 		for (uint8_t i=0; i <= internal_data.highest_entry; i++) {
-			novals++;
-			total += internal_data.points[i];
+			if (!internal_data.ignore[i]) {
+		    novals++;
+			  total += internal_data.points[i];
+			}
 		}
 		if (novals == 0)
 			novals = 1;
@@ -296,10 +329,11 @@ static void transmit_data() {
 		return;
 
 	// Send either base (if last sent is -1) or a point
-	if (internal_data.last_sent == -1)
+	if (internal_data.last_sent == -1) {
 		send_base(internal_data.base);
-	else
-		send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent]);
+	} else {
+		send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent], internal_data.ignore[internal_data.last_sent]);
+	}
 }
 
 /*
@@ -324,7 +358,7 @@ void transmit_next_data(void *data) {
 	// Transmit next load of data
 	APP_LOG(APP_LOG_LEVEL_INFO, "transmit_next_data %d<%d", internal_data.last_sent, internal_data.highest_entry);
 	internal_data.last_sent++;
-	send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent]);
+	send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent], internal_data.ignore[internal_data.last_sent]);
 }
 
 /*
@@ -332,9 +366,8 @@ void transmit_next_data(void *data) {
  */
 void server_processing(uint16_t biggest) {
 	if (!internal_data.has_been_reset) {
-		APP_LOG(APP_LOG_LEVEL_INFO, "Not reset");
 		if (no_record_warning) {
-			show_notice(NOTICE_RESET_TO_START_USING, false);
+			show_notice(NOTICE_RESET_TO_START_USING);
 			no_record_warning = false;
 		}
 	}

@@ -1,5 +1,5 @@
 {
-    "versionLabel": "2.1.0",
+    "versionLabel": "2.2.0",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -11,7 +11,7 @@
         "keyGoneoff": 7
     },
     "longName": "Morpheuz",
-    "versionCode": 21,
+    "versionCode": 22,
     "capabilities": [
         "configurable"
     ],
@@ -23,19 +23,19 @@
     "resources": {
         "media": [
             {
-                "characterRegex": "[0-9:. ]",
+                "characterRegex": "[0-9:]",
                 "type": "font",
                 "name": "FONT_DIGITAL_38",
                 "file": "fonts/axaxax-bd-1.ttf"
             },
             {
-                "characterRegex": "[a-zA-Z0-9:.\\-! ]",
+                "characterRegex": "[a-zA-Z0-9:.\\-!() ]",
                 "type": "font",
                 "name": "FONT_DIGITAL_16",
                 "file": "fonts/axaxax-bd-1.ttf"
             },
             {
-                "characterRegex": "[0-9:. ]",
+                "characterRegex": "[0-9:]",
                 "type": "font",
                 "name": "FONT_DIGITAL_25",
                 "file": "fonts/axaxax-bd-1.ttf"
@@ -78,8 +78,23 @@
             },
             {
                 "type": "png",
-                "name": "IMAGE_LOGO",
-                "file": "images/logo.png"
+                "name": "IMAGE_LOGO_BED",
+                "file": "images/logo-bed.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_LOGO_SLEEPER",
+                "file": "images/logo-sleeper.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_LOGO_HEAD",
+                "file": "images/logo-head.png"
+            },
+            {
+                "type": "png",
+                "name": "IMAGE_LOGO_TEXT",
+                "file": "images/logo-text.png"
             },
             {
                 "type": "png",
@@ -98,11 +113,6 @@
             },
             {
                 "type": "png",
-                "name": "NOTICE_BG",
-                "file": "images/notice.png"
-            },
-            {
-                "type": "png",
                 "name": "KEYBOARD_BG",
                 "file": "images/keyboard-black.png"
             },
@@ -110,8 +120,32 @@
                 "type": "png",
                 "name": "KEYBOARD_BG_WHITE",
                 "file": "images/keyboard-white.png"
+            },
+            {
+                "type": "png",
+                "name": "KEYBOARD_ARROW_R_WHITE",
+                "file": "images/right-arrow-white.png"
+            },
+            {
+                "type": "png",
+                "name": "KEYBOARD_ARROW_L_WHITE",
+                "file": "images/left-arrow-white.png"
+            },
+            {
+                "type": "png",
+                "name": "KEYBOARD_ARROW_R_BLACK",
+                "file": "images/right-arrow-black.png"
+            },
+            {
+                "type": "png",
+                "name": "KEYBOARD_ARROW_L_BLACK",
+                "file": "images/left-arrow-black.png"
+            },
+            {
+                "type": "png",
+                "name": "IGNORE",
+                "file": "images/ignore.png"
             }
-            
         ]
     }
 }

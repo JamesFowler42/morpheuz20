@@ -24,27 +24,27 @@
 
 #include "pebble.h"
 #include "morpheuz.h"
+#include "language.h"
 
 static Window *window;
-static Window *notice_window;
-static Window *keyboard_window;
-static Window *fatal_window;
 
 static Layer *progress_layer;
 static Layer *battery_layer;
 
 static TextLayer *text_date_layer;
 static TextLayer *text_time_layer;
-static TextLayer *notice_text;
-static TextLayer *keyboard_time_text;
-static TextLayer *fatal_text;
+static TextLayer *version_text;
+static TextLayer *block_layer;
+static TextLayer *block_layer2;
 
-static BitmapLayer *logo_layer;
+static BitmapLayer *logo_bed_layer;
+static BitmapLayer *logo_sleeper_layer;
+static BitmapLayer *logo_head_layer;
+static BitmapLayer *logo_text_layer;
 static BitmapLayer *bluetooth_layer;
 static BitmapLayer *comms_layer;
+static BitmapLayer *ignore_layer;
 static BitmapLayer *record_layer;
-static BitmapLayer *notice_layer;
-static BitmapLayer *keyboard_layer;
 static BitmapLayer *alarm_icon_layer;
 static BitmapLayer *alarm_layer;
 
@@ -57,38 +57,30 @@ static GBitmap *icon_battery_charge;
 static GBitmap *image_progress;
 static GBitmap *image_progress_full;
 static GBitmap *record_bitmap;
-static GBitmap *notice_bitmap;
-static GBitmap *keyboard_bitmap;
-static GBitmap *logo_bitmap = NULL;
-static GBitmap *bluetooth_bitmap = NULL;
-static GBitmap *comms_bitmap = NULL;
+static GBitmap *logo_bed_bitmap;
+static GBitmap *logo_sleeper_bitmap;
+static GBitmap *logo_head_bitmap;
+static GBitmap *logo_text_bitmap;
+static GBitmap *bluetooth_bitmap;
+static GBitmap *comms_bitmap;
+static GBitmap *ignore_bitmap;
 
-static GFont notice_font;
+extern GFont notice_font;
 static GFont time_font;
-static GFont keyboard_time_font;
 
-static AppTimer *notice_timer;
-static AppTimer *keyboard_timer;
+static struct PropertyAnimation *logo_bed_animation;
+static struct PropertyAnimation *logo_sleeper_animation;
+static struct PropertyAnimation *logo_text_animation;
+static struct PropertyAnimation *block_animation;
+static struct PropertyAnimation *logo_head_animation;
 
 static uint8_t battery_level;
 static bool battery_plugged;
 static bool g_show_special_text = false;
-static char date_text[] = "Xxxxxxxxx 00   ";
-//                         00:00 - 00:00
-static uint8_t progress_level;
-static bool notice_showing = false;
-static char version_text[40];
-static bool keyboard_showing = false;
-static bool fatal_showing = false;
+static char date_text[16];
+static uint16_t progress_level;
 static bool first_time = true;
-
-static const uint32_t const sos_seg[] = { 100, 250, 100, 250, 100, 250,
-                                          200, 250, 200, 250, 200, 250,
-                                          100, 250, 100, 250, 100};
-VibePattern sos = {
-  .durations = sos_seg,
-  .num_segments = ARRAY_LENGTH(sos_seg),
-};
+static uint8_t animation_count = 0;
 
 /*
  * Show the date
@@ -99,6 +91,8 @@ static void show_date() {
 	strftime(date_text, sizeof(date_text), "%B %e", time);
 	text_layer_set_text(text_date_layer, date_text);
 }
+
+
 
 /*
  * Set the smart alarm status details
@@ -129,7 +123,7 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx) {
 		graphics_draw_bitmap_in_rect(ctx, icon_battery, GRect(0, 0, 24, 12));
 		graphics_context_set_stroke_color(ctx, GColorBlack);
 		graphics_context_set_fill_color(ctx, GColorWhite);
-		graphics_fill_rect(ctx, GRect(7, 4, (uint8_t)((battery_level / 100.0) * 11.0), 4), 0, GCornerNone);
+		graphics_fill_rect(ctx, GRect(7, 4, battery_level / 9, 4), 0, GCornerNone);
 	} else {
 		graphics_draw_bitmap_in_rect(ctx, icon_battery_charge, GRect(0, 0, 24, 12));
 	}
@@ -150,24 +144,19 @@ static void battery_state_handler(BatteryChargeState charge) {
 static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 	graphics_context_set_compositing_mode(ctx, GCompOpAssign);
 	graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 131, 5));
-	graphics_draw_bitmap_in_rect(ctx, image_progress_full, GRect(0, 0, (uint8_t)((progress_level / 100.0) * 131.0), 5));
+	graphics_draw_bitmap_in_rect(ctx, image_progress_full, GRect(0, 0, progress_level * 131 / LIMIT, 5));
 }
 
 /*
  * Process clockface
  */
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
-	// Need to be static because they're used by the system later.
-	static char time_text[] = "00:00";
 
 	if (!g_show_special_text) {
 		show_date();
 	}
 
-	clock_copy_time_string	(time_text, sizeof(time_text));
-	if (time_text[4] == ' ')
-		time_text[4] = '\0';
-	text_layer_set_text(text_time_layer, time_text);
+	set_text_layer_to_time(text_time_layer);
 
 	self_monitor();
 
@@ -199,6 +188,13 @@ void show_comms_state(bool connected) {
 }
 
 /*
+ * Ignore status
+ */
+void show_ignore_state(bool ignore) {
+  layer_set_hidden(bitmap_layer_get_layer(ignore_layer), !ignore);
+}
+
+/*
  * Alarm status icon
  */
 void set_alarm_icon(bool show_icon) {
@@ -206,10 +202,10 @@ void set_alarm_icon(bool show_icon) {
 }
 
 /*
- * Progress indicator position
+ * Progress indicator position (1-54)
  */
-void set_progress(uint8_t progress_percent) {
-	progress_level = progress_percent;
+void set_progress(uint8_t progress_level_in) {
+	progress_level = progress_level_in;
 	layer_mark_dirty(progress_layer);
 }
 
@@ -221,186 +217,70 @@ void show_record(bool recording) {
 }
 
 /*
- * Remove the notice window
+ * End of initial animation sequence - occurs 4 then 5 times
  */
-static void hide_notice_layer(void *data) {
-	if (notice_showing) {
-		window_stack_remove(notice_window, true);
-		text_layer_destroy(notice_text);
-		bitmap_layer_destroy(notice_layer);
-		window_destroy(notice_window);
-		notice_showing = false;
-	}
+static void animation_stopped(Animation *animation, bool finished, void *data) {
+  animation_count++;
+  if (animation_count == 4) {
+    light_enable_interaction();
+    animation_unschedule((Animation*) logo_bed_animation);
+    animation_unschedule((Animation*) logo_sleeper_animation);
+    animation_unschedule((Animation*) logo_text_animation);
+    animation_unschedule((Animation*) block_animation);
+    animation_destroy((Animation*) logo_bed_animation);
+    animation_destroy((Animation*) logo_sleeper_animation);
+    animation_destroy((Animation*) logo_text_animation);
+    animation_destroy((Animation*) block_animation);
+    text_layer_destroy(block_layer2);
+    animation_schedule((Animation*) logo_head_animation);
+  } else if (animation_count == 5) {
+    animation_unschedule((Animation*) logo_head_animation);
+    animation_destroy((Animation*) logo_head_animation);
+  }
 }
 
 /*
- * Show the notice window
+ * Start title animation sequence
  */
-void show_notice(char *message, bool short_time) {
+static void start_animate(void *data) {
+  light_enable_interaction();
 
-	if (fatal_showing)
-		return;
+  GRect start = BED_START;
+  GRect finish = BED_FINISH;
+  logo_bed_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_bed_layer), &start, &finish);
+  animation_set_duration((Animation*) logo_bed_animation, 1000);
+  animation_set_handlers((Animation*) logo_bed_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
 
-	// It's night - want to see message
-	light_enable_interaction();
+  start = SLEEPER_START;
+  finish = SLEEPER_FINISH;
+  logo_sleeper_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_sleeper_layer), &start, &finish);
+  animation_set_duration((Animation*) logo_sleeper_animation, 1000);
+  animation_set_handlers((Animation*) logo_sleeper_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
 
-	// Already showing - change message
-	if (notice_showing) {
-		text_layer_set_text(notice_text, message);
-		app_timer_reschedule(notice_timer, short_time ? NOTICE_DISPLAY_SHORT_MS : NOTICE_DISPLAY_MS);
-		return;
-	}
+  start = HEAD_START;
+  finish = HEAD_FINISH;
+  logo_head_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_head_layer), &start, &finish);
+  animation_set_duration((Animation*) logo_head_animation, 500);
+  animation_set_handlers((Animation*) logo_head_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
 
-	// Bring up notice
-	notice_showing = true;
-	notice_window = window_create();
-	window_set_fullscreen(notice_window, true);
-	window_stack_push(notice_window, true /* Animated */);
-	window_set_background_color(notice_window, GColorBlack);
+  start = TEXT_START;
+  finish = TEXT_FINISH;
+  logo_text_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_text_layer), &start, &finish);
+  animation_set_duration((Animation*) logo_text_animation, 1000);
+  animation_set_handlers((Animation*) logo_text_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
 
-	Layer *window_layer = window_get_root_layer(notice_window);
+  start = BLOCK_START;
+  finish = BLOCK_FINISH;
+  block_animation = property_animation_create_layer_frame(text_layer_get_layer(block_layer), &start, &finish);
+  animation_set_duration((Animation*) block_animation, 1000);
+  animation_set_handlers((Animation*) block_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
 
-	notice_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
-	layer_add_child(window_layer, bitmap_layer_get_layer(notice_layer));
-
-	bitmap_layer_set_bitmap(notice_layer, notice_bitmap);
-
-	notice_text = text_layer_create(GRect(17, 61, 112, 65));
-	text_layer_set_text_color(notice_text, GColorBlack);
-	text_layer_set_background_color(notice_text, GColorClear);
-	text_layer_set_text_alignment(notice_text, GTextAlignmentCenter);
-	text_layer_set_font(notice_text, notice_font);
-	layer_add_child(window_layer, text_layer_get_layer(notice_text));
-	text_layer_set_text(notice_text, message);
-
-	window_set_click_config_provider(notice_window, (ClickConfigProvider) click_config_provider);
-
-	notice_timer = app_timer_register(short_time ? NOTICE_DISPLAY_SHORT_MS : NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
-}
-
-/**
- * Vibe to give SOS
- */
-void vibes_sos() {
-	vibes_enqueue_custom_pattern(sos);
-}
-
-/*
- * Remove the keyboard window
- */
-static void hide_keyboard_layer(void *data) {
-	if (keyboard_showing) {
-		window_stack_remove(keyboard_window, true);
-		text_layer_destroy(keyboard_time_text);
-		bitmap_layer_destroy(keyboard_layer);
-		gbitmap_destroy(keyboard_bitmap);
-		window_destroy(keyboard_window);
-		keyboard_showing = false;
-	}
-}
-
-/*
- * Show the keyboard window
- */
-void show_keyboard() {
-
-	if (fatal_showing)
-		return;
-
-	// Need to be static because they're used by the system later.
-	static char time_text[] = "00:00";
-
-	// It's night - want to see message and time
-	light_enable_interaction();
-
-	// Already showing - make it vanish quickly
-	if (keyboard_showing) {
-		app_timer_reschedule(keyboard_timer, 200);
-		return;
-	}
-
-	// Bring up notice
-	keyboard_showing = true;
-	keyboard_window = window_create();
-	window_set_fullscreen(keyboard_window, true);
-	window_stack_push(keyboard_window, true /* Animated */);
-	window_set_background_color(keyboard_window, GColorBlack);
-
-	Layer *window_layer = window_get_root_layer(keyboard_window);
-
-	keyboard_layer = bitmap_layer_create(GRect(0, 0, 144, 168));
-	layer_add_child(window_layer, bitmap_layer_get_layer(keyboard_layer));
-
-	if (get_config_data()->invert) {
-		keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG_WHITE);
-	} else {
-		keyboard_bitmap = gbitmap_create_with_resource(RESOURCE_ID_KEYBOARD_BG);
-	}
-
-	bitmap_layer_set_bitmap(keyboard_layer, keyboard_bitmap);
-
-	keyboard_time_text = text_layer_create(GRect(0, 0, 144, 30));
-
-	if (get_config_data()->invert) {
-		text_layer_set_text_color(keyboard_time_text, GColorBlack);
-		text_layer_set_background_color(keyboard_time_text, GColorWhite);
-	} else {
-		text_layer_set_text_color(keyboard_time_text, GColorWhite);
-		text_layer_set_background_color(keyboard_time_text, GColorBlack);
-	}
-	text_layer_set_text_alignment(keyboard_time_text, GTextAlignmentCenter);
-	text_layer_set_font(keyboard_time_text, keyboard_time_font);
-	layer_add_child(window_layer, text_layer_get_layer(keyboard_time_text));
-	clock_copy_time_string	(time_text, sizeof(time_text));
-	if (time_text[4] == ' ')
-		time_text[4] = '\0';
-	text_layer_set_text(keyboard_time_text, time_text);
-
-	window_set_click_config_provider(keyboard_window, (ClickConfigProvider) click_config_provider);
-
-	keyboard_timer = app_timer_register(KEYBOARD_DISPLAY_MS, hide_keyboard_layer, NULL);
-}
-
-/*
- * Remove the keyboard window
- */
-static void hide_fatal_layer() {
-	if (fatal_showing) {
-		window_stack_remove(fatal_window, true);
-		text_layer_destroy(fatal_text);
-		window_destroy(fatal_window);
-		fatal_showing = false;
-	}
-}
-
-/*
- * Show the fatal error window and do sos vibes
- */
-void show_fatal(char *message) {
-
-	if (fatal_showing)
-		return;
-
-	fatal_showing = true;
-
-	// Bring up notice
-	fatal_window = window_create();
-	window_set_fullscreen(fatal_window, true);
-	window_stack_push(fatal_window, false);
-	window_set_background_color(fatal_window, GColorWhite);
-
-	Layer *window_layer = window_get_root_layer(fatal_window);
-
-	fatal_text = text_layer_create(GRect(5, 5, 134, 158));
-	text_layer_set_text_color(fatal_text, GColorBlack);
-	text_layer_set_background_color(fatal_text, GColorWhite);
-	text_layer_set_font(fatal_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD));
-	layer_add_child(window_layer, text_layer_get_layer(fatal_text));
-	text_layer_set_text(fatal_text, message);
-
-	window_set_click_config_provider(fatal_window, (ClickConfigProvider) click_config_provider);
-
-	vibes_sos();
+  animation_schedule((Animation*) logo_bed_animation);
+  animation_schedule((Animation*) logo_sleeper_animation);
+  animation_schedule((Animation*) logo_text_animation);
+  animation_schedule((Animation*) block_animation);
+  text_layer_destroy(version_text);
+  text_layer_set_text(block_layer, "");
 }
 
 /*
@@ -413,27 +293,37 @@ static void handle_init(void) {
 
 	window_set_background_color(window, GColorBlack);
 
+	notice_init();
+
 	Layer *window_layer = window_get_root_layer(window);
 
-	logo_layer = bitmap_layer_create(GRect(0, 10, 144, 80));
-	layer_add_child(window_layer, bitmap_layer_get_layer(logo_layer));
-	logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO);
-	bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
+	logo_bed_layer = bitmap_layer_create(BED_START);
+	layer_add_child(window_layer, bitmap_layer_get_layer(logo_bed_layer));
+	logo_bed_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_BED);
+	bitmap_layer_set_bitmap(logo_bed_layer, logo_bed_bitmap);
+
+  logo_sleeper_layer = bitmap_layer_create(SLEEPER_START);
+  layer_add_child(window_layer, bitmap_layer_get_layer(logo_sleeper_layer));
+  logo_sleeper_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_SLEEPER);
+  bitmap_layer_set_bitmap(logo_sleeper_layer, logo_sleeper_bitmap);
+
+  logo_text_layer = bitmap_layer_create(TEXT_START);
+  layer_add_child(window_layer, bitmap_layer_get_layer(logo_text_layer));
+  logo_text_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_TEXT);
+  bitmap_layer_set_bitmap(logo_text_layer, logo_text_bitmap);
+
+  logo_head_layer = bitmap_layer_create(HEAD_START);
+  layer_add_child(window_layer, bitmap_layer_get_layer(logo_head_layer));
+  logo_head_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_HEAD);
+  bitmap_layer_set_bitmap(logo_head_layer, logo_head_bitmap);
+
+  version_text = macro_text_layer_create(GRect(26, 43, 92, 30),window_layer,GColorWhite,GColorClear, notice_font, GTextAlignmentCenter);
+  text_layer_set_text(version_text, VERSION_TXT);
 
 	time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
-	text_time_layer = text_layer_create(GRect(0, 109, 144, 42));
-	text_layer_set_text_color(text_time_layer, GColorWhite);
-	text_layer_set_text_alignment(text_time_layer, GTextAlignmentCenter);
-	text_layer_set_background_color(text_time_layer, GColorBlack);
-	text_layer_set_font(text_time_layer, time_font);
-	layer_add_child(window_layer, text_layer_get_layer(text_time_layer));
+	text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42),window_layer,GColorWhite,GColorBlack, time_font, GTextAlignmentCenter);
 
-	text_date_layer = text_layer_create(GRect(8, 85, 144-8, 31));
-	text_layer_set_text_color(text_date_layer, GColorWhite);
-	text_layer_set_background_color(text_date_layer, GColorBlack);
-	text_layer_set_text_alignment(text_date_layer, GTextAlignmentCenter);
-	text_layer_set_font(text_date_layer, fonts_get_system_font(FONT_KEY_GOTHIC_24));
-	layer_add_child(window_layer, text_layer_get_layer(text_date_layer));
+	text_date_layer = macro_text_layer_create(GRect(8, 85, 144-8, 31),window_layer,GColorWhite,GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
 	alarm_layer = bitmap_layer_create(GRect(11, 96, 12, 12));
 	layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));
@@ -475,6 +365,12 @@ static void handle_init(void) {
 	bitmap_layer_set_bitmap(alarm_icon_layer, alarm_ring_bitmap);
 	layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), true);
 
+  ignore_layer = bitmap_layer_create(GRect(144-26-14-10-16-19-15, 4, 9, 12));
+  layer_add_child(window_layer, bitmap_layer_get_layer(ignore_layer));
+  ignore_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IGNORE);
+  bitmap_layer_set_bitmap(ignore_layer, ignore_bitmap);
+  layer_set_hidden(bitmap_layer_get_layer(ignore_layer), true);
+
 	image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
 	image_progress_full = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS_FULL);
 	progress_level = 0;
@@ -482,13 +378,14 @@ static void handle_init(void) {
 	layer_set_update_proc(progress_layer, &progress_layer_update_callback);
 	layer_add_child(window_layer, progress_layer);
 
+	block_layer = macro_text_layer_create(BLOCK_START,window_layer,GColorWhite,GColorBlack, notice_font, GTextAlignmentCenter);
+  text_layer_set_text(block_layer, COPYRIGHT);
+
+  block_layer2 = macro_text_layer_create(GRect(144-26-14-10-16-19, 0, 144, 18),window_layer,GColorWhite,GColorBlack, notice_font, GTextAlignmentCenter);
+
 	full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
 	layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
 	layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
-
-	notice_bitmap = gbitmap_create_with_resource(RESOURCE_ID_NOTICE_BG);
-	notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
-	keyboard_time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_25));
 
 	window_stack_push(window, true /* Animated */);
 
@@ -507,9 +404,9 @@ static void handle_init(void) {
 
 	init_morpheuz(window);
 
-	// Show the welcome and version
-	snprintf(version_text, sizeof(version_text), NOTICE_WELCOME, VERSION_TXT);
-	show_notice(version_text, true);
+  light_enable_interaction();
+
+	app_timer_register(3000, start_animate, NULL);
 
 }
 
@@ -517,49 +414,56 @@ static void handle_init(void) {
  * Shutdown
  */
 static void handle_deinit(void) {
-	save_config_data(NULL);
+  save_config_data(NULL);
 	save_internal_data();
-	if (notice_showing)
-		hide_notice_layer(NULL);
-	if (keyboard_showing)
-		hide_keyboard_layer(NULL);
-	if (fatal_showing)
-		hide_fatal_layer();
-	window_stack_remove(window, true);
-	inverter_layer_destroy(full_inverse_layer);
-	layer_destroy(progress_layer);
-	bitmap_layer_destroy(alarm_icon_layer);
-	bitmap_layer_destroy(record_layer);
-	bitmap_layer_destroy(comms_layer);
-	bitmap_layer_destroy(bluetooth_layer);
-	layer_destroy(battery_layer);
-	bitmap_layer_destroy(alarm_layer);
-	text_layer_destroy(text_time_layer);
-	text_layer_destroy(text_date_layer);
-	bitmap_layer_destroy(logo_layer);
-	gbitmap_destroy(icon_battery);
-	gbitmap_destroy(icon_battery_charge);
-	gbitmap_destroy(logo_bitmap);
+  notice_deinit();
+
+  window_stack_remove(window, true);
+
+  inverter_layer_destroy(full_inverse_layer);
+
+  layer_destroy(progress_layer);
+  layer_destroy(battery_layer);
+
+  text_layer_destroy(text_time_layer);
+  text_layer_destroy(text_date_layer);
+
+  bitmap_layer_destroy(logo_bed_layer);
+  bitmap_layer_destroy(logo_sleeper_layer);
+  bitmap_layer_destroy(logo_head_layer);
+  bitmap_layer_destroy(logo_text_layer);
+  bitmap_layer_destroy(comms_layer);
+  bitmap_layer_destroy(ignore_layer);
+  bitmap_layer_destroy(bluetooth_layer);
+  bitmap_layer_destroy(alarm_icon_layer);
+  bitmap_layer_destroy(record_layer);
+  bitmap_layer_destroy(alarm_layer);
+
+  gbitmap_destroy(alarm_bitmap);
+  gbitmap_destroy(alarm_ring_bitmap);
+  gbitmap_destroy(icon_battery);
+  gbitmap_destroy(icon_battery_charge);
+  gbitmap_destroy(image_progress);
+  gbitmap_destroy(image_progress_full);
+  gbitmap_destroy(record_bitmap);
+  gbitmap_destroy(logo_bed_bitmap);
+  gbitmap_destroy(logo_sleeper_bitmap);
+  gbitmap_destroy(logo_head_bitmap);
+  gbitmap_destroy(logo_text_bitmap);
 	gbitmap_destroy(bluetooth_bitmap);
 	gbitmap_destroy(comms_bitmap);
-	gbitmap_destroy(alarm_bitmap);
-	gbitmap_destroy(alarm_ring_bitmap);
-	gbitmap_destroy(image_progress);
-	gbitmap_destroy(image_progress_full);
-	gbitmap_destroy(record_bitmap);
-	gbitmap_destroy(notice_bitmap);
-	fonts_unload_custom_font(notice_font);
-	fonts_unload_custom_font(keyboard_time_font);
-	fonts_unload_custom_font(time_font);
+  gbitmap_destroy(ignore_bitmap);
+
+  fonts_unload_custom_font(time_font);
+
 	tick_timer_service_unsubscribe();
 	battery_state_service_unsubscribe();
 	bluetooth_connection_service_unsubscribe();
+
 	deinit_morpheuz();
+
 	window_destroy(window);
-	APP_LOG(APP_LOG_LEVEL_INFO, "clean stop");
 }
-
-
 
 /*
  * Invert screen

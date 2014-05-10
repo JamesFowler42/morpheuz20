@@ -28,7 +28,7 @@
 function mConst() {
 	var cfg = { limit: 54,
 			divisor: 600000,
-			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view017.html", 
+			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view-", 
 			ctrlReset: 1,
 			ctrlInverse: 2,
 			ctrlNormal: 4
@@ -48,6 +48,7 @@ function resetWithPreserve() {
 	var tomin = window.localStorage.getItem("tomin");
 	var smart = window.localStorage.getItem("smart");
 	var inverse = window.localStorage.getItem("inverse");
+	var emailto = window.localStorage.getItem("emailto");
 	window.localStorage.clear();
 	window.localStorage.setItem("version",version);
 	window.localStorage.setItem("smart",smart);
@@ -56,6 +57,7 @@ function resetWithPreserve() {
 	window.localStorage.setItem("tohr",tohr);
 	window.localStorage.setItem("tomin",tomin);
 	window.localStorage.setItem("inverse", inverse);
+	window.localStorage.setItem("emailto", emailto);
 }
 
 /*
@@ -64,7 +66,9 @@ function resetWithPreserve() {
 function storePointInfo(point, biggest) {
 	var entry = "P" + point;
 	if (biggest == 0) // Don't pass -1 across the link but 0 really means null
-		biggest = -1; 
+		biggest = -1; // Null
+	else if (biggest == 5000) 
+		biggest = -2; // Ignored by user
 	window.localStorage.setItem(entry,biggest);
 }
 
@@ -103,7 +107,7 @@ Pebble.addEventListener("appmessage",
 		window.localStorage.setItem("base",base);			
 	}
 	if (typeof e.payload.keyVersion !== 'undefined') {
-		var version = parseInt(e.payload.keyVersion, 10) / 10;
+		var version = parseInt(e.payload.keyVersion, 10);
 		console.log("appmessage version=" + version);
 		window.localStorage.setItem("version",version);
 	}
@@ -175,9 +179,11 @@ Pebble.addEventListener("webviewclosed",
 		window.localStorage.setItem("tohr",dataElems[4]);
 		window.localStorage.setItem("tomin",dataElems[5]);
 		window.localStorage.setItem("inverse",dataElems[6]);
+		window.localStorage.setItem("emailto",dataElems[7]);
 		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
 	}
 });
+
 
 /*
  * Show the config/display page - this will show a graph and allow a reset
@@ -196,6 +202,9 @@ Pebble.addEventListener("showConfiguration",
 		}
 	}
 	var version = window.localStorage.getItem("version");
+	if (!(parseInt(version,10) >= 22))
+		version = "22";
+	
 	var fromhr = window.localStorage.getItem("fromhr");
 	var tohr = window.localStorage.getItem("tohr");
 	var frommin = window.localStorage.getItem("frommin");
@@ -207,11 +216,14 @@ Pebble.addEventListener("showConfiguration",
 	var inverse = window.localStorage.getItem("inverse");
 	if (inverse == null)
 		inverse = "N";
+	var emailto = window.localStorage.getItem("emailto");
+	if (emailto == null)
+		emailto = "";
 
-	var url = mConst().url + "?base=" + base + "&graph=" + graph + 
+	var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + 
 	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin +
 	"&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + 
-	"&goneoff=" + goneOff + "&inverse=" + inverse;
+	"&goneoff=" + goneOff + "&inverse=" + inverse + "&emailto=" + emailto;
 	console.log("url=" + url);
 	Pebble.openURL(url);
 });

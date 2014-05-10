@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 21
-#define VERSION_TXT "2.1"
+#define VERSION 22
+#define VERSION_TXT "2.2"
 
 #define FUDGE 4
 
@@ -37,24 +37,20 @@
 #define FLASH_ALARM_MS 2000
 #define WEEKEND_PERIOD (12*60*60)
 
-#define POWER_NAP_SETTLE_TIME "Power nap"
-#define POWER_NAP_RUNNING     "Power nap: %d"
-#define WEEKEND_TEXT 		  "Weekend"
-#define NOTICE_TIMER_RESET_ALARM "Sleep well!\nChart reset\nAlarm set"
-#define NOTICE_TIMER_RESET_NOALARM "Sleep well!\nChart reset\nNO ALARM"
-#define NOTICE_STARTED_POWER_NAP "\nPower nap\nstarted"
-#define NOTICE_STOPPED_POWER_NAP "\nPower nap\nstopped"
-#define NOTICE_TIME_TO_WAKE_UP "\nTime to\nwake up!"
-#define NOTICE_WELCOME "Morpheuz\nSleep Monitor\nVersion %s"
-#define NOTICE_ALARM_CANCELLED "\nAlarm\nCancelled"
-#define NOTICE_END_OF_RECORDING "End of recording\nReset to start again"
-#define NOTICE_RESET_TO_START_USING "Reset to start\nrecording"
-#define NOTICE_SNOOZE_ACTIVATED "\nSnooze\n9 minutes"
-#define NOTICE_STARTED_WEEKEND "Weekend mode\nNo alarm for 12hrs"
-#define NOTICE_STOPPED_WEEKEND "Weekend mode cancelled"
-#define NOTICE_NEED_SMART_ALARM "No Smart alarm: no weekend mode!"
 
-#define FATAL_ACCEL_CRASH "Morpheuz has found an error: The accelerometer is not returning any data. Please contact support from the Pebble app on your phone. Shutdown and restart your Pebble.\nHold back to leave Morpheuz."
+
+#define BED_START GRect(-144-8, 15, 127, 70)
+#define BED_FINISH GRect(8, 15, 127, 70)
+#define SLEEPER_START GRect(25+144, 22, 110, 29)
+#define SLEEPER_FINISH GRect(25, 22, 110, 29)
+#define HEAD_START GRect(25, -22, 19, 16)
+#define HEAD_FINISH GRect(25, 22, 19, 16)
+#define TEXT_START GRect(26, 23, 92, 15)
+#define TEXT_FINISH GRect(26, 70, 92, 15)
+#define BLOCK_START GRect(0,91,144,78)
+#define BLOCK_FINISH GRect(0,169,144,78)
+#define MOON_FINISH GRect(6, 5, 58, 46)
+#define MOON_START GRect(144+6, 72, 58, 46)
 
 enum MorpKey {
 	KEY_POINT = 1,
@@ -72,6 +68,13 @@ enum CtrlValues {
 	CTRL_NORMAL = 4
 };
 
+typedef enum {
+  VIBE_LONG = 1,
+  VIBE_DOUBLE = 2,
+  VIBE_SHORT = 3,
+  VIBE_SOS = 4
+} VibeOptions;
+
 #define DISTRESS_WAIT_SEC 10
 #define WINDOW_HEIGHT 168
 
@@ -82,7 +85,6 @@ enum CtrlValues {
 #define SHORT_RETRY_MS 200
 #define LONG_RETRY_MS 60000
 #define NOTICE_DISPLAY_MS 7000
-#define NOTICE_DISPLAY_SHORT_MS 2500
 #define KEYBOARD_DISPLAY_MS 7000
 
 #define LIMIT 54
@@ -94,6 +96,7 @@ typedef struct {
 	uint8_t highest_entry;
 	int8_t last_sent;
 	uint16_t points[LIMIT];
+	bool ignore[LIMIT];
 	bool has_been_reset;
 	bool gone_off_sent;
 } InternalData;
@@ -129,7 +132,7 @@ void set_progress(uint8_t progress_percent);
 void send_base(uint32_t base);
 void send_goneoff();
 void send_version(void *data);
-void send_point(uint8_t point, uint16_t biggest);
+void send_point(uint8_t point, uint16_t biggest, bool ignore);
 void set_progress_based_on_persist();
 InternalData *get_internal_data();
 void read_internal_data();
@@ -138,7 +141,7 @@ void show_record(bool recording);
 void save_config_data(void *data);
 void read_config_data();
 ConfigData *get_config_data();
-void show_notice(char *message, bool short_time);
+void show_notice(char *message);
 bool cancel_alarm();
 void fire_alarm();
 bool snooze_alarm();
@@ -148,7 +151,16 @@ void set_alarm_icon(bool show_icon);
 void show_fatal(char *message);
 void every_minute_processing(int min_no);
 void trigger_config_save();
-void vibes_sos();
+void do_vibes(VibeOptions opt);
 void toggle_weekend_mode();
+void notice_init();
+void notice_deinit();
+void set_text_layer_to_time(TextLayer *text_layer);
+TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment);
+int32_t join_value(int16_t top, int16_t bottom);
+int32_t dirty_checksum(void *data, uint8_t data_size);
+void set_ignore_on_current_time_segment();
+void show_ignore_state(bool ignore);
+void resend_all_data();
 
 #endif /* MORPHEUZ_H_ */

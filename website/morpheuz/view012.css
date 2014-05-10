@@ -27,9 +27,9 @@ body {
 }
 
 h2 {
-       margin-top: 0px;
+	margin-top: 0px;
 	font-size: 17px;
-       margin-bottom:5px;
+	margin-bottom: 5px;
 }
 
 p {
@@ -78,15 +78,15 @@ table.jqplot-table-legend {
 }
 
 .fromValues {
-  border-top: none;
-  border-right: none;
-  border-left: none;
-  border-bottom: 2px solid rgb(76,217,100);
+	border-top: none;
+	border-right: none;
+	border-left: none;
+	border-bottom: 2px solid rgb(76, 217, 100);
 }
 
 .toValues {
-  border-top: none;
-  border-right: none;
-  border-left: none;
-  border-bottom: 2px solid rgb(255,59,48);
+	border-top: none;
+	border-right: none;
+	border-left: none;
+	border-bottom: 2px solid rgb(255, 59, 48);
 }
