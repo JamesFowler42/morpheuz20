@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013 James Fowler
+ * Copyright (c) 2013-2014 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -49,6 +49,9 @@ function resetWithPreserve() {
 	var smart = window.localStorage.getItem("smart");
 	var inverse = window.localStorage.getItem("inverse");
 	var emailto = window.localStorage.getItem("emailto");
+	var xuser = window.localStorage.getItem("xuser");
+	var xpass = window.localStorage.getItem("xpass");
+	var xkey = window.localStorage.getItem("xkey");
 	window.localStorage.clear();
 	window.localStorage.setItem("version",version);
 	window.localStorage.setItem("smart",smart);
@@ -58,6 +61,9 @@ function resetWithPreserve() {
 	window.localStorage.setItem("tomin",tomin);
 	window.localStorage.setItem("inverse", inverse);
 	window.localStorage.setItem("emailto", emailto);
+	window.localStorage.setItem("xuser", xuser);
+	window.localStorage.setItem("xpass", xpass);
+	window.localStorage.setItem("xkey", xkey);
 }
 
 /*
@@ -180,6 +186,9 @@ Pebble.addEventListener("webviewclosed",
 		window.localStorage.setItem("tomin",dataElems[5]);
 		window.localStorage.setItem("inverse",dataElems[6]);
 		window.localStorage.setItem("emailto",dataElems[7]);
+		window.localStorage.setItem("xuser",dataElems[8]);
+		window.localStorage.setItem("xpass",dataElems[9]);
+		window.localStorage.setItem("xkey",dataElems[10]);
 		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
 	}
 });
@@ -219,12 +228,22 @@ Pebble.addEventListener("showConfiguration",
 	var emailto = window.localStorage.getItem("emailto");
 	if (emailto == null)
 		emailto = "";
+	var xuser = window.localStorage.getItem("xuser");
+	if (xuser == null)
+		xuser = "";
+	var xpass = window.localStorage.getItem("xpass");
+	if (xpass == null)
+		xpass = "";
+	var xkey = window.localStorage.getItem("xkey");
+	if (xkey == null)
+		xkey = "";
 
 	var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + 
 	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin +
 	"&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + 
-	"&goneoff=" + goneOff + "&inverse=" + inverse + "&emailto=" + emailto;
-	console.log("url=" + url);
+	"&goneoff=" + goneOff + "&inverse=" + inverse + "&emailto=" + emailto +
+	"&xuser=" + xuser + "&xpass=" + xpass + "&xkey=" + xkey;
+	console.log("url=" + url + " (len=" + url.length + ")");
 	Pebble.openURL(url);
 });
 

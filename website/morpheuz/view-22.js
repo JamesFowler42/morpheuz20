@@ -159,6 +159,9 @@ var inverse = getParameterByName("inverse");
 var vers = getParameterByName("vers");
 var goneoff = getParameterByName("goneoff");
 var emailto = decodeURIComponent(getParameterByName('emailto'));
+var xuser = decodeURIComponent(getParameterByName('xuser'));
+var xpass = decodeURIComponent(getParameterByName('xpass'));
+var xkey = decodeURIComponent(getParameterByName('xkey'));
 
 var smartOn = smart == 'Y';
 var inverseOn = inverse == 'Y';
@@ -499,6 +502,9 @@ document.getElementById('reset').onclick = function() {
 	var smartpart = document.getElementById('smartalarm').checked ? 'Y' : 'N';
 	var inversepart = document.getElementById('inverse').checked ? 'Y' : 'N';
 	var emailpart = encodeURIComponent(document.getElementById('emailto').value);
+        var xuserpart = "";
+        var xpasspart = "";
+        var xkeypart = "";
 	var fromhrpart = "";
 	var fromminpart = "";
 	var tohrpart = "";
@@ -530,8 +536,9 @@ document.getElementById('reset').onclick = function() {
 		document.getElementById('satohourtxt').style.backgroundColor = 'red';
 		document.getElementById('satomintxt').style.backgroundColor = 'red';
 	} else {
-		window.location.href = "pebblejs://close#reset" + '!' + smartpart + '!'
+		window.location.href = 'pebblejs://close#reset' + '!' + smartpart + '!'
 				+ fromhrpart + '!' + fromminpart + '!' + tohrpart + '!'
-				+ tominpart + "!" + inversepart + "!" + emailpart;
+				+ tominpart + '!' + inversepart + '!' + emailpart + '!'
+                                + xuserpart + '!' + xpasspart + '!' + xkeypart;
 	}
 }
