@@ -4,3 +4,5 @@ build/
 Debug/
 .lock-waf_darwin_build
 .settings/
+
+.lock-waf_darwin_build
