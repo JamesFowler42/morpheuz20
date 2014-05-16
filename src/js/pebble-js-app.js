@@ -31,9 +31,23 @@ function mConst() {
 			url: "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view-", 
 			ctrlReset: 1,
 			ctrlInverse: 2,
-			ctrlNormal: 4
+			ctrlNormal: 4,
+			versionDef: "22",
+			smartDef: "N",
+			fromhrDef:"6",
+			fromminDef: "30",
+			tohrDef:"7",
+			tominDef: "15",
+			inverseDef: "N"
 	};
 	return cfg;
+}
+
+/*
+ * Protection against nulls
+ */
+function nvl(field, defval) {
+	return field == null || field == "null" ? defval : field;
 }
 
 /*
@@ -53,17 +67,17 @@ function resetWithPreserve() {
 	var xpass = window.localStorage.getItem("xpass");
 	var xkey = window.localStorage.getItem("xkey");
 	window.localStorage.clear();
-	window.localStorage.setItem("version",version);
-	window.localStorage.setItem("smart",smart);
-	window.localStorage.setItem("fromhr",fromhr);
-	window.localStorage.setItem("frommin",frommin);
-	window.localStorage.setItem("tohr",tohr);
-	window.localStorage.setItem("tomin",tomin);
-	window.localStorage.setItem("inverse", inverse);
-	window.localStorage.setItem("emailto", emailto);
-	window.localStorage.setItem("xuser", xuser);
-	window.localStorage.setItem("xpass", xpass);
-	window.localStorage.setItem("xkey", xkey);
+	window.localStorage.setItem("version", nvl(version, mConst().versionDef));
+	window.localStorage.setItem("smart", nvl(smart,mConst().smartDef));
+	window.localStorage.setItem("fromhr", nvl(fromhr,mConst().fromhrDef));
+	window.localStorage.setItem("frommin", nvl(frommin,mConst().fromminDef));
+	window.localStorage.setItem("tohr", nvl(tohr,mConst().tohrDef));
+	window.localStorage.setItem("tomin", nvl(tomin,mConst().tominDef));
+	window.localStorage.setItem("inverse", nvl(inverse, mConst().inverseDef));
+	window.localStorage.setItem("emailto", nvl(emailto, ""));
+	window.localStorage.setItem("xuser", nvl(xuser, ""));
+	window.localStorage.setItem("xpass", nvl(xpass, ""));
+	window.localStorage.setItem("xkey", nvl(xkey, ""));
 }
 
 /*
@@ -85,14 +99,14 @@ Pebble.addEventListener("ready",
 		function(e) {
 	console.log("ready");
 	var smartStr = window.localStorage.getItem("smart");
-	if (smartStr == null) {
+	if (smartStr == null || smartStr == "null") {
 		resetWithPreserve();
-		window.localStorage.setItem("smart","N");
-		window.localStorage.setItem("fromhr","6");
-		window.localStorage.setItem("frommin","30");
-		window.localStorage.setItem("tohr","7");
-		window.localStorage.setItem("tomin","15");
-		window.localStorage.setItem("inverse", "N");
+		window.localStorage.setItem("smart",mConst().smartDef);
+		window.localStorage.setItem("fromhr",mConst().fromhrDef);
+		window.localStorage.setItem("frommin",mConst().fromminDef);
+		window.localStorage.setItem("tohr",mConst().tohrDef);
+		window.localStorage.setItem("tomin",mConst().tominDef);
+		window.localStorage.setItem("inverse", mConst().inverseDef);
 		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
 	} else {		
 		Pebble.sendAppMessage(returnSmartAlarmSettings(false));
@@ -104,7 +118,7 @@ Pebble.addEventListener("ready",
  */
 Pebble.addEventListener("appmessage",
 		function(e) {
-	if (typeof e.payload.keyBase !== 'undefined') {
+	if (typeof e.payload.keyBase !== "undefined") {
 		var base = parseInt(e.payload.keyBase, 10);
 		// Watch delivers local time in seconds...
 		base = (base + (new Date().getTimezoneOffset() * 60)) * 1000;
@@ -112,12 +126,12 @@ Pebble.addEventListener("appmessage",
 		resetWithPreserve();
 		window.localStorage.setItem("base",base);			
 	}
-	if (typeof e.payload.keyVersion !== 'undefined') {
+	if (typeof e.payload.keyVersion !== "undefined") {
 		var version = parseInt(e.payload.keyVersion, 10);
 		console.log("appmessage version=" + version);
 		window.localStorage.setItem("version",version);
 	}
-	if (typeof e.payload.keyGoneoff !== 'undefined') {
+	if (typeof e.payload.keyGoneoff !== "undefined") {
 		var goneoffNum = parseInt(e.payload.keyGoneoff, 10);
 		var goneoff = "N";
 		if (goneoffNum != 0) {
@@ -134,7 +148,7 @@ Pebble.addEventListener("appmessage",
 		console.log("appmessage goneoff=" + goneoff);
 		window.localStorage.setItem("goneOff", goneoff);	
 	}
-	if (typeof e.payload.keyPoint !== 'undefined') {
+	if (typeof e.payload.keyPoint !== "undefined") {
 		var point = parseInt(e.payload.keyPoint, 10);
 		var top = point >> 16;
 		var bottom = point & 0xFFFF;
@@ -169,7 +183,8 @@ function returnSmartAlarmSettings(resetVal) {
 }
 
 /*
- * Monitor the closing of the config/display screen so as we can do a reset if needed
+ * Monitor the closing of the config/display screen so as we can do a reset if
+ * needed
  */
 Pebble.addEventListener("webviewclosed",
 		function(e) {
@@ -213,30 +228,18 @@ Pebble.addEventListener("showConfiguration",
 	var version = window.localStorage.getItem("version");
 	if (!(parseInt(version,10) >= 22))
 		version = "22";
-	
-	var fromhr = window.localStorage.getItem("fromhr");
-	var tohr = window.localStorage.getItem("tohr");
-	var frommin = window.localStorage.getItem("frommin");
-	var tomin = window.localStorage.getItem("tomin");
-	var smart = window.localStorage.getItem("smart");
-	var goneOff = window.localStorage.getItem("goneOff");
-	if (goneOff == null)
-		goneOff = "N";
-	var inverse = window.localStorage.getItem("inverse");
-	if (inverse == null)
-		inverse = "N";
-	var emailto = window.localStorage.getItem("emailto");
-	if (emailto == null)
-		emailto = "";
-	var xuser = window.localStorage.getItem("xuser");
-	if (xuser == null)
-		xuser = "";
-	var xpass = window.localStorage.getItem("xpass");
-	if (xpass == null)
-		xpass = "";
-	var xkey = window.localStorage.getItem("xkey");
-	if (xkey == null)
-		xkey = "";
+
+	var fromhr = nvl(window.localStorage.getItem("fromhr"),mConst().fromhrDef);
+	var tohr = nvl(window.localStorage.getItem("tohr"),mConst().tohrDef);
+	var frommin = nvl(window.localStorage.getItem("frommin"),mConst().fromminDef);
+	var tomin = nvl(window.localStorage.getItem("tomin"),mConst().tominDef);
+	var smart = nvl(window.localStorage.getItem("smart"),mConst().smartDef);
+	var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
+	var inverse = nvl(window.localStorage.getItem("inverse"),mConst().inverseDef);
+	var emailto = nvl(window.localStorage.getItem("emailto"),"");
+	var xuser = nvl(window.localStorage.getItem("xuser"),"");
+	var xpass = nvl(window.localStorage.getItem("xpass"),"");
+	var xkey = nvl(window.localStorage.getItem("xkey"),"");
 
 	var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + 
 	"&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin +
@@ -247,10 +250,10 @@ Pebble.addEventListener("showConfiguration",
 	Pebble.openURL(url);
 });
 
-/*
- * Unclear if this serves a purpose at all
- */
-Pebble.addEventListener("configurationClosed",
-		function(e) {
-	console.log("configurationClosed");
-});
+	/*
+	 * Unclear if this serves a purpose at all
+	 */
+	Pebble.addEventListener("configurationClosed",
+			function(e) {
+		console.log("configurationClosed");
+	});

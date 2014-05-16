@@ -1,0 +1,7 @@
+# Stuff that doesn't need to be checked in
+#
+build/
+Debug/
+.lock-waf_darwin_build
+.cproject
+.project
