@@ -5,6 +5,8 @@
 # Feel free to customize this to your needs.
 #
 
+import os.path
+
 top = '.'
 out = 'build'
 
@@ -20,5 +22,12 @@ def build(ctx):
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
                     target='pebble-app.elf')
 
-    ctx.pbl_bundle(elf='pebble-app.elf',
-                   js=ctx.path.ant_glob('src/js/**/*.js'))
+    if os.path.exists('worker_src'):
+        ctx.pbl_worker(source=ctx.path.ant_glob('worker_src/**/*.c'),
+                        target='pebble-worker.elf')
+        ctx.pbl_bundle(elf='pebble-app.elf',
+                        worker_elf='pebble-worker.elf',
+                        js=ctx.path.ant_glob('src/js/**/*.js'))
+    else:
+        ctx.pbl_bundle(elf='pebble-app.elf',
+                        js=ctx.path.ant_glob('src/js/**/*.js'))

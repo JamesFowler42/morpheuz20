@@ -1,5 +1,5 @@
 {
-    "versionLabel": "2.2.0",
+    "versionLabel": "2.3",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -11,7 +11,7 @@
         "keyGoneoff": 7
     },
     "longName": "Morpheuz",
-    "versionCode": 22,
+    "versionCode": 23,
     "capabilities": [
         "configurable"
     ],
@@ -145,6 +145,11 @@
                 "type": "png",
                 "name": "IGNORE",
                 "file": "images/ignore.png"
+            },
+            {
+                "type": "png",
+                "name": "ACTIVITY_ICON",
+                "file": "images/activity.png"
             }
         ]
     }

@@ -42,6 +42,7 @@ static BitmapLayer *logo_sleeper_layer;
 static BitmapLayer *logo_head_layer;
 static BitmapLayer *logo_text_layer;
 static BitmapLayer *bluetooth_layer;
+static BitmapLayer *activity_layer;
 static BitmapLayer *comms_layer;
 static BitmapLayer *ignore_layer;
 static BitmapLayer *record_layer;
@@ -62,6 +63,7 @@ static GBitmap *logo_sleeper_bitmap;
 static GBitmap *logo_head_bitmap;
 static GBitmap *logo_text_bitmap;
 static GBitmap *bluetooth_bitmap;
+static GBitmap *activity_bitmap;
 static GBitmap *comms_bitmap;
 static GBitmap *ignore_bitmap;
 
@@ -83,6 +85,38 @@ static bool first_time = true;
 static uint8_t animation_count = 0;
 
 /*
+ * Boot up background process
+ */
+static void start_worker() {
+  AppWorkerResult result = app_worker_launch();
+  if (result == APP_WORKER_RESULT_SUCCESS ||
+      result == APP_WORKER_RESULT_ALREADY_RUNNING) {
+    layer_set_hidden(bitmap_layer_get_layer(activity_layer), false);
+  }
+  APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
+}
+
+/**
+ * Close background process
+ */
+static void stop_worker() {
+  bool running = app_worker_is_running();
+
+  // Toggle running state
+  if (running) {
+    AppWorkerResult result = app_worker_kill();
+    APP_LOG(APP_LOG_LEVEL_ERROR, "wkill %d", result);
+  }
+}
+
+/**
+ * Show worker icon
+ */
+static void show_worker() {
+  layer_set_hidden(bitmap_layer_get_layer(activity_layer), !app_worker_is_running());
+}
+
+/*
  * Show the date
  */
 static void show_date() {
@@ -91,8 +125,6 @@ static void show_date() {
 	strftime(date_text, sizeof(date_text), "%B %e", time);
 	text_layer_set_text(text_date_layer, date_text);
 }
-
-
 
 /*
  * Set the smart alarm status details
@@ -162,13 +194,12 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
 	if (!first_time) {
 	  every_minute_processing(tick_time->tm_min);
+	  show_worker();
 	} else {
 		first_time = false;
 	}
 
 	power_nap_countdown();
-
-
 }
 
 /*
@@ -179,6 +210,7 @@ static void bluetooth_state_handler(bool connected) {
 	if (!connected)
 		show_comms_state(false); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
 }
+
 
 /*
  * Comms connection status
@@ -236,6 +268,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
   } else if (animation_count == 5) {
     animation_unschedule((Animation*) logo_head_animation);
     animation_destroy((Animation*) logo_head_animation);
+    start_worker();
   }
 }
 
@@ -371,6 +404,12 @@ static void handle_init(void) {
   bitmap_layer_set_bitmap(ignore_layer, ignore_bitmap);
   layer_set_hidden(bitmap_layer_get_layer(ignore_layer), true);
 
+  activity_layer = bitmap_layer_create(GRect(144-26-14-10-16-19-15-15, 4, 9, 12));
+  layer_add_child(window_layer, bitmap_layer_get_layer(activity_layer));
+  activity_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ACTIVITY_ICON);
+  bitmap_layer_set_bitmap(activity_layer, activity_bitmap);
+  layer_set_hidden(bitmap_layer_get_layer(activity_layer), true);
+
 	image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
 	image_progress_full = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS_FULL);
 	progress_level = 0;
@@ -414,6 +453,8 @@ static void handle_init(void) {
  * Shutdown
  */
 static void handle_deinit(void) {
+  stop_worker();
+
   save_config_data(NULL);
 	save_internal_data();
   notice_deinit();
@@ -435,6 +476,7 @@ static void handle_deinit(void) {
   bitmap_layer_destroy(comms_layer);
   bitmap_layer_destroy(ignore_layer);
   bitmap_layer_destroy(bluetooth_layer);
+  bitmap_layer_destroy(activity_layer);
   bitmap_layer_destroy(alarm_icon_layer);
   bitmap_layer_destroy(record_layer);
   bitmap_layer_destroy(alarm_layer);
@@ -451,6 +493,7 @@ static void handle_deinit(void) {
   gbitmap_destroy(logo_head_bitmap);
   gbitmap_destroy(logo_text_bitmap);
 	gbitmap_destroy(bluetooth_bitmap);
+  gbitmap_destroy(activity_bitmap);
 	gbitmap_destroy(comms_bitmap);
   gbitmap_destroy(ignore_bitmap);
 

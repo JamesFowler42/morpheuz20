@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 22
-#define VERSION_TXT "2.2"
+#define VERSION 23
+#define VERSION_TXT "2.3"
 
 #define FUDGE 4
 
