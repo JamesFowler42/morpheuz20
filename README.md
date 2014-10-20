@@ -15,6 +15,19 @@ Please visit http://www.morpheuz.net for further information.
 
 Sleep well.
 
+Version 2.3
+-----------
+* The chart displays are more modern looking (strong colours, shades & no drop shadows). I hope you like these.
+* Morpheuz attempts to work out the start and end of your period of sleep - this is represented on the chart as two vertical solid orange lines. The first is set for the first 10 minute period where your movement is below the threshold set for awake. The last is set to either the actual alarm time or if the alarm didn't go off the last 10 minute period where your movement is below the threshold set for awake.
+* The start and end of the sleep period is reported in a new statistics section called 'Sleep Analysis Data Point' - this is intended for entry directly into Apple's Healthkit.
+* The trend line has been removed from the graph - it had little purpose anyway as it was always messed up by the waking time after the alarm.
+* The drop downs for minutes (iOS only) has been changed to be in 5 minute rather than 15 minute intervals - you may now choose to wake at 7:10!
+* The text boxes for hours and minutes (Android only) have been set to type number. This should hopefully give Android users a numeric keypad on entry.
+* The email export attempts to close the morpheuz config window as leaving it open on ios8 caused the Pebble app to hang.
+* Once you have slept and got some 'Sleep Analysis Data Point' data a button will appear below (iOS only). The purpose of this button will be revealed shortly, although you can probably guess.
+* It's all been recompiled with Pebble SDK 2.6.1
+* Morpheuz now has a background process. Since Pebble only runs on background process at a time, this ensures that you are reminded that something else is running. You have the choice to suspend it (answer yes) whilst Morpheuz is running or allow it to run (answer no). If you answer no the other activity monitoring app may close down Morpheuz and prevent the alarm and full overnight charting.
+
 Version 2.1.0
 ----------------
 * NEW Weekend mode - One button press prevents the smart alarm going
