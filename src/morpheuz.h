@@ -25,8 +25,12 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 23
-#define VERSION_TXT "2.3"
+#define VERSION 24
+#define VERSION_TXT "2.4"
+
+// Uncomment for release
+#undef APP_LOG
+#define APP_LOG(level, fmt, args...)
 
 #define FUDGE 4
 
@@ -34,10 +38,8 @@
 #define POWER_NAP_SETTLE 2
 #define POWER_NAP_SETTLE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
-#define FLASH_ALARM_MS 2000
+#define MENU_ACTION_MS 500
 #define WEEKEND_PERIOD (12*60*60)
-
-
 
 #define BED_START GRect(-144-8, 15, 127, 70)
 #define BED_FINISH GRect(8, 15, 127, 70)
@@ -63,17 +65,8 @@ enum MorpKey {
 };
 
 enum CtrlValues {
-	CTRL_RESET = 1,
-	CTRL_INVERSE = 2,
-	CTRL_NORMAL = 4
+	CTRL_RESET = 1
 };
-
-typedef enum {
-  VIBE_LONG = 1,
-  VIBE_DOUBLE = 2,
-  VIBE_SHORT = 3,
-  VIBE_SOS = 4
-} VibeOptions;
 
 #define DISTRESS_WAIT_SEC 10
 #define WINDOW_HEIGHT 168
@@ -103,6 +96,7 @@ typedef struct {
 
 typedef struct {
 	bool invert;
+	bool analogue;
 	bool smart;
 	uint8_t fromhr;
 	uint8_t frommin;
@@ -115,7 +109,6 @@ typedef struct {
 
 void init_morpheuz(Window *window);
 void deinit_morpheuz();
-void self_monitor();
 void set_smart_status_on_screen(bool show_special_text, char *special_text);
 void invert_screen();
 void power_nap_countdown();
@@ -124,7 +117,6 @@ void click_config_provider(Window *window);
 void set_smart_status();
 void power_nap_reset();
 void show_comms_state(bool connected);
-void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert);
 void reset_sleep_period();
 void server_processing(uint16_t biggest);
 void transmit_next_data(void *data);
@@ -148,10 +140,7 @@ bool snooze_alarm();
 void init_alarm();
 void show_keyboard();
 void set_alarm_icon(bool show_icon);
-void show_fatal(char *message);
 void every_minute_processing(int min_no);
-void trigger_config_save();
-void do_vibes(VibeOptions opt);
 void toggle_weekend_mode();
 void notice_init();
 void notice_deinit();
@@ -162,5 +151,17 @@ int32_t dirty_checksum(void *data, uint8_t data_size);
 void set_ignore_on_current_time_segment();
 void show_ignore_state(bool ignore);
 void resend_all_data();
+void bed_visible(bool value);
+bool is_animation_complete();
+void show_menu(bool ignore, bool weekend, bool inverse, bool analogue, bool power_nap, bool alarm);
+void hide_menu();
+bool get_ignore_state();
+void toggle_power_nap();
+void close_morpheuz();
+void set_config_data_time(int32_t iface_from, int32_t iface_to);
+void set_config_data_invert(bool iface_invert);
+void set_config_data_analogue(bool iface_analogue);
+bool check_alarm();
+bool is_notice_showing();
 
 #endif /* MORPHEUZ_H_ */

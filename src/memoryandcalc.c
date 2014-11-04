@@ -1,7 +1,7 @@
 /*
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013 James Fowler
+ * Copyright (c) 2013-2014 James Fowler
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,6 +25,7 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+#include "analogue.h"
 
 static InternalData internal_data;
 static ConfigData config_data;
@@ -73,7 +74,6 @@ static void clear_internal_data() {
 	memset(&internal_data, 0, sizeof(internal_data));
 	internal_data_checksum = 0;
 	internal_data.has_been_reset = false;
-	set_progress_based_on_persist();
 }
 
 /*
@@ -91,6 +91,8 @@ void read_internal_data() {
 	} else {
 		clear_internal_data();
 	}
+  analogue_set_base(internal_data.base);
+  set_progress_based_on_persist();
 	app_timer_register(PERSIST_MEMORY_MS, save_internal_data_timer, NULL);
 }
 
@@ -142,10 +144,18 @@ ConfigData *get_config_data() {
 	return &config_data;
 }
 
+static void trigger_config_save() {
+  if (!save_config_requested) {
+    app_timer_register(PERSIST_CONFIG_MS, save_config_data, NULL);
+    save_config_requested = true;
+  }
+}
+
+
 /*
  * Remember the configuration settings from the javascript
  */
-void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert) {
+void set_config_data_time(int32_t iface_from, int32_t iface_to) {
 	config_data.smart = (iface_from != -1 && iface_to != -1);
 	config_data.fromhr = iface_from >> 8;
 	config_data.frommin = iface_from & 0xff;
@@ -153,11 +163,23 @@ void set_config_data(int32_t iface_from, int32_t iface_to, bool iface_invert) {
 	config_data.tomin = iface_to & 0xff;
 	config_data.from = to_mins(config_data.fromhr, config_data.frommin);
 	config_data.to = to_mins(config_data.tohr , config_data.tomin);
-	config_data.invert = iface_invert;
-	if (!save_config_requested) {
-		app_timer_register(PERSIST_CONFIG_MS, save_config_data, NULL);
-		save_config_requested = true;
-	}
+	trigger_config_save();
+}
+
+/*
+ * Remember the configuration settings
+ */
+void set_config_data_invert(bool iface_invert) {
+  config_data.invert = iface_invert;
+  trigger_config_save();
+}
+
+/*
+ * Remember the configuration settings
+ */
+void set_config_data_analogue(bool iface_analogue) {
+  config_data.analogue = iface_analogue;
+  trigger_config_save();
 }
 
 /*
@@ -173,11 +195,13 @@ void reset_sleep_period() {
 	show_ignore_state(false);
 	if (config_data.smart && config_data.weekend_until == 0) {
 		show_notice(NOTICE_TIMER_RESET_ALARM);
-	  do_vibes(VIBE_DOUBLE);
+	  vibes_double_pulse();
 	} else {
 		show_notice(NOTICE_TIMER_RESET_NOALARM);
-	  do_vibes(VIBE_SHORT);
+	  vibes_short_pulse();
 	}
+	analogue_set_base(internal_data.base);
+  set_progress_based_on_persist();
 }
 
 /*
@@ -190,13 +214,20 @@ void resend_all_data() {
 }
 
 /*
+ * Compute offset
+ */
+int32_t calc_offset() {
+  time_t now = time(NULL);
+
+  return (now - internal_data.base) / DIVISOR;
+}
+
+/*
  * Set ignore on current time segment
  */
 void set_ignore_on_current_time_segment() {
 
-  time_t now = time(NULL);
-
-  int32_t offset = (now - internal_data.base) / DIVISOR;
+  int32_t offset = calc_offset();
 
   if (offset >= LIMIT || offset < 0) {
     show_ignore_state(false);
@@ -206,10 +237,6 @@ void set_ignore_on_current_time_segment() {
   internal_data.ignore[offset] = !internal_data.ignore[offset];
   show_ignore_state(internal_data.ignore[offset]);
 
-  if (internal_data.ignore[offset])
-    show_notice(NOTICE_IGNORING);
-  else
-    show_notice(NOTICE_NOT_IGNORING);
 }
 
 /*
@@ -217,9 +244,7 @@ void set_ignore_on_current_time_segment() {
  */
 static void store_point_info(uint16_t point) {
 
-	time_t now = time(NULL);
-
-	int32_t offset = (now - internal_data.base) / DIVISOR;
+	int32_t offset = calc_offset();
 
 	if (offset >= LIMIT || offset < 0) {
 		show_record(false);
@@ -251,6 +276,7 @@ static void store_point_info(uint16_t point) {
 void set_progress_based_on_persist() {
 	if (internal_data.highest_entry != last_progress_highest_entry) {
 		set_progress(internal_data.highest_entry + 1);
+		analogue_set_progress(internal_data.highest_entry + 1);
 		last_progress_highest_entry = internal_data.highest_entry;
 	}
 }

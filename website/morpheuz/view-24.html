@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html>
+<!-- 
+/* 
+ * Morpheuz Sleep Monitor
+ *
+ * Copyright (c) 2013-2014 James Fowler
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+-->
+<head>
+<title>Morpheuz Sleep Monitor</title>
+<link rel="stylesheet" type="text/css" href="view-24.min.css" />
+<script type="text/javascript" src="jqplot/jquery.min.js"></script>
+<script type="text/javascript" src="jqplot/jquery.jqplot.min.js"></script>
+<link rel="stylesheet" type="text/css" href="jqplot/jquery.jqplot.css" />
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.canvasAxisLabelRenderer.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.dateAxisRenderer.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.canvasTextRenderer.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.canvasOverlay.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.trendline.min.js"></script>
+<script type="text/javascript"
+	src="jqplot/plugins/jqplot.pieRenderer.min.js"></script>
+	<script type="text/javascript" src='utils.min.js'></script>
+
+</head>
+<body>
+	<form action="">
+		<div id="version">v0.5</div>
+		<h2 id="title">Morpheuz Sleep Monitor</h2>
+		<p id="verserror" class="error" style="display: none">This is the
+			wrong version of the configuration page. Please cancel and pick
+			settings again.</p>
+		<h3 class="settings">Settings</h3>
+		<div class="settingsouter">
+			<div class="settingswrap">
+				<p>
+					<label for="smartalarm">Smart Alarm:</label> <input id="smartalarm"
+						type="checkbox" />
+				</p>
+				<p>
+					<label for="smartalarm">between:</label> <select id="safromhour"
+						class="fromValues ios">
+						<option>00</option>
+						<option>01</option>
+						<option>02</option>
+						<option>03</option>
+						<option>04</option>
+						<option>05</option>
+						<option selected>06</option>
+						<option>07</option>
+						<option>08</option>
+						<option>09</option>
+						<option>10</option>
+						<option>11</option>
+						<option>12</option>
+						<option>13</option>
+						<option>14</option>
+						<option>15</option>
+						<option>16</option>
+						<option>17</option>
+						<option>18</option>
+						<option>19</option>
+						<option>20</option>
+						<option>21</option>
+						<option>22</option>
+						<option>23</option>
+					</select><input type="number" id="safromhourtxt"
+						class="textbox fromValues android" maxlength="2" /> : <select
+						id="safrommin" class="fromValues ios">
+						<option>00</option>
+						<option>05</option>
+						<option>10</option>
+						<option>15</option>
+						<option>20</option>
+						<option>25</option>
+						<option selected>30</option>
+						<option>35</option>
+						<option>40</option>
+						<option>45</option>
+						<option>50</option>
+						<option>55</option>
+					</select><input type="number" id="safrommintxt"
+						class="textbox fromValues android" maxlength="2" /> and <select
+						id="satohour" class="toValues ios">
+						<option>00</option>
+						<option>01</option>
+						<option>02</option>
+						<option>03</option>
+						<option>04</option>
+						<option>05</option>
+						<option>06</option>
+						<option selected>07</option>
+						<option>08</option>
+						<option>09</option>
+						<option>10</option>
+						<option>11</option>
+						<option>12</option>
+						<option>13</option>
+						<option>14</option>
+						<option>15</option>
+						<option>16</option>
+						<option>17</option>
+						<option>18</option>
+						<option>19</option>
+						<option>20</option>
+						<option>21</option>
+						<option>22</option>
+						<option>23</option>
+					</select><input type="number" id="satohourtxt"
+						class="textbox toValues android" maxlength="2" /> : <select
+						id="satomin" class="toValues ios">
+						<option>00</option>
+						<option>05</option>
+						<option>10</option>
+						<option selected>15</option>
+						<option>20</option>
+						<option>25</option>
+						<option>30</option>
+						<option>35</option>
+						<option>40</option>
+						<option>45</option>
+						<option>50</option>
+						<option>55</option>
+					</select><input type="number" id="satomintxt"
+						class="textbox toValues android" maxlength="2" />
+				</p>
+			</div>
+			<p class="buttons">
+				<input type='button' id="reset" value="Save &amp; Reset" />
+			</p>
+		</div>
+		<h3 class="movement-head">Sleep Movement</h3>
+		<div id="chart1" style="width: 318px; height: 250px;"></div>
+		<h3 class="quality-head">Quality of Sleep</h3>
+		<div id="chart2" style="width: 318px; height: 250px;"></div>
+		<h3>Statistics</h3>
+		<table class="statstable">
+			<col width="50%">
+			<col width="50%">
+			<tr class='stat'>
+				<td>Total</td>
+				<td id='ttotal'>-</td>
+			</tr>
+			<tr class='stat'>
+				<td>Awake?</td>
+				<td id='tawake'>-</td>
+			</tr>
+			<tr class='stat'>
+				<td>Light</td>
+				<td id='tlight'>-</td>
+			</tr>
+			<tr class='stat'>
+				<td>Deep</td>
+				<td id='tdeep'>-</td>
+			</tr>
+			<tr class='stat'>
+				<td>Ignore</td>
+				<td id='tignore'>-</td>
+			</tr>
+		</table>
+		<h4>Sleep Analysis Data Point</h4>
+		<table class="statstable">
+			<col width="50%">
+			<col width="50%">
+			<tr class='stat'>
+				<td>Starts</td>
+				<td id='tstarts'>-</td>
+			</tr>
+			<tr class='stat'>
+				<td>Ends</td>
+				<td id='tends'>-</td>
+			</tr>
+		</table>
+		<div class="swpdiv ios">
+			<a id="swp" href="swpro2hk://"></a>
+		</div>
+		<div class="afterswpdiv ios"></div>
+		<h3 class="exporthead">Export</h3>
+		<ol class="exportwrap">
+			<li>
+				<p>CSV Data</p> <textarea id="copy" rows="3" cols="30"></textarea>
+				<p class="small">Select all &amp; copy the CSV data in this text
+					area</p>
+			</li>
+			<li>
+				<p>E-Mail</p> <label for="emailto">To:</label><input id="emailto"
+				type="email" maxlength="254" /><a id="mail" href="mailto:">Export</a>
+				<input id="mailtemp" type="hidden" />
+				<p class="small android">Whether this link works or not depends
+					upon your phone, the version of the OS it is running and mail apps
+					installed.</p>
+				<p class="small">'To' only saved on Save &amp; Reset.</p>
+			</li>
+		</ol>
+		<h3>See also</h3>
+		<p>
+		<ul>
+			<li><a href="http://www.morpheuz.net/p/instructions.html"
+				target="_blank">Instructions @ www.morpheuz.net</a></li>
+			<li><a class='ios' href="fb://profile/600709213346669">morpheuzsleepmonitor
+					on Facebook</a> <span class='android'>morpheuzsleepmonitor on
+					Facebook</span></li>
+			<li><a class='ios'
+				href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep
+					on Twitter</a> <span class='android'>@MorpheuzSleep on Twitter</span></li>
+		</ul>
+		</p>
+		<p class="centre small">&copy; 2013-2014 James Fowler</p>
+	</form>
+	<script type="text/javascript" src='view-24.min.js?v=5'></script>
+</body>
+</html>

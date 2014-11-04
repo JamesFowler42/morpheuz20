@@ -25,14 +25,12 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+#include "analogue.h"
 
 static uint16_t biggest_movement_in_one_minute = 0;
 
-static time_t last_accel;
-
 static int32_t last_from = -1;
 static int32_t last_to = -1;
-static bool last_invert = false;
 static int32_t previous_to_phone = 0;
 
 static char version_context[] = "V";
@@ -40,14 +38,6 @@ static char base_context[] = "B";
 static char goneoff_context[] = "G";
 static char point_context[] = "P";
 static char clear_context[] = "P";
-
-static const uint32_t const sos_seg[] = { 100, 250, 100, 250, 100, 250,
-                                          200, 250, 200, 250, 200, 250,
-                                          100, 250, 100, 250, 100};
-VibePattern sos = {
-  .durations = sos_seg,
-  .num_segments = ARRAY_LENGTH(sos_seg),
-};
 
 /*
  * Send a message to javascript
@@ -81,27 +71,26 @@ void set_smart_status() {
 	if (get_config_data()->smart) {
 		if (get_config_data()->weekend_until == 0) {
 			snprintf(status_text, sizeof(status_text), "%02d:%02d - %02d:%02d", get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+			analogue_set_smart_times(get_config_data()->smart, get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+      analogue_weekend(false);
 		} else {
 			strncpy(status_text, WEEKEND_TEXT, sizeof(status_text));
+      analogue_set_smart_times(false, get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+      analogue_weekend(true);
 		}
 	} else {
 		strncpy(status_text, "", sizeof(status_text));
+    analogue_set_smart_times(false, get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+    analogue_weekend(false);
 	}
 	set_smart_status_on_screen(get_config_data()->smart, status_text);
-}
-
-/*
- * Incoming message dropped handler
- */
-static void in_dropped_handler(AppMessageResult reason, void *context) {
-	APP_LOG(APP_LOG_LEVEL_ERROR, "App Msg Drop %d", reason);
 }
 
 /*
  * Outgoing message failed handler
  */
 static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-	APP_LOG(APP_LOG_LEVEL_ERROR, "App Msg Send Fail %d", reason);
+	APP_LOG(APP_LOG_LEVEL_ERROR, "Send Fail %d", reason);
 	show_comms_state(false);
 	app_message_set_context(clear_context);
 }
@@ -129,27 +118,17 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
 
 	if (from_tuple) {
 		last_from = from_tuple->value->int32;
-		set_config_data(last_from, last_to, last_invert);
+		set_config_data_time(last_from, last_to);
 		set_smart_status();
 	}
 	if (to_tuple) {
 		last_to = to_tuple->value->int32;
-		set_config_data(last_from, last_to, last_invert);
+		set_config_data_time(last_from, last_to);
 		set_smart_status();
 	}
 	if (ctrl_tuple) {
 		show_comms_state(true);
 		int32_t ctrl_value = ctrl_tuple->value->int32;
-		if (ctrl_value & CTRL_INVERSE) {
-			last_invert = true;
-			set_config_data(last_from, last_to, last_invert);
-			invert_screen();
-		}
-		if (ctrl_value & CTRL_NORMAL) {
-			last_invert = false;
-			set_config_data(last_from, last_to, last_invert);
-			invert_screen();
-		}
     if (ctrl_value & CTRL_RESET) {
       reset_sleep_period(); // Phone trigger reset
     }
@@ -222,7 +201,7 @@ static void open_comms() {
 
 	uint32_t inbound_size = dict_calc_buffer_size_from_tuplets(in_values, ARRAY_LENGTH(in_values)) + FUDGE;
 
-	APP_LOG(APP_LOG_LEVEL_INFO, "In buff %ld, Out buff %ld", inbound_size, outbound_size);
+	APP_LOG(APP_LOG_LEVEL_INFO, "I(%ld) O(%ld)", inbound_size, outbound_size);
 
   // Open buffers
   app_message_open(inbound_size, outbound_size);
@@ -274,10 +253,7 @@ static uint16_t scale_accel(int16_t val) {
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
-	// Self monitor memory
-	last_accel = time(NULL);
-
-	// Average the data
+  // Average the data
 	uint32_t avg_x = 0;
 	uint32_t avg_y = 0;
 	uint32_t avg_z = 0;
@@ -336,52 +312,14 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 }
 
 /*
- *	Self monitoring - if the accelerometer tell the wearer so as they can do something
- */
-void self_monitor() {
-
-	// Get time
-	time_t now = time(NULL);
-
-	// Or the accelerometer function having been dead for a while
-	if (last_accel < (now - DISTRESS_WAIT_SEC)) {
-		show_fatal(FATAL_ACCEL_CRASH);
-	}
-}
-
-/**
- * Various vibes
- */
-void do_vibes(VibeOptions opt) {
-  switch (opt) {
-  case VIBE_LONG:
-    vibes_long_pulse();
-    break;
-  case VIBE_DOUBLE:
-    vibes_double_pulse();
-    break;
-  case VIBE_SHORT:
-    vibes_short_pulse();
-    break;
-  case VIBE_SOS:
-    vibes_enqueue_custom_pattern(sos);
-    break;
-  }
-}
-
-
-/*
  * Initialise comms and accelerometer
  */
 void init_morpheuz(Window *window) {
 
 	init_alarm();
 
-	last_accel = time(NULL);
-
 	// Register message handlers
 	app_message_register_inbox_received(in_received_handler);
-	app_message_register_inbox_dropped(in_dropped_handler);
 	app_message_register_outbox_failed(out_failed_handler);
 	app_message_register_outbox_sent(out_sent_handler);
 
@@ -419,12 +357,10 @@ void toggle_weekend_mode() {
 	if (get_config_data()->weekend_until > 0) {
 		// Turn off weekend
 		get_config_data()->weekend_until = 0;
-		show_notice(NOTICE_STOPPED_WEEKEND);
 		set_smart_status();
 	} else {
 		// Turn on weekend
 		get_config_data()->weekend_until = time(NULL) + WEEKEND_PERIOD;
-		show_notice(NOTICE_STARTED_WEEKEND);
 		set_smart_status();
 	}
 }

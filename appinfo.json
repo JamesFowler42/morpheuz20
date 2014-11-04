@@ -1,5 +1,5 @@
 {
-    "versionLabel": "2.3",
+    "versionLabel": "2.4",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -11,7 +11,7 @@
         "keyGoneoff": 7
     },
     "longName": "Morpheuz",
-    "versionCode": 23,
+    "versionCode": 24,
     "capabilities": [
         "configurable"
     ],
@@ -29,15 +29,9 @@
                 "file": "fonts/axaxax-bd-1.ttf"
             },
             {
-                "characterRegex": "[a-zA-Z0-9:.\\-!() ]",
+                "characterRegex": "[a-zA-Z0-9:.\\-!() \\xA9]",
                 "type": "font",
                 "name": "FONT_DIGITAL_16",
-                "file": "fonts/axaxax-bd-1.ttf"
-            },
-            {
-                "characterRegex": "[0-9:]",
-                "type": "font",
-                "name": "FONT_DIGITAL_25",
                 "file": "fonts/axaxax-bd-1.ttf"
             },
             {
@@ -123,26 +117,6 @@
             },
             {
                 "type": "png",
-                "name": "KEYBOARD_ARROW_R_WHITE",
-                "file": "images/right-arrow-white.png"
-            },
-            {
-                "type": "png",
-                "name": "KEYBOARD_ARROW_L_WHITE",
-                "file": "images/left-arrow-white.png"
-            },
-            {
-                "type": "png",
-                "name": "KEYBOARD_ARROW_R_BLACK",
-                "file": "images/right-arrow-black.png"
-            },
-            {
-                "type": "png",
-                "name": "KEYBOARD_ARROW_L_BLACK",
-                "file": "images/left-arrow-black.png"
-            },
-            {
-                "type": "png",
                 "name": "IGNORE",
                 "file": "images/ignore.png"
             },
@@ -150,6 +124,26 @@
                 "type": "png",
                 "name": "ACTIVITY_ICON",
                 "file": "images/activity.png"
+            },
+            {
+                "type": "png",
+                "name": "SMALL_LOGO",
+                "file": "images/small-logo.png"
+            },
+            {
+                "type": "png",
+                "name": "WEEKEND_ICON",
+                "file": "images/weekend.png"
+            },
+            {
+                "type": "png",
+                "name": "MENU_NO",
+                "file": "images/menu_no.png"
+            },
+            {
+                "type": "png",
+                "name": "MENU_YES",
+                "file": "images/menu_yes.png"
             }
         ]
     }

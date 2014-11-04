@@ -46,7 +46,10 @@ static void do_alarm(void *data) {
 	}
 
 	// Vibrate
-	do_vibes(VIBE_LONG);
+	if (alarm_count < 10)
+	  vibes_short_pulse();
+	else
+	  vibes_long_pulse();
 
 	// Prepare the time for the next buzz (this gives progressing and phasing)
 	alarm_timer = app_timer_register(((uint16_t)alarm_pattern[alarm_count]) * 1000, do_alarm, NULL);
@@ -71,7 +74,6 @@ static void do_alarm(void *data) {
  */
 void fire_alarm() {
 	alarm_count = 0;
-	show_notice(NOTICE_TIME_TO_WAKE_UP);
 	do_alarm(NULL);
 	set_alarm_icon(true);
 }
@@ -81,20 +83,24 @@ void fire_alarm() {
  */
 bool snooze_alarm() {
 	// Already hit the limit so cannot snooze
-	if (alarm_count >= ARRAY_LENGTH(alarm_pattern)) {
+	if (!check_alarm()) {
 		return false;
 	}
 
-	// Set alarm to go off in 5 minutes
+	// Set alarm to go off in 9 minutes
 	app_timer_reschedule(alarm_timer, SNOOZE_PERIOD_MS);
 
 	// Reset alarm sequence
 	alarm_count = 0;
 
-	// Let us know we're snoozing
-	show_notice(NOTICE_SNOOZE_ACTIVATED);
-
 	return true;
+}
+
+/**
+ * Check alarm
+ */
+bool check_alarm() {
+  return alarm_count < ARRAY_LENGTH(alarm_pattern);
 }
 
 /*
@@ -103,7 +109,7 @@ bool snooze_alarm() {
 bool cancel_alarm() {
 
 	// Already hit the limit - nothing to cancel
-	if (alarm_count >= ARRAY_LENGTH(alarm_pattern)) {
+	if (!check_alarm()) {
 		return false;
 	}
 
@@ -112,9 +118,6 @@ bool cancel_alarm() {
 
 	// Max out the count
 	alarm_count = ARRAY_LENGTH(alarm_pattern);
-
-	// Let the screen know
-	show_notice(NOTICE_ALARM_CANCELLED);
 
 	// Reset power nap if not already done so
 	power_nap_reset();
