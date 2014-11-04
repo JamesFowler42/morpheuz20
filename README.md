@@ -15,6 +15,30 @@ Please visit http://www.morpheuz.net for further information.
 
 Sleep well.
 
+Version 2.4
+-----------
+* The alarm starts with 10 shorter vibes before escalating - some people found the alarm initially too strong.
+* There is an optional analogue watchface.
+* Analogue display shows; reset time, earliest wakeup time, latest wakeup time, progress, alarm active, weekend mode and powernap timer.
+* Instead of the increasingly weird button combinations to access basic functions and the 'button help page' which appeared on a single press of any button I have introduced regular Pebble style menus. This makes Morpheuz seem more familiar, allows the pressing of a button to illuminate the backlight, and provides the means to introduce more features in the future.
+* back button still needs a long press to leave (this is to prevent accidental closure of Morpheuz in your sleep). A short press does nothing.
+* up button cancels the alarm if it is sounding or snoozed, otherwise does nothing
+* down button snoozes the alarm if it is sounding, otherwise does nothing
+* select brings up a menu with the following options:
+1) Ignore (was a double click of select)
+2) Reset (was a long press of up)
+3) Power nap (was a long press of select)
+4) Weekend (was a long press of down)
+5) Resend (was a double press of back)
+6) Inverse (was on the phone config page and could only be changed on a reset)
+7) Analogue (was, briefly, on the phone config page and could only be changed on a reset)
+9) Quit (still available as a long press on back)
+* When the alarm is sounding then two additional menu items appear at the top of the list:
+a) Snooze Alarm (the down button will also work)
+b) Cancel Alarm (the up button will also work)
+* Menu items which are toggles have a tick or cross against them.
+* I have added the date across the top of the menu. A lot of the messages that were there to reassure that the correct button was pressed have been removed as they were overkill.
+
 Version 2.3
 -----------
 * The chart displays are more modern looking (strong colours, shades & no drop shadows). I hope you like these.
