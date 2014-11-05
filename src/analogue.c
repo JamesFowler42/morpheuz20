@@ -264,7 +264,6 @@ void analogue_window_load(Window *window) {
 
   powernap_layer = macro_text_layer_create(GRect(144-21, 144-28 ,20, 31), analgue_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
   layer_set_hidden(text_layer_get_layer(powernap_layer), true);
-  text_layer_set_text(powernap_layer, "88");
   // init hands
   // init hand paths
   minute_arrow = gpath_create(&MINUTE_HAND_POINTS);

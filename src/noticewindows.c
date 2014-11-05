@@ -28,7 +28,6 @@
 
 static AppTimer *notice_timer;
 
-static BitmapLayer *notice_layer;
 static BitmapLayer *notice_moon_layer;
 
 static GBitmap *notice_moon_bitmap;
@@ -54,7 +53,6 @@ static void hide_notice_layer(void *data) {
     gbitmap_destroy(notice_moon_bitmap);
     text_layer_destroy(notice_name_layer);
     text_layer_destroy(notice_text);
-    bitmap_layer_destroy(notice_layer);
     window_destroy(notice_window);
     notice_showing = false;
   }

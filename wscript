@@ -18,6 +18,9 @@ def configure(ctx):
 
 def build(ctx):
     ctx.load('pebble_sdk')
+    
+    #ctx.env.CFLAGS += ["-fstack-usage"]
+    #ctx.env.CFLAGS += ["-Os"]
 
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
                     target='pebble-app.elf')
