@@ -103,7 +103,7 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
 			if (late != null && early != null)
 				break;
 		}
-		if (early != null && late != null) {
+		if (early != null) {
 			var earlyOverlay = {
 				dashedVerticalLine : {
 					name : "start",
@@ -117,6 +117,8 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
 			};
 			canvasOverlayConf.show = true;
 			canvasOverlayConf.objects.push(earlyOverlay);
+		}
+		if (late != null) {
 			var lateOverlay = {
 				dashedVerticalLine : {
 					name : "end",
@@ -337,6 +339,10 @@ getEl("version").textContent = parseInt(vers, 10) / 10;
 
 if (vers != mConst().vers) {
 	getEl('verserror').style.display = 'inline';
+}
+
+if ((new Date().valueOf()) % 10 == 0) {
+	getEl('info-message').style.display = 'block';
 }
 
 var splitup = graph.split("!");

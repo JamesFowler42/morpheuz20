@@ -1,7 +1,7 @@
 /*
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013 James Fowler
+ * Copyright (c) 2013-2014 James Fowler
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,17 +27,6 @@
 #include "language.h"
 
 /*
- * Set a text layer to the current time applying silly little corrections
- */
-void set_text_layer_to_time(TextLayer *text_layer) {
-  static char time_text[6];
-  clock_copy_time_string  (time_text, sizeof(time_text));
-  if (time_text[4] == ' ')
-    time_text[4] = '\0';
-  text_layer_set_text(text_layer, time_text);
-}
-
-/*
  * Do all the poop associated with creating a text box, but in one lump
  */
 TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment) {
@@ -46,8 +35,27 @@ TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GC
   text_layer_set_background_color(text_layer, bcolor);
   text_layer_set_text_alignment(text_layer, text_alignment);
   text_layer_set_font(text_layer, font);
-  layer_add_child(parent, text_layer_get_layer(text_layer));
+  layer_add_child(parent, text_layer_get_layer_jf(text_layer));
   return text_layer;
+}
+
+/*
+ * Create a bitmap layer with bitmap in one go
+ */
+void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible) {
+  comp->layer = bitmap_layer_create(frame);
+  layer_add_child(parent, bitmap_layer_get_layer_jf(comp->layer));
+  comp->bitmap = gbitmap_create_with_resource(resource_id);
+  bitmap_layer_set_bitmap(comp->layer, comp->bitmap);
+  layer_set_hidden(bitmap_layer_get_layer_jf(comp->layer), !visible);
+}
+
+/*
+ * Get rid of the bitmap layer in one go
+ */
+void macro_bitmap_layer_destroy(BitmapLayerComp *comp) {
+  bitmap_layer_destroy(comp->layer);
+  gbitmap_destroy(comp->bitmap);
 }
 
 /*
@@ -74,3 +82,12 @@ int32_t dirty_checksum(void *data, uint8_t data_size) {
   }
   return join_value(xor, sum);
 }
+
+/*
+ * Display the times using the settings the user prefers
+ */
+uint8_t twenty_four_to_twelve(uint8_t hour) {
+  return (hour <= 12 || clock_is_24h_style()) ? hour : hour - 12;
+}
+
+

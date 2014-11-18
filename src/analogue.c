@@ -35,14 +35,10 @@ static Layer *analgue_layer;
 static GPath *minute_arrow;
 static GPath *hour_arrow;
 static Layer *hands_layer;
-static BitmapLayer *logo_layer;
-static GBitmap *logo_bitmap;
 static struct PropertyAnimation* analogue_animation;
-static BitmapLayer *alarm_layer;
-extern GBitmap *alarm_bitmap;
-static BitmapLayer *weekend_layer;
-static GBitmap *weekend_bitmap;
-static TextLayer *powernap_layer;
+
+static BitmapLayerComp logo;
+
 static TextLayer *text_12;
 static TextLayer *text_3;
 static TextLayer *text_6;
@@ -55,14 +51,7 @@ static int16_t start_time;
 static int16_t progress_1;
 static int16_t progress_2;
 static bool is_visible = false;
-static char powernap_text[3];
-
-/*
- * Show the alarm is set icon
- */
-static void analogue_alarm_set(bool value) {
-  layer_set_hidden(bitmap_layer_get_layer(alarm_layer), !value);
-}
+static bool g_call_post_init;
 
 /*
  * Draws marks around the circumference of the clock face
@@ -140,13 +129,12 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
 /*
  * Record the smart times for display on the analogue clock. Trigger an update of the layer.
  */
-void analogue_set_smart_times(bool smart, int8_t fromhr, int8_t frommin, int8_t tohr, int8_t tomin) {
-  show_smart_points = smart;
-  from_time = (fromhr > 12 ? fromhr - 12 : fromhr) * 120 + frommin * 2;
-  to_time = (tohr > 12 ? tohr - 12 : tohr) * 120 + tomin * 2;
+void analogue_set_smart_times() {
+  show_smart_points = get_config_data()->smart;
+  from_time = (get_config_data()->fromhr > 12 ? get_config_data()->fromhr - 12 : get_config_data()->fromhr) * 120 + get_config_data()->frommin * 2;
+  to_time = (get_config_data()->tohr > 12 ? get_config_data()->tohr - 12 : get_config_data()->tohr) * 120 + get_config_data()->tomin * 2;
   if (is_visible)
     layer_mark_dirty(analgue_layer);
-  analogue_alarm_set(smart);
 }
 
 /*
@@ -167,7 +155,7 @@ void analogue_set_base(time_t base) {
  * Mark progress on the analogue clock. Progress 1-54. Trigger an update of the layer
  */
 void analogue_set_progress(uint8_t progress_level_in) {
-  progress_1 = start_time + ((int16_t)progress_level_in) * 20;
+  progress_1 = start_time + ((int16_t) progress_level_in) * 20;
   if (progress_1 >= 1440) {
     progress_2 = progress_1 - 1440;
     progress_1 = 1439;
@@ -209,7 +197,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
 /*
  * Trigger the refresh of the time
  */
-void analogue_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+void analogue_minute_tick() {
   if (is_visible)
     layer_mark_dirty(hands_layer);
 }
@@ -234,36 +222,20 @@ void analogue_window_load(Window *window) {
   layer_set_update_proc(analgue_layer, bg_update_proc);
   layer_add_child(window_layer, analgue_layer);
 
-  logo_layer = bitmap_layer_create(GRect(144/2-25, 144/2-15-31+10, 50, 31));
-  layer_add_child(analgue_layer, bitmap_layer_get_layer(logo_layer));
-  logo_bitmap = gbitmap_create_with_resource(RESOURCE_ID_SMALL_LOGO);
-  bitmap_layer_set_bitmap(logo_layer, logo_bitmap);
+  macro_bitmap_layer_create(&logo, GRect(144/2-25, 144/2-15-31+10, 50, 31), analgue_layer, RESOURCE_ID_SMALL_LOGO, true);
 
-  text_12 = macro_text_layer_create(GRect(144/2-14, 21, 20, 32),analgue_layer,GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
+  text_12 = macro_text_layer_create(GRect(144/2-14, 21, 20, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
   text_layer_set_text(text_12, TEXT_12);
 
-  text_3 = macro_text_layer_create(GRect(144-34, 144/2-9, 10, 32),analgue_layer,GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
+  text_3 = macro_text_layer_create(GRect(144-34, 144/2-9, 10, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
   text_layer_set_text(text_3, TEXT_3);
 
-  text_6 = macro_text_layer_create(GRect(144/2-6, 144-39, 10, 32),analgue_layer,GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
+  text_6 = macro_text_layer_create(GRect(144/2-6, 144-39, 10, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
   text_layer_set_text(text_6, TEXT_6);
 
-  text_9 = macro_text_layer_create(GRect(21, 144/2-9, 10, 32),analgue_layer,GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
+  text_9 = macro_text_layer_create(GRect(21, 144/2-9, 10, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
   text_layer_set_text(text_9, TEXT_9);
 
-  alarm_layer = bitmap_layer_create(GRect(2, 129, 12, 12));
-  layer_add_child(analgue_layer, bitmap_layer_get_layer(alarm_layer));
-  bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
-
-  weekend_layer = bitmap_layer_create(GRect(2, 129, 12, 12));
-  layer_add_child(analgue_layer, bitmap_layer_get_layer(weekend_layer));
-  weekend_bitmap = gbitmap_create_with_resource(RESOURCE_ID_WEEKEND_ICON);
-  bitmap_layer_set_bitmap(weekend_layer, weekend_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(weekend_layer), true);
-
-  powernap_layer = macro_text_layer_create(GRect(144-21, 144-28 ,20, 31), analgue_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
-  layer_set_hidden(text_layer_get_layer(powernap_layer), true);
   // init hands
   // init hand paths
   minute_arrow = gpath_create(&MINUTE_HAND_POINTS);
@@ -280,56 +252,42 @@ void analogue_window_load(Window *window) {
 }
 
 /*
- * Set the power nap text for the analogue display
- */
-void analogue_powernap_text(char *text) {
-  strncpy(powernap_text, text, sizeof(powernap_text));
-  if (strlen(powernap_text) > 0) {
-    layer_set_hidden(text_layer_get_layer(powernap_layer), false);
-    text_layer_set_text(powernap_layer, powernap_text);
-  } else {
-    layer_set_hidden(text_layer_get_layer(powernap_layer), true);
-  }
-}
-
-/*
- * Set the weekend indicator on the analogue display
- */
-void analogue_weekend(bool weekend) {
-  layer_set_hidden(bitmap_layer_get_layer(weekend_layer), !weekend);
-}
-
-/*
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
+  animation_unschedule(animation);
+  animation_destroy(animation);
   if (is_visible) {
     bed_visible(false);
   }
-  animation_unschedule((Animation*) analogue_animation);
-  animation_destroy((Animation*) analogue_animation);
+  if (g_call_post_init) {
+    app_timer_register(250, post_init_hook, NULL);
+  }
+}
+
+/*
+ * Build and start an animation used when making the face visible or invisible
+ */
+static void start_animation(GRect *start, GRect *finish) {
+  analogue_animation = property_animation_create_layer_frame(analgue_layer, start, finish);
+  animation_set_duration((Animation*) analogue_animation, 750);
+  animation_set_handlers((Animation*) analogue_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
+  animation_schedule((Animation*) analogue_animation);
 }
 
 /*
  * Make the analogue watchface visible or invisible
  */
-void analogue_visible(bool visible) {
+void analogue_visible(bool visible, bool call_post_init) {
   if (visible && !is_visible) {
-    GRect start = ANALOGUE_START;
-    GRect finish = ANALOGUE_FINISH;
-    analogue_animation = property_animation_create_layer_frame(analgue_layer, &start, &finish);
-    animation_set_duration((Animation*) analogue_animation, 1000);
-    animation_set_handlers((Animation*) analogue_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-    animation_schedule((Animation*) analogue_animation);
+    start_animation(&ANALOGUE_START, &ANALOGUE_FINISH);
   } else if (!visible && is_visible) {
-    GRect start = ANALOGUE_FINISH;
-    GRect finish = ANALOGUE_START;
-    analogue_animation = property_animation_create_layer_frame(analgue_layer, &start, &finish);
-    animation_set_duration((Animation*) analogue_animation, 1000);
-    animation_set_handlers((Animation*) analogue_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-    animation_schedule((Animation*) analogue_animation);
+    start_animation(&ANALOGUE_FINISH, &ANALOGUE_START);
     bed_visible(true);
+  } else if (call_post_init) {
+    app_timer_register(250, post_init_hook, NULL);
   }
+  g_call_post_init = call_post_init;
   is_visible = visible;
 }
 
@@ -339,12 +297,7 @@ void analogue_visible(bool visible) {
 void analogue_window_unload() {
   gpath_destroy(minute_arrow);
   gpath_destroy(hour_arrow);
-  bitmap_layer_destroy(alarm_layer);
-  bitmap_layer_destroy(weekend_layer);
-  gbitmap_destroy(weekend_bitmap);
-  gbitmap_destroy(logo_bitmap);
-  bitmap_layer_destroy(logo_layer);
-  text_layer_destroy(powernap_layer);
+  macro_bitmap_layer_destroy(&logo);
   text_layer_destroy(text_12);
   text_layer_destroy(text_3);
   text_layer_destroy(text_6);

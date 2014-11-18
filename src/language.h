@@ -27,15 +27,6 @@
 
 #define POWER_NAP_SETTLE_INDICATOR "--"
 #define POWER_NAP_OFF_INDICATOR ""
-#define POWER_NAP_SETTLE_TIME "Power nap"
-#define POWER_NAP_RUNNING     "Power nap: %d"
-#define WEEKEND_TEXT      "Weekend"
-#define NOTICE_TIMER_RESET_ALARM "Sleep well!\nChart reset.\nAlarm set."
-#define NOTICE_TIMER_RESET_NOALARM "Sleep well!\nChart reset.\nNO ALARM."
-#define NOTICE_END_OF_RECORDING "End of recording. Reset to start again."
-#define NOTICE_RESET_TO_START_USING "Reset to start recording."
-#define NOTICE_NEED_SMART_ALARM "No Smart alarm: no weekend mode!"
-#define NOTICE_DATA_WILL_BE_RESENT_SHORTLY "Data will be resent. Please wait."
 
 #define MENU_IGNORE "Ignore"
 #define MENU_IGNORE_DES  "...next 10 mins"
@@ -57,6 +48,21 @@
 #define MENU_SNOOZE_DES "... or press down"
 #define MENU_CANCEL "Cancel Alarm"
 #define MENU_CANCEL_DES "... or press up"
+#define MENU_AUTO_RESET "Auto reset"
+#define MENU_AUTO_RESET_DES_OFF "... same time again"
+#define MENU_AUTO_RESET_DES_ON "... at %d:%02d"
+#define MENU_SMART_ALARM "Smart Alarm"
+#define MENU_SMART_ALARM_DES "Wake up right"
+
+#define ON "On"
+#define OFF "Off"
+#define DONE "Save"
+#define BAD "Bad!"
+
+#define SMART_ALARM "Smart Alarm:"
+#define EARLIEST "Earliest:"
+#define COLON ":"
+#define LATEST "Latest:"
 
 #define COPYRIGHT "\n© 2014\nJames Fowler"
 

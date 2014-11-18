@@ -30,7 +30,6 @@ function mConst() {
 		limit : 54,
 		divisor : 600000,
 		url : "http://homepage.ntlworld.com/keith.j.fowler/morpheuz/view-",
-		ctrlReset : 1,
 		versionDef : "22",
 		smartDef : "N",
 		fromhrDef : "6",
@@ -47,6 +46,16 @@ function mConst() {
 function nvl(field, defval) {
 	return field == null || field == "null" ? defval : field;
 }
+
+/*
+ * Fix a string to 2 characters long prefixing a zero
+ */
+function fixLen(inStr) {
+	if (inStr == null || inStr.length > 1)
+		return inStr;
+	return '0' + inStr;
+}
+
 
 /*
  * Reset log
@@ -101,10 +110,11 @@ Pebble.addEventListener("ready", function(e) {
 		window.localStorage.setItem("frommin", mConst().fromminDef);
 		window.localStorage.setItem("tohr", mConst().tohrDef);
 		window.localStorage.setItem("tomin", mConst().tominDef);
-		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
-	} else {
-		Pebble.sendAppMessage(returnSmartAlarmSettings(false));
 	}
+	Pebble.sendAppMessage({
+		"keyCtrl" : "0"
+	});
+	
 });
 
 /*
@@ -124,18 +134,48 @@ Pebble.addEventListener("appmessage", function(e) {
 		console.log("appmessage version=" + version);
 		window.localStorage.setItem("version", version);
 	}
+	if (typeof e.payload.keyFrom !== "undefined") {
+		var from = parseInt(e.payload.keyFrom, 10);
+		var fromhr = mConst().fromhrDef;
+		var frommin = mConst().fromminDef;
+		var smart = mConst().smartDef;
+		if (from != -1) {
+			var hours = Math.floor(from / 60);
+			var minutes = from - hours * 60;
+			fromhr = fixLen(String(hours));
+			frommin = fixLen(String(minutes));
+			smart = "Y";
+		}
+		window.localStorage.setItem("fromhr", fromhr);
+		window.localStorage.setItem("frommin", frommin);
+		window.localStorage.setItem("smart", smart);
+		console.log("appmessage from=" + from + ", smart=" + smart + ", fromhr=" + fromhr + ", frommin=" + frommin);
+	}
+	if (typeof e.payload.keyTo !== "undefined") {
+		var to = parseInt(e.payload.keyTo, 10);
+		var tohr = mConst().tohrDef;
+		var tomin = mConst().tominDef;
+		var smart = mConst().smartDef;
+		if (to != -1) {
+			var hours = Math.floor(to / 60);
+			var minutes = to - hours * 60;
+			tohr = fixLen(String(hours));
+			tomin = fixLen(String(minutes));
+			smart = "Y";
+		}
+		window.localStorage.setItem("tohr", tohr);
+		window.localStorage.setItem("tomin", tomin);
+		window.localStorage.setItem("smart", smart);
+		console.log("appmessage to=" + to + ", smart=" + smart + ", tohr=" + tohr + ", tomin=" + tomin);
+	}
 	if (typeof e.payload.keyGoneoff !== "undefined") {
 		var goneoffNum = parseInt(e.payload.keyGoneoff, 10);
 		var goneoff = "N";
 		if (goneoffNum != 0) {
 			var hours = Math.floor(goneoffNum / 60);
 			var minutes = goneoffNum - hours * 60;
-			var hoursStr = String(hours);
-			var minutesStr = String(minutes);
-			if (hoursStr.length < 2)
-				hoursStr = "0" + hoursStr;
-			if (minutesStr.length < 2)
-				minutesStr = "0" + minutesStr;
+			var hoursStr = fixLen(String(hours));
+			var minutesStr = fixLen(String(minutes));
 			goneoff = hoursStr + minutesStr;
 		}
 		console.log("appmessage goneoff=" + goneoff);
@@ -151,34 +191,6 @@ Pebble.addEventListener("appmessage", function(e) {
 });
 
 /*
- * Return smart alarm setting to watchface
- */
-function returnSmartAlarmSettings(resetVal) {
-	var ctrlValue = 0;
-	ctrlValue = resetVal ? ctrlValue + mConst().ctrlReset : ctrlValue;
-	var smartStr = window.localStorage.getItem("smart");
-	if (smartStr != null && smartStr == "Y") {
-		var fromhr = parseInt(window.localStorage.getItem("fromhr"), 10);
-		var tohr = parseInt(window.localStorage.getItem("tohr"), 10);
-		var frommin = parseInt(window.localStorage.getItem("frommin"), 10);
-		var tomin = parseInt(window.localStorage.getItem("tomin"), 10);
-		var from = (fromhr << 8) | frommin;
-		var to = (tohr << 8) | tomin;
-		return {
-			"keyFrom" : from,
-			"keyTo" : to,
-			"keyCtrl" : ctrlValue
-		};
-	} else {
-		return {
-			"keyFrom" : -1,
-			"keyTo" : -1,
-			"keyCtrl" : ctrlValue
-		};
-	}
-}
-
-/*
  * Monitor the closing of the config/display screen so as we can do a reset if
  * needed
  */
@@ -188,17 +200,10 @@ Pebble.addEventListener("webviewclosed", function(e) {
 		return;
 	var dataElems = e.response.split("!");
 	if (dataElems[0] == "reset") {
-		resetWithPreserve();
-		window.localStorage.setItem("smart", dataElems[1]);
-		window.localStorage.setItem("fromhr", dataElems[2]);
-		window.localStorage.setItem("frommin", dataElems[3]);
-		window.localStorage.setItem("tohr", dataElems[4]);
-		window.localStorage.setItem("tomin", dataElems[5]);
 		window.localStorage.setItem("emailto", dataElems[7]);
 		window.localStorage.setItem("xuser", dataElems[8]);
 		window.localStorage.setItem("xpass", dataElems[9]);
 		window.localStorage.setItem("xkey", dataElems[10]);
-		Pebble.sendAppMessage(returnSmartAlarmSettings(true));
 	}
 });
 
@@ -243,7 +248,7 @@ Pebble.addEventListener("showConfiguration",
 					+ "&frommin=" + frommin + "&tomin=" + tomin + "&smart="
 					+ smart + "&vers=" + version + "&goneoff=" + goneOff
 					+ "&emailto=" + emailto + "&xuser=" + xuser + "&xpass="
-					+ xpass + "&xkey=" + xkey;
+					+ xpass + "&xkey=" + xkey + "&noset=Y";
 			console.log("url=" + url + " (len=" + url.length + ")");
 			Pebble.openURL(url);
 		});

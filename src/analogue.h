@@ -44,13 +44,13 @@
 #define MIN (CLOCK + 4)
 
 void analogue_window_load(Window *window);
-void analogue_minute_tick(struct tm *tick_time, TimeUnits units_changed);
-void analogue_set_smart_times(bool smart, int8_t fromhr, int8_t frommin, int8_t tohr, int8_t tomin );
+void analogue_minute_tick();
+void analogue_set_smart_times();
 void analogue_set_base(time_t base);
 void analogue_set_progress(uint8_t progress_level_in);
 void analogue_window_unload();
-void analogue_visible(bool visible);
+void analogue_visible(bool visible, bool call_post_init);
 void analogue_powernap_text(char *text);
-void analogue_weekend(bool weekend);
+void set_weekend_icon(bool weekend);
 
 #endif /* ANALOGUE_H_ */

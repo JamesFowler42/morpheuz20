@@ -25,47 +25,64 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 24
-#define VERSION_TXT "2.4"
+#define VERSION 25
+#define VERSION_TXT "2.5"
 
 // Uncomment for release
 #undef APP_LOG
 #define APP_LOG(level, fmt, args...)
 
+#define LAST_SENT_INIT -3
+
 #define FUDGE 4
+
+#define FROM_HR_DEF 6
+#define FROM_MIN_DEF 30
+#define TO_HR_DEF 7
+#define TO_MIN_DEF 15
 
 #define POWER_NAP_MINUTES 27
 #define POWER_NAP_SETTLE 2
 #define POWER_NAP_SETTLE_THRESHOLD 1000
+#define CLOCK_UPDATE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
 #define MENU_ACTION_MS 500
 #define WEEKEND_PERIOD (12*60*60)
 
-#define BED_START GRect(-144-8, 15, 127, 70)
-#define BED_FINISH GRect(8, 15, 127, 70)
-#define SLEEPER_START GRect(25+144, 22, 110, 29)
-#define SLEEPER_FINISH GRect(25, 22, 110, 29)
-#define HEAD_START GRect(25, -22, 19, 16)
-#define HEAD_FINISH GRect(25, 22, 19, 16)
-#define TEXT_START GRect(26, 23, 92, 15)
-#define TEXT_FINISH GRect(26, 70, 92, 15)
+#define BED_START GRect(-144-8, 17, 127, 70)
+#define BED_FINISH GRect(8, 17, 127, 70)
+#define SLEEPER_START GRect(25+144, 24, 110, 29)
+#define SLEEPER_FINISH GRect(25, 24, 110, 29)
+#define HEAD_START GRect(25, -24, 19, 16)
+#define HEAD_FINISH GRect(25, 24, 19, 16)
+#define TEXT_START GRect(26, 25, 92, 15)
+#define TEXT_FINISH GRect(26, 72, 92, 15)
 #define BLOCK_START GRect(0,91,144,78)
 #define BLOCK_FINISH GRect(0,169,144,78)
 #define MOON_FINISH GRect(6, 5, 58, 46)
 #define MOON_START GRect(144+6, 72, 58, 46)
+#define ICON_TOPS 1
+
+// These save space and time to run and a direct cast is claimed to be supported in the documentation
+#define bitmap_layer_get_layer_jf(x) ((Layer *)(x))
+#define text_layer_get_layer_jf(x) ((Layer *)(x))
+#define inverter_layer_get_layer_jf(x) ((Layer *)(x))
+#define menu_layer_get_layer_jf(x) ((Layer *)(x))
+
+#define to_mins(h,m) (((h) * 60) + (m))
 
 enum MorpKey {
-	KEY_POINT = 1,
-	KEY_CTRL = 2,
-	KEY_FROM = 3,
-	KEY_TO = 4,
-	KEY_BASE = 5,
-	KEY_VERSION = 6,
-	KEY_GONEOFF = 7
+  KEY_POINT = 1,
+  KEY_CTRL = 2,
+  KEY_FROM = 3,
+  KEY_TO = 4,
+  KEY_BASE = 5,
+  KEY_VERSION = 6,
+  KEY_GONEOFF = 7
 };
 
 enum CtrlValues {
-	CTRL_RESET = 1
+  CTRL_RESET = 1
 };
 
 #define DISTRESS_WAIT_SEC 10
@@ -83,34 +100,55 @@ enum CtrlValues {
 #define LIMIT 54
 #define DIVISOR 600
 
+#define LOGO_BED_ANIMATION 0
+#define LOGO_SLEEPER_ANIMATION 1
+#define LOGO_HEAD_ANIMATION 2
+#define LOGO_TEXT_ANIMATION 3
+#define BLOCK_ANIMATION 4
+#define MAX_ANIMATIONS 5
+
+#define BUFFER_SIZE 40
+
+#define TWENTY_FOUR_HOURS_IN_SECONDS (24*60*60)
+#define WAKEUP_AUTO_RESTART 1
+#define ONE_MINUTE 60
+
 typedef struct {
-	uint32_t base;
-	uint16_t gone_off;
-	uint8_t highest_entry;
-	int8_t last_sent;
-	uint16_t points[LIMIT];
-	bool ignore[LIMIT];
-	bool has_been_reset;
-	bool gone_off_sent;
+  uint32_t base;
+  uint16_t gone_off;
+  uint8_t highest_entry;
+  int8_t last_sent;
+  uint16_t points[LIMIT];
+  bool ignore[LIMIT];
+  bool has_been_reset;
+  bool gone_off_sent;
 } InternalData;
 
 typedef struct {
-	bool invert;
-	bool analogue;
-	bool smart;
-	uint8_t fromhr;
-	uint8_t frommin;
-	uint8_t tohr;
-	uint8_t tomin;
-	uint32_t from;
-	uint32_t to;
-	time_t weekend_until;
+  bool invert;
+  bool analogue;
+  bool smart;
+  bool auto_reset;
+  uint8_t autohr;
+  uint8_t automin;
+  uint8_t fromhr;
+  uint8_t frommin;
+  uint8_t tohr;
+  uint8_t tomin;
+  uint32_t from;
+  uint32_t to;
+  time_t weekend_until;
 } ConfigData;
 
+typedef struct {
+  BitmapLayer *layer;
+  GBitmap *bitmap;
+} BitmapLayerComp;
+
 void init_morpheuz(Window *window);
-void deinit_morpheuz();
 void set_smart_status_on_screen(bool show_special_text, char *special_text);
 void invert_screen();
+void revive_clock_on_movement(uint16_t last_movement);
 void power_nap_countdown();
 void power_nap_check(uint16_t biggest);
 void click_config_provider(Window *window);
@@ -121,11 +159,12 @@ void reset_sleep_period();
 void server_processing(uint16_t biggest);
 void transmit_next_data(void *data);
 void set_progress(uint8_t progress_percent);
-void send_base(uint32_t base);
+void send_base();
+void send_from();
+void send_to();
 void send_goneoff();
-void send_version(void *data);
+void send_version();
 void send_point(uint8_t point, uint16_t biggest, bool ignore);
-void set_progress_based_on_persist();
 InternalData *get_internal_data();
 void read_internal_data();
 void save_internal_data();
@@ -133,35 +172,41 @@ void show_record(bool recording);
 void save_config_data(void *data);
 void read_config_data();
 ConfigData *get_config_data();
-void show_notice(char *message);
-bool cancel_alarm();
+void show_notice(uint32_t resource_id);
+void hide_notice_layer(void *data);
+void cancel_alarm();
 void fire_alarm();
-bool snooze_alarm();
+void snooze_alarm();
 void init_alarm();
-void show_keyboard();
 void set_alarm_icon(bool show_icon);
-void every_minute_processing(int min_no);
+uint16_t every_minute_processing();
 void toggle_weekend_mode();
-void notice_init();
-void notice_deinit();
-void set_text_layer_to_time(TextLayer *text_layer);
 TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment);
 int32_t join_value(int16_t top, int16_t bottom);
 int32_t dirty_checksum(void *data, uint8_t data_size);
 void set_ignore_on_current_time_segment();
 void show_ignore_state(bool ignore);
-void resend_all_data();
+void resend_all_data(bool silent);
 void bed_visible(bool value);
 bool is_animation_complete();
-void show_menu(bool ignore, bool weekend, bool inverse, bool analogue, bool power_nap, bool alarm);
+void show_menu();
 void hide_menu();
 bool get_ignore_state();
 void toggle_power_nap();
 void close_morpheuz();
-void set_config_data_time(int32_t iface_from, int32_t iface_to);
-void set_config_data_invert(bool iface_invert);
-void set_config_data_analogue(bool iface_analogue);
 bool check_alarm();
 bool is_notice_showing();
+void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible);
+void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
+void wakeup_init();
+void wakeup_toggle();
+void clear_next_wakeup();
+void set_next_wakeup();
+uint8_t twenty_four_to_twelve(uint8_t hour);
+void post_init_hook();
+void show_set_alarm();
+void trigger_config_save();
+bool is_doing_powernap();
+bool has_version_been_sent();
 
 #endif /* MORPHEUZ_H_ */

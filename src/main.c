@@ -33,56 +33,47 @@ static Layer *progress_layer;
 static Layer *battery_layer;
 
 static TextLayer *text_date_layer;
+static TextLayer *smart_alarm_range_layer;
 static TextLayer *text_time_layer;
 static TextLayer *version_text;
 static TextLayer *block_layer;
 static TextLayer *block_layer2;
+static TextLayer *powernap_layer;
 
-static BitmapLayer *logo_bed_layer;
-static BitmapLayer *logo_sleeper_layer;
-static BitmapLayer *logo_head_layer;
-static BitmapLayer *logo_text_layer;
-static BitmapLayer *bluetooth_layer;
-static BitmapLayer *activity_layer;
-static BitmapLayer *comms_layer;
-static BitmapLayer *ignore_layer;
-static BitmapLayer *record_layer;
-static BitmapLayer *alarm_icon_layer;
-static BitmapLayer *alarm_layer;
+static BitmapLayerComp logo_bed;
+static BitmapLayerComp logo_sleeper;
+static BitmapLayerComp logo_text;
+static BitmapLayerComp logo_head;
+static BitmapLayerComp alarm_icon;
+static BitmapLayerComp bluetooth_icon;
+static BitmapLayerComp comms_icon;
+static BitmapLayerComp record_icon;
+static BitmapLayerComp alarm_ring;
+static BitmapLayerComp ignore_icon;
+static BitmapLayerComp activity_icon;
+static BitmapLayerComp weekend;
 
 static InverterLayer *full_inverse_layer;
 
-GBitmap *alarm_bitmap;
-static GBitmap *alarm_ring_bitmap;
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
 static GBitmap *image_progress;
 static GBitmap *image_progress_full;
-static GBitmap *record_bitmap;
-static GBitmap *logo_bed_bitmap;
-static GBitmap *logo_sleeper_bitmap;
-static GBitmap *logo_head_bitmap;
-static GBitmap *logo_text_bitmap;
-static GBitmap *bluetooth_bitmap;
-static GBitmap *activity_bitmap;
-static GBitmap *comms_bitmap;
-static GBitmap *ignore_bitmap;
 
-extern GFont notice_font;
 static GFont time_font;
 
-static struct PropertyAnimation *logo_bed_animation;
-static struct PropertyAnimation *logo_sleeper_animation;
-static struct PropertyAnimation *logo_text_animation;
-static struct PropertyAnimation *block_animation;
-static struct PropertyAnimation *logo_head_animation;
+static struct PropertyAnimation *animations[MAX_ANIMATIONS];
 
 static uint8_t battery_level;
 static bool battery_plugged;
-static bool g_show_special_text = false;
-static char date_text[16];
-static uint16_t progress_level;
+static char powernap_text[3];
+static uint16_t progress_level = 0;
 static uint8_t animation_count = 0;
+static uint8_t previous_mday = 255;
+static time_t last_clock_update;
+
+char date_text[16] = "";
+GFont notice_font;
 
 /*
  * Boot up background process
@@ -90,7 +81,7 @@ static uint8_t animation_count = 0;
 static void start_worker() {
   AppWorkerResult result = app_worker_launch();
   if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
-    layer_set_hidden(bitmap_layer_get_layer(activity_layer), false);
+    layer_set_hidden(bitmap_layer_get_layer_jf(activity_icon.layer), false);
   }
   APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
 }
@@ -112,36 +103,17 @@ static void stop_worker() {
  * Show worker icon
  */
 static void show_worker() {
-  layer_set_hidden(bitmap_layer_get_layer(activity_layer), !app_worker_is_running());
-}
-
-/*
- * Show the date
- */
-static void show_date() {
-  time_t now = time(NULL);
-  struct tm *time = localtime(&now);
-  strftime(date_text, sizeof(date_text), "%B %e", time);
-  text_layer_set_text(text_date_layer, date_text);
+  layer_set_hidden(bitmap_layer_get_layer_jf(activity_icon.layer), !app_worker_is_running());
 }
 
 /*
  * Set the smart alarm status details
  */
-void set_smart_status_on_screen(bool show_special_text, char *special_text) {
-  if (!show_special_text) {
-    if (g_show_special_text) {
-      layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
-      show_date();
-    }
-  } else {
-    if (!g_show_special_text) {
-      layer_set_hidden(bitmap_layer_get_layer(alarm_layer), false);
-    }
-    strncpy(date_text, special_text, sizeof(date_text));
-    text_layer_set_text(text_date_layer, date_text);
-  }
-  g_show_special_text = show_special_text;
+void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
+  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_icon.layer), !smart_alarm_on);
+  layer_set_hidden(text_layer_get_layer_jf(smart_alarm_range_layer), !smart_alarm_on);
+  if (smart_alarm_on)
+    text_layer_set_text(smart_alarm_range_layer, special_text);
 }
 
 /*
@@ -179,31 +151,68 @@ static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 }
 
 /*
+ * Perform the clock update
+ */
+static void update_clock() {
+  static char time_text[6];
+  clock_copy_time_string(time_text, sizeof(time_text));
+  if (time_text[4] == ' ')
+    time_text[4] = '\0';
+  text_layer_set_text(text_time_layer, time_text);
+  analogue_minute_tick();
+  last_clock_update = time(NULL);
+}
+
+/*
  * Process clockface
  */
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
-  if (!g_show_special_text) {
-    show_date();
+  // Only update the date if the day has changed
+  if (tick_time->tm_mday != previous_mday) {
+    strftime(date_text, sizeof(date_text), "%B %e", tick_time);
+    text_layer_set_text(text_date_layer, date_text);
+    previous_mday = tick_time->tm_mday;
   }
 
-  set_text_layer_to_time(text_time_layer);
-
+  // Perform all background processing
+  uint16_t last_movement;
   if (is_animation_complete()) {
-    every_minute_processing(tick_time->tm_min);
+    last_movement = every_minute_processing();
     show_worker();
+  } else {
+    last_movement = CLOCK_UPDATE_THRESHOLD;
   }
 
+  // Do the power nap countdown
   power_nap_countdown();
 
-  analogue_minute_tick(tick_time, units_changed);
+  // Only update the clock every five minutes unless awake
+  if (last_movement >= CLOCK_UPDATE_THRESHOLD || (tick_time->tm_min % 5 == 0)) {
+    update_clock();
+  }
+}
+
+/*
+ * Display the clock on movement (ensures if you start moving the clock is up to date)
+ * Also fired from button press
+ */
+void revive_clock_on_movement(uint16_t last_movement) {
+
+  if (last_movement >= CLOCK_UPDATE_THRESHOLD) {
+    time_t now = time(NULL);
+    if ((now - last_clock_update) > 60) {
+      update_clock();
+    }
+  }
+
 }
 
 /*
  * Bluetooth connection status
  */
 static void bluetooth_state_handler(bool connected) {
-  layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer), !connected);
+  layer_set_hidden(bitmap_layer_get_layer_jf(bluetooth_icon.layer), !connected);
   if (!connected)
     show_comms_state(false); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
 }
@@ -212,25 +221,28 @@ static void bluetooth_state_handler(bool connected) {
  * Comms connection status
  */
 void show_comms_state(bool connected) {
-  layer_set_hidden(bitmap_layer_get_layer(comms_layer), !connected);
+  layer_set_hidden(bitmap_layer_get_layer_jf(comms_icon.layer), !connected);
 }
 
 /*
  * Ignore status
  */
 void show_ignore_state(bool ignore) {
-  layer_set_hidden(bitmap_layer_get_layer(ignore_layer), !ignore);
+  layer_set_hidden(bitmap_layer_get_layer_jf(ignore_icon.layer), !ignore);
 }
 
+/*
+ * Are we in ignore mode or not
+ */
 bool get_ignore_state() {
-  return !layer_get_hidden(bitmap_layer_get_layer(ignore_layer));
+  return !layer_get_hidden(bitmap_layer_get_layer_jf(ignore_icon.layer));
 }
 
 /*
  * Alarm status icon
  */
 void set_alarm_icon(bool show_icon) {
-  layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), !show_icon);
+  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_ring.layer), !show_icon);
 }
 
 /*
@@ -245,33 +257,43 @@ void set_progress(uint8_t progress_level_in) {
  * Show record
  */
 void show_record(bool recording) {
-  layer_set_hidden(bitmap_layer_get_layer(record_layer), !recording);
+  layer_set_hidden(bitmap_layer_get_layer_jf(record_icon.layer), !recording);
+}
+
+/*
+ * Stuff we only allow after we've gone through the normal pre-amble
+ */
+void post_init_hook(void *data) {
+  start_worker();
+  wakeup_init();
+  animation_count++; // Make it 6 so we consider is_animation_complete() will return true
+}
+
+static void animation_stopped(Animation *animation, bool finished, void *data);
+
+/*
+ * Set up a single animation
+ */
+static void build_an_animate(Layer *layer, GRect *start, GRect *finish, uint32_t duration, uint8_t id) {
+  animations[id] = property_animation_create_layer_frame(layer, start, finish);
+  animation_set_duration((Animation*) animations[id], duration);
+  animation_set_handlers((Animation*) animations[id], (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
 }
 
 /*
  * End of initial animation sequence - occurs 4 then 5 times
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
+  animation_unschedule(animation);
+  animation_destroy(animation);
   animation_count++;
   if (animation_count == 4) {
     light_enable_interaction();
-    animation_unschedule((Animation*) logo_bed_animation);
-    animation_unschedule((Animation*) logo_sleeper_animation);
-    animation_unschedule((Animation*) logo_text_animation);
-    animation_unschedule((Animation*) block_animation);
-    animation_destroy((Animation*) logo_bed_animation);
-    animation_destroy((Animation*) logo_sleeper_animation);
-    animation_destroy((Animation*) logo_text_animation);
-    animation_destroy((Animation*) block_animation);
     text_layer_destroy(block_layer2);
-    animation_schedule((Animation*) logo_head_animation);
+    build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, 500, LOGO_HEAD_ANIMATION);
+    animation_schedule((Animation*) animations[LOGO_HEAD_ANIMATION]);
   } else if (animation_count == 5) {
-    animation_count++; // Make it 6
-    animation_unschedule((Animation*) logo_head_animation);
-    animation_destroy((Animation*) logo_head_animation);
-    start_worker();
-    if (get_config_data()->analogue)
-      analogue_visible(true);
+    analogue_visible(get_config_data()->analogue, true);
   }
 }
 
@@ -288,40 +310,14 @@ bool is_animation_complete() {
 static void start_animate(void *data) {
   light_enable_interaction();
 
-  GRect start = BED_START;
-  GRect finish = BED_FINISH;
-  logo_bed_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_bed_layer), &start, &finish);
-  animation_set_duration((Animation*) logo_bed_animation, 1000);
-  animation_set_handlers((Animation*) logo_bed_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-
-  start = SLEEPER_START;
-  finish = SLEEPER_FINISH;
-  logo_sleeper_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_sleeper_layer), &start, &finish);
-  animation_set_duration((Animation*) logo_sleeper_animation, 1000);
-  animation_set_handlers((Animation*) logo_sleeper_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-
-  start = HEAD_START;
-  finish = HEAD_FINISH;
-  logo_head_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_head_layer), &start, &finish);
-  animation_set_duration((Animation*) logo_head_animation, 500);
-  animation_set_handlers((Animation*) logo_head_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-
-  start = TEXT_START;
-  finish = TEXT_FINISH;
-  logo_text_animation = property_animation_create_layer_frame(bitmap_layer_get_layer(logo_text_layer), &start, &finish);
-  animation_set_duration((Animation*) logo_text_animation, 1000);
-  animation_set_handlers((Animation*) logo_text_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-
-  start = BLOCK_START;
-  finish = BLOCK_FINISH;
-  block_animation = property_animation_create_layer_frame(text_layer_get_layer(block_layer), &start, &finish);
-  animation_set_duration((Animation*) block_animation, 1000);
-  animation_set_handlers((Animation*) block_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
-
-  animation_schedule((Animation*) logo_bed_animation);
-  animation_schedule((Animation*) logo_sleeper_animation);
-  animation_schedule((Animation*) logo_text_animation);
-  animation_schedule((Animation*) block_animation);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_bed.layer), &BED_START, &BED_FINISH, 1000, LOGO_BED_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_sleeper.layer), &SLEEPER_START, &SLEEPER_FINISH, 1000, LOGO_SLEEPER_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_text.layer), &TEXT_START, &TEXT_FINISH, 1000, LOGO_TEXT_ANIMATION);
+  build_an_animate(text_layer_get_layer_jf(block_layer), &BLOCK_START, &BLOCK_FINISH, 1000, BLOCK_ANIMATION);
+  animation_schedule((Animation*) animations[LOGO_BED_ANIMATION]);
+  animation_schedule((Animation*) animations[LOGO_SLEEPER_ANIMATION]);
+  animation_schedule((Animation*) animations[LOGO_TEXT_ANIMATION]);
+  animation_schedule((Animation*) animations[BLOCK_ANIMATION]);
   text_layer_destroy(version_text);
   text_layer_set_text(block_layer, "");
 }
@@ -333,43 +329,36 @@ static void morpheuz_load(Window *window) {
 
   window_set_background_color(window, GColorBlack);
 
-  notice_init();
+  notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+  time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
 
   Layer *window_layer = window_get_root_layer(window);
 
-  logo_bed_layer = bitmap_layer_create(BED_START);
-  layer_add_child(window_layer, bitmap_layer_get_layer(logo_bed_layer));
-  logo_bed_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_BED);
-  bitmap_layer_set_bitmap(logo_bed_layer, logo_bed_bitmap);
+  powernap_layer = macro_text_layer_create(GRect(5, -3 ,20, 19), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
 
-  logo_sleeper_layer = bitmap_layer_create(SLEEPER_START);
-  layer_add_child(window_layer, bitmap_layer_get_layer(logo_sleeper_layer));
-  logo_sleeper_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_SLEEPER);
-  bitmap_layer_set_bitmap(logo_sleeper_layer, logo_sleeper_bitmap);
+  macro_bitmap_layer_create(&logo_bed, BED_START, window_layer, RESOURCE_ID_IMAGE_LOGO_BED, true);
 
-  logo_text_layer = bitmap_layer_create(TEXT_START);
-  layer_add_child(window_layer, bitmap_layer_get_layer(logo_text_layer));
-  logo_text_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_TEXT);
-  bitmap_layer_set_bitmap(logo_text_layer, logo_text_bitmap);
+  macro_bitmap_layer_create(&logo_sleeper, SLEEPER_START, window_layer, RESOURCE_ID_IMAGE_LOGO_SLEEPER, true);
 
-  logo_head_layer = bitmap_layer_create(HEAD_START);
-  layer_add_child(window_layer, bitmap_layer_get_layer(logo_head_layer));
-  logo_head_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_LOGO_HEAD);
-  bitmap_layer_set_bitmap(logo_head_layer, logo_head_bitmap);
+  macro_bitmap_layer_create(&logo_text, TEXT_START, window_layer, RESOURCE_ID_IMAGE_LOGO_TEXT, true);
+
+  macro_bitmap_layer_create(&logo_head, HEAD_START, window_layer, RESOURCE_ID_IMAGE_LOGO_HEAD, true);
 
   version_text = macro_text_layer_create(GRect(26, 43, 92, 30), window_layer, GColorWhite, GColorClear, notice_font, GTextAlignmentCenter);
   text_layer_set_text(version_text, VERSION_TXT);
 
-  time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
   text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, GColorBlack, time_font, GTextAlignmentCenter);
 
-  text_date_layer = macro_text_layer_create(GRect(8, 85, 144-8, 31), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  text_date_layer = macro_text_layer_create(GRect(8, 86, 144-8, 31), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
-  alarm_layer = bitmap_layer_create(GRect(11, 96, 12, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(alarm_layer));
-  alarm_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_ICON);
-  bitmap_layer_set_bitmap(alarm_layer, alarm_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(alarm_layer), true);
+  smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144-8, 31), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(smart_alarm_range_layer), true);
+
+  macro_bitmap_layer_create(&alarm_icon, GRect(144-26-14-10-16-19, ICON_TOPS, 12, 12), window_layer, RESOURCE_ID_ALARM_ICON, false);
+
+  macro_bitmap_layer_create(&weekend, GRect(144-26-14-10-16-19, ICON_TOPS, 12, 12), window_layer, RESOURCE_ID_WEEKEND_ICON, false);
+
+  macro_bitmap_layer_create(&alarm_ring, GRect(144-26-14-10-16-19, ICON_TOPS, 12, 12), window_layer, RESOURCE_ID_ALARM_RING_ICON, false);
 
   icon_battery = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_ICON);
   icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
@@ -377,49 +366,22 @@ static void morpheuz_load(Window *window) {
   BatteryChargeState initial = battery_state_service_peek();
   battery_level = initial.charge_percent;
   battery_plugged = initial.is_plugged;
-  battery_layer = layer_create(GRect(144-26,4,24,12)); //24*12
+  battery_layer = layer_create(GRect(144-26,ICON_TOPS,24,12)); //24*12
   layer_set_update_proc(battery_layer, &battery_layer_update_callback);
   layer_add_child(window_layer, battery_layer);
 
-  bluetooth_layer = bitmap_layer_create(GRect(144-26-10, 4, 9, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(bluetooth_layer));
-  bluetooth_bitmap = gbitmap_create_with_resource(RESOURCE_ID_BLUETOOTH_ICON);
-  bitmap_layer_set_bitmap(bluetooth_layer, bluetooth_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(bluetooth_layer), !bluetooth_connection_service_peek());
+  macro_bitmap_layer_create(&bluetooth_icon, GRect(144-26-10, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_BLUETOOTH_ICON, bluetooth_connection_service_peek());
 
-  comms_layer = bitmap_layer_create(GRect(144-26-14-10, 4, 9, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(comms_layer));
-  comms_bitmap = gbitmap_create_with_resource(RESOURCE_ID_COMMS_ICON);
-  bitmap_layer_set_bitmap(comms_layer, comms_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(comms_layer), true);
+  macro_bitmap_layer_create(&comms_icon, GRect(144-26-14-10, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_COMMS_ICON, false);
 
-  record_layer = bitmap_layer_create(GRect(144-26-14-10-16, 4, 10, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(record_layer));
-  record_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ICON_RECORD);
-  bitmap_layer_set_bitmap(record_layer, record_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(record_layer), true);
+  macro_bitmap_layer_create(&record_icon, GRect(144-26-14-10-16, ICON_TOPS, 10, 12), window_layer, RESOURCE_ID_ICON_RECORD, false);
 
-  alarm_ring_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ALARM_RING_ICON);
-  alarm_icon_layer = bitmap_layer_create(GRect(144-26-14-10-16-19, 4, 12, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(alarm_icon_layer));
-  bitmap_layer_set_bitmap(alarm_icon_layer, alarm_ring_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(alarm_icon_layer), true);
+  macro_bitmap_layer_create(&ignore_icon, GRect(144-26-14-10-16-19-15, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_IGNORE, false);
 
-  ignore_layer = bitmap_layer_create(GRect(144-26-14-10-16-19-15, 4, 9, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(ignore_layer));
-  ignore_bitmap = gbitmap_create_with_resource(RESOURCE_ID_IGNORE);
-  bitmap_layer_set_bitmap(ignore_layer, ignore_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(ignore_layer), true);
-
-  activity_layer = bitmap_layer_create(GRect(144-26-14-10-16-19-15-15, 4, 9, 12));
-  layer_add_child(window_layer, bitmap_layer_get_layer(activity_layer));
-  activity_bitmap = gbitmap_create_with_resource(RESOURCE_ID_ACTIVITY_ICON);
-  bitmap_layer_set_bitmap(activity_layer, activity_bitmap);
-  layer_set_hidden(bitmap_layer_get_layer(activity_layer), true);
+  macro_bitmap_layer_create(&activity_icon, GRect(144-26-14-10-16-19-15-15, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_ACTIVITY_ICON, false);
 
   image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
   image_progress_full = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS_FULL);
-  progress_level = 0;
   progress_layer = layer_create(GRect(6,161,131,5));
   layer_set_update_proc(progress_layer, &progress_layer_update_callback);
   layer_add_child(window_layer, progress_layer);
@@ -432,8 +394,8 @@ static void morpheuz_load(Window *window) {
   analogue_window_load(window);
 
   full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
-  layer_add_child(window_layer, inverter_layer_get_layer(full_inverse_layer));
-  layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), true);
+  layer_add_child(window_layer, inverter_layer_get_layer_jf(full_inverse_layer));
+  layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), true);
 
   read_internal_data();
   read_config_data();
@@ -458,13 +420,15 @@ static void morpheuz_load(Window *window) {
  * Shutdown
  */
 static void morpheuz_unload(Window *window) {
+
+  hide_notice_layer(NULL);
+
   stop_worker();
 
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
-
-  deinit_morpheuz();
+  accel_data_service_unsubscribe();
 
   save_config_data(NULL);
   save_internal_data();
@@ -478,53 +442,59 @@ static void morpheuz_unload(Window *window) {
 
   text_layer_destroy(text_time_layer);
   text_layer_destroy(text_date_layer);
+  text_layer_destroy(smart_alarm_range_layer);
+  text_layer_destroy(powernap_layer);
 
-  bitmap_layer_destroy(logo_bed_layer);
-  bitmap_layer_destroy(logo_sleeper_layer);
-  bitmap_layer_destroy(logo_head_layer);
-  bitmap_layer_destroy(logo_text_layer);
-  bitmap_layer_destroy(comms_layer);
-  bitmap_layer_destroy(ignore_layer);
-  bitmap_layer_destroy(bluetooth_layer);
-  bitmap_layer_destroy(activity_layer);
-  bitmap_layer_destroy(alarm_icon_layer);
-  bitmap_layer_destroy(record_layer);
-  bitmap_layer_destroy(alarm_layer);
+  macro_bitmap_layer_destroy(&logo_bed);
+  macro_bitmap_layer_destroy(&logo_sleeper);
+  macro_bitmap_layer_destroy(&logo_text);
+  macro_bitmap_layer_destroy(&logo_head);
+  macro_bitmap_layer_destroy(&alarm_icon);
+  macro_bitmap_layer_destroy(&bluetooth_icon);
+  macro_bitmap_layer_destroy(&comms_icon);
+  macro_bitmap_layer_destroy(&record_icon);
+  macro_bitmap_layer_destroy(&alarm_ring);
+  macro_bitmap_layer_destroy(&ignore_icon);
+  macro_bitmap_layer_destroy(&activity_icon);
+  macro_bitmap_layer_destroy(&weekend);
 
-  gbitmap_destroy(alarm_bitmap);
-  gbitmap_destroy(alarm_ring_bitmap);
   gbitmap_destroy(icon_battery);
   gbitmap_destroy(icon_battery_charge);
   gbitmap_destroy(image_progress);
   gbitmap_destroy(image_progress_full);
-  gbitmap_destroy(record_bitmap);
-  gbitmap_destroy(logo_bed_bitmap);
-  gbitmap_destroy(logo_sleeper_bitmap);
-  gbitmap_destroy(logo_head_bitmap);
-  gbitmap_destroy(logo_text_bitmap);
-  gbitmap_destroy(bluetooth_bitmap);
-  gbitmap_destroy(activity_bitmap);
-  gbitmap_destroy(comms_bitmap);
-  gbitmap_destroy(ignore_bitmap);
-
-  notice_deinit();
 
   fonts_unload_custom_font(time_font);
+  fonts_unload_custom_font(notice_font);
+}
+
+/*
+ * Set the weekend indicator on the display
+ */
+void set_weekend_icon(bool weekend_visible) {
+  layer_set_hidden(bitmap_layer_get_layer_jf(weekend.layer), !weekend_visible);
+}
+
+/*
+ * Set the power nap text for the analogue display
+ */
+void analogue_powernap_text(char *text) {
+  strncpy(powernap_text, text, sizeof(powernap_text));
+  text_layer_set_text(powernap_layer, powernap_text);
 }
 
 /*
  * Invert screen
  */
 void invert_screen() {
-  layer_set_hidden(inverter_layer_get_layer(full_inverse_layer), !get_config_data()->invert);
+  layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), !get_config_data()->invert);
 }
 
 /**
  * Hide the bed when making the analogue face visible
  */
 void bed_visible(bool value) {
-  layer_set_hidden(bitmap_layer_get_layer(logo_bed_layer), !value);
-  layer_set_hidden(bitmap_layer_get_layer(logo_head_layer), !value);
+  layer_set_hidden(bitmap_layer_get_layer_jf(logo_bed.layer), !value);
+  layer_set_hidden(bitmap_layer_get_layer_jf(logo_head.layer), !value);
 }
 
 /*

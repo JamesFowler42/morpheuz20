@@ -23,7 +23,7 @@
 								<option id="llvm.c_cpp.compiler.option.optimization.level.756802434" name="Optimization Level" superClass="llvm.c_cpp.compiler.option.optimization.level" value="llvm.c_cpp.compiler.optimization.level.none" valueType="enumerated"/>
 								<option id="llvm.c_cpp.compiler.option.debugging.level.155933297" name="Debug Level" superClass="llvm.c_cpp.compiler.option.debugging.level" value="llvm.c_cpp.compiler.debugging.level.max" valueType="enumerated"/>
 								<option id="llvm.c_cpp.compiler.option.include.paths.1303379785" name="Include paths (-I)" superClass="llvm.c_cpp.compiler.option.include.paths" valueType="includePath">
-									<listOptionValue builtIn="false" value="/Users/keith/pebble-dev/PebbleSDK-2.6.1/Pebble/include"/>
+									<listOptionValue builtIn="false" value="/Users/keith/pebble-dev/PebbleSDK-2.7/Pebble/include"/>
 								</option>
 								<inputType id="cdt.managedbuild.tool.llvm.c.compiler.input.1017524008" superClass="cdt.managedbuild.tool.llvm.c.compiler.input"/>
 							</tool>

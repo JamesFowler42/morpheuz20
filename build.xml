@@ -1,0 +1,44 @@
+<?xml version="1.0"?>
+<project name="morpheuz" basedir="." default="all">
+	
+	<property name="ver" value="25"/>
+	<property name="dir" value="website/morpheuz"/>
+	<property name="test.dir" value="../Desktop/morpheuz"/>
+
+	<target name="all"  description="all">
+		<antcall target="shrink" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="view-${ver}.css" />
+			<param name="min.file" value="view-${ver}.min.css" />
+		</antcall> 
+		<antcall target="shrink" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="view-${ver}.js" />
+			<param name="min.file" value="view-${ver}.min.js" />
+		</antcall> 
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="view-${ver}.min.css" />
+		</antcall> 
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="view-${ver}.min.js" />
+		</antcall> 
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="view-${ver}.html" />
+		</antcall> 
+	</target>
+
+	<target name="shrink" description="shrink">
+		<delete file="${dir}/${min.file}"/>
+		<java jar="../yui/yuicompressor-2.4.8.jar" fork="true">
+			<arg value="${dir}/${in.file}" />
+			<arg value="-o" />
+			<arg value="${dir}/${min.file}" />
+			<classpath>
+				<pathelement location="../yui/yuicompressor-2.4.8.jar" />
+			</classpath>
+		</java>
+	</target>
+	
+    <target name="copy" description="copy">      
+		<copy file="${dir}/${min.file}" tofile="${test.dir}/${min.file}" overwrite="true" force="true" />
+    </target>	
+    
+</project>

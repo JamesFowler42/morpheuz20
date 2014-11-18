@@ -31,7 +31,6 @@
 
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ICONS 2
-#define NUM_FIRST_MENU_ITEMS 8
 
 static Window *window;
 static MenuLayer *menu_layer;
@@ -42,9 +41,46 @@ static uint8_t weekend_state = 0;
 static uint8_t inverse_state = 0;
 static uint8_t analogue_state = 0;
 static uint8_t power_nap_state = 0;
+static uint8_t auto_reset_state = 0;
+static uint8_t smart_alarm_state = 0;
 static bool alarm_on = false;
-static char date_text[19];
+static char menu_text[15];
 static int16_t selected_row;
+
+extern char date_text[16];
+
+static void menu_invert();
+static void menu_analogue();
+static void menu_resend();
+
+// Invoke a menu item
+typedef void (*MorphMenuAction)(void);
+
+// Define a menu item
+typedef struct {
+  char *title;
+  char *subtitle;
+  uint8_t *state;
+  MorphMenuAction action;
+} MenuDef;
+
+#define OPT_WAKEUP 6
+
+// Define the menu
+static MenuDef menu_def[] = {
+    { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm },
+    { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm },
+    { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment },
+    { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period },
+    { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm },
+    { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode },
+    { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle },
+    { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap },
+    { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert },
+    { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue },
+    { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend },
+    { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz }
+};
 
 /*
  * A callback is used to specify the amount of sections of menu items
@@ -59,12 +95,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
  * You can also dynamically add and remove items using this
  */
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-  switch (section_index) {
-  case 0:
-    return NUM_FIRST_MENU_ITEMS + (alarm_on ? 2 : 0);
-  default:
-    return 0;
-  }
+   return ARRAY_LENGTH(menu_def) - (alarm_on ? 0 : 2);
 }
 
 /*
@@ -78,107 +109,58 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
  * Here we draw what each header is
  */
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-  time_t now = time(NULL);
-  struct tm *time = localtime(&now);
-  strftime(date_text, sizeof(date_text), "%B %e, %Y", time);
-
-  switch (section_index) {
-  case 0:
-    menu_cell_basic_header_draw(ctx, cell_layer, date_text);
-    break;
-  }
+  menu_cell_basic_header_draw(ctx, cell_layer, date_text);
 }
 
 /*
  * This is the menu item draw callback where you specify what each item should look like
  */
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
-  int16_t row = alarm_on ? cell_index->row - 2 : cell_index->row;
-  switch (cell_index->section) {
-  case 0:
-    switch (row) {
-    case -2:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_SNOOZE, MENU_SNOOZE_DES, NULL);
-      break;
 
-    case -1:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_CANCEL, MENU_CANCEL_DES, NULL);
-      break;
+  // Pick up names from the array except for the one instance where we fiddle with it
+  int16_t index = alarm_on ? cell_index->row : cell_index->row + 2;
+  const char *subtitle = menu_def[index].subtitle;
+  GBitmap *icon = menu_def[index].state == NULL ? NULL : menu_icons[*(menu_def[index].state)];
 
-    case 0:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_IGNORE, MENU_IGNORE_DES, menu_icons[ignore_state]);
-      break;
-
-    case 1:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_RESET, MENU_RESET_DES, NULL);
-      break;
-
-    case 2:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_POWER_NAP, MENU_POWER_NAP_DES, menu_icons[power_nap_state]);
-      break;
-
-    case 3:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_WEEKEND, MENU_WEEKEND_DES, menu_icons[weekend_state]);
-      break;
-
-    case 4:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_RESEND, MENU_RESEND_DES, NULL);
-      break;
-
-    case 5:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_INVERSE, MENU_INVERSE_DES, menu_icons[inverse_state]);
-      break;
-
-    case 6:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_ANALOGUE, MENU_ANALOGUE_DES, menu_icons[analogue_state]);
-      break;
-
-    case 7:
-      menu_cell_basic_draw(ctx, cell_layer, MENU_QUIT, MENU_QUIT_DES, NULL);
-      break;
-    }
-    break;
+  if (index == OPT_WAKEUP && auto_reset_state == 1) {
+     snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin);
+     subtitle = menu_text;
   }
+
+  menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, subtitle, icon);
+
 }
 
 /*
  * Do menu action after shutting the menu and allowing time for the animations to complete
  */
 static void do_menu_action(void *data) {
-  switch (selected_row) {
-  case -2:
-    snooze_alarm();
-    break;
-  case -1:
-    cancel_alarm();
-    break;
-  case 0:
-    set_ignore_on_current_time_segment();
-    break;
-  case 1:
-    reset_sleep_period();
-    break;
-  case 2:
-    toggle_power_nap();
-    break;
-  case 3:
-    toggle_weekend_mode();
-    break;
-  case 4:
-    resend_all_data();
-    break;
-  case 5:
-    set_config_data_invert(!get_config_data()->invert);
-    invert_screen();
-    break;
-  case 6:
-    set_config_data_analogue(!get_config_data()->analogue);
-    analogue_visible(get_config_data()->analogue);
-    break;
-  case 7:
-    close_morpheuz();
-    break;
-  }
+  menu_def[selected_row].action();
+}
+
+/*
+ * Invert option
+ */
+static void menu_invert() {
+  get_config_data()->invert = !get_config_data()->invert;
+  trigger_config_save();
+  invert_screen();
+}
+
+/*
+ * Analogue option
+ */
+static void menu_analogue() {
+  get_config_data()->analogue = !get_config_data()->analogue;
+  trigger_config_save();
+  analogue_visible(get_config_data()->analogue, false);
+}
+
+/*
+ * Resend option
+ */
+static void menu_resend() {
+  resend_all_data(false);
 }
 
 /*
@@ -186,7 +168,7 @@ static void do_menu_action(void *data) {
  */
 void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
-  selected_row = alarm_on ? cell_index->row - 2 : cell_index->row;
+  selected_row = alarm_on ? cell_index->row  : cell_index->row + 2;
   hide_menu();
   app_timer_register(MENU_ACTION_MS, do_menu_action, NULL);
 }
@@ -195,9 +177,8 @@ void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *da
  * This initializes the menu upon window load
  */
 void window_load(Window *window) {
-  int num_menu_icons = 0;
-  menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_MENU_NO);
-  menu_icons[num_menu_icons++] = gbitmap_create_with_resource(RESOURCE_ID_MENU_YES);
+  menu_icons[0] = gbitmap_create_with_resource(RESOURCE_ID_MENU_NO);
+  menu_icons[1] = gbitmap_create_with_resource(RESOURCE_ID_MENU_YES);
 
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
@@ -208,7 +189,7 @@ void window_load(Window *window) {
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
 
-  layer_add_child(window_layer, menu_layer_get_layer(menu_layer));
+  layer_add_child(window_layer, menu_layer_get_layer_jf(menu_layer));
 }
 
 /*
@@ -216,23 +197,23 @@ void window_load(Window *window) {
  */
 void window_unload(Window *window) {
   menu_layer_destroy(menu_layer);
-
-  for (int i = 0; i < NUM_MENU_ICONS; i++) {
-    gbitmap_destroy(menu_icons[i]);
-  }
+  gbitmap_destroy(menu_icons[0]);
+  gbitmap_destroy(menu_icons[1]);
 
 }
 
 /*
  * Show the menu
  */
-void show_menu(bool ignore, bool weekend, bool inverse, bool analogue, bool power_nap, bool alarm) {
-  ignore_state = ignore ? 1 : 0;
-  weekend_state = weekend ? 1 : 0;
-  inverse_state = inverse ? 1 : 0;
-  analogue_state = analogue ? 1 : 0;
-  power_nap_state = power_nap ? 1 : 0;
-  alarm_on = alarm;
+void show_menu() {
+  ignore_state = get_ignore_state();
+  weekend_state = get_config_data()->weekend_until != 0;
+  inverse_state = get_config_data()->invert;
+  analogue_state = get_config_data()->analogue;
+  power_nap_state = is_doing_powernap();
+  auto_reset_state = get_config_data()->auto_reset;
+  alarm_on = check_alarm();
+  smart_alarm_state = get_config_data()->smart;
   window = window_create();
   // Setup the window handlers
   window_set_window_handlers(window, (WindowHandlers ) { .load = window_load, .unload = window_unload, });
