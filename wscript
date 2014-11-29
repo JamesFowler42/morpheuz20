@@ -24,13 +24,28 @@ def build(ctx):
 
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
                     target='pebble-app.elf')
+                    
+                   
+    # Concatenate all JS files into pebble-js-app.js prior to building.
+    all_js = "\n".join([node.read() for node in ctx.path.ant_glob('src/js/**/*.js', excl='src/js/build/pebble-js-app.max.js src/js/build/pebble-js-app.js')])
+    out_js_node = ctx.path.make_node('src/js/build/pebble-js-app.max.js')
+    out_js_node.write(all_js)
+    build_js = ctx.path.make_node('src/js/build/pebble-js-app.js')
+    
+    # Validate the javascript    
+    #ctx(rule='(java -jar ../../jslint/jslint4java-2.0.4.jar --sloppy --white --vars ${SRC})',
+    #source=out_js_node, target=build_js)
+    
+    # Minify
+    ctx(rule='(java -jar ../../yui/yuicompressor-2.4.8.jar -o ${TGT} ${SRC})',
+    source=out_js_node, target=build_js)
 
     if os.path.exists('worker_src'):
         ctx.pbl_worker(source=ctx.path.ant_glob('worker_src/**/*.c'),
                         target='pebble-worker.elf')
         ctx.pbl_bundle(elf='pebble-app.elf',
                         worker_elf='pebble-worker.elf',
-                        js=ctx.path.ant_glob('src/js/**/*.js'))
+                        js=build_js)
     else:
         ctx.pbl_bundle(elf='pebble-app.elf',
-                        js=ctx.path.ant_glob('src/js/**/*.js'))
+                        js=build_js)

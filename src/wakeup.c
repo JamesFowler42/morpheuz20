@@ -28,10 +28,18 @@
 #include "analogue.h"
 
 /*
- * Clear next wakeup
+ * Build a wakeup entry
  */
-void clear_next_wakeup() {
-  wakeup_cancel_all();
+static void build_wakeup_entry(time_t timestamp, int32_t cookie) {
+  // Schedule (ensure we don't clash with another app)
+  WakeupId id = E_RANGE;
+  uint8_t count = 0;
+  while (id == E_RANGE && count < 10) {
+    id = wakeup_schedule(timestamp, cookie, false);
+    if (id == E_RANGE)
+      timestamp += ONE_MINUTE;
+    count++;
+  }
 }
 
 /*
@@ -39,31 +47,36 @@ void clear_next_wakeup() {
  */
 void set_next_wakeup() {
 
-  // Reboot time is always 24 hours from last reboot
-  time_t timestamp = (time_t) get_internal_data()->base + TWENTY_FOUR_HOURS_IN_SECONDS;
+  // Clear wakeups
+  wakeup_cancel_all();
 
-  // Make sure that if Morpheuz was last used days ago the restart time is not
-  // in the past
   time_t now = time(NULL);
-  while (timestamp < now) {
-    timestamp += TWENTY_FOUR_HOURS_IN_SECONDS;
+
+  // Auto wakeup if set
+  if (get_config_data()->auto_reset) {
+
+    // Reboot time is always 24 hours from last reboot
+    time_t timestamp = (time_t) get_internal_data()->base + TWENTY_FOUR_HOURS_IN_SECONDS;
+
+    // Make sure that if Morpheuz was last used days ago the restart time is not
+    // in the past
+    while (timestamp < now) {
+      timestamp += TWENTY_FOUR_HOURS_IN_SECONDS;
+    }
+
+    build_wakeup_entry(timestamp, WAKEUP_AUTO_RESTART);
+
+    // Remember when auto is set for
+    struct tm *time = localtime(&timestamp);
+    get_config_data()->autohr = time->tm_hour;
+    get_config_data()->automin = time->tm_min;
   }
 
-  // Schedule (ensure we don't clash with another app)
-  WakeupId id = E_RANGE;
-  uint8_t count = 0;
-  while (id == E_RANGE && count < 10) {
-    id = wakeup_schedule(timestamp, WAKEUP_AUTO_RESTART, true);
-    if (id == E_RANGE)
-      timestamp += ONE_MINUTE;
-    count++;
+  // Wakeup for transmit
+  time_t revive_timestamp = (time_t) get_internal_data()->base + TEN_HOURS_IN_SECONDS;
+  if (revive_timestamp > now) {
+    build_wakeup_entry(revive_timestamp, WAKEUP_FOR_TRANSMIT);
   }
-
-  // Remember when auto is set for
-  struct tm *time = localtime(&timestamp);
-  get_config_data()->autohr = time->tm_hour;
-  get_config_data()->automin = time->tm_min;
-
 }
 
 /*
@@ -73,6 +86,13 @@ static void wakeup_handler(WakeupId wakeup_id, int32_t cookie) {
   if (cookie == WAKEUP_AUTO_RESTART) {
     reset_sleep_period();
   }
+}
+
+/**
+ * Close in five minutes
+ */
+static void close_morpheuz_timer(void *data) {
+  close_morpheuz();
 }
 
 /*
@@ -85,8 +105,13 @@ void wakeup_init() {
   if (launch_reason() == APP_LAUNCH_WAKEUP) {
     wakeup_get_launch_event(&wakeup_id, &cookie);
     if (cookie == WAKEUP_AUTO_RESTART) {
+      start_worker();
       reset_sleep_period();
+    } else if (cookie == WAKEUP_FOR_TRANSMIT) {
+      app_timer_register(FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
     }
+  } else {
+    start_worker();
   }
 }
 
@@ -94,12 +119,6 @@ void wakeup_init() {
  * Turn auto wakeup on or off
  */
 void wakeup_toggle() {
-  if (get_config_data()->auto_reset) {
-    get_config_data()->auto_reset = false;
-    clear_next_wakeup();
-  } else if (get_internal_data()->has_been_reset) {
-    get_config_data()->auto_reset = true;
-    clear_next_wakeup();
-    set_next_wakeup();
-  }
+  get_config_data()->auto_reset = get_internal_data()->has_been_reset ? !get_config_data()->auto_reset : false;
+  set_next_wakeup();
 }

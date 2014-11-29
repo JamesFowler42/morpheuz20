@@ -78,7 +78,7 @@ GFont notice_font;
 /*
  * Boot up background process
  */
-static void start_worker() {
+void start_worker() {
   AppWorkerResult result = app_worker_launch();
   if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
     layer_set_hidden(bitmap_layer_get_layer_jf(activity_icon.layer), false);
@@ -264,7 +264,6 @@ void show_record(bool recording) {
  * Stuff we only allow after we've gone through the normal pre-amble
  */
 void post_init_hook(void *data) {
-  start_worker();
   wakeup_init();
   animation_count++; // Make it 6 so we consider is_animation_complete() will return true
 }

@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 25
-#define VERSION_TXT "2.5"
+#define VERSION 26
+#define VERSION_TXT "2.6"
 
 // Uncomment for release
 #undef APP_LOG
@@ -78,15 +78,13 @@ enum MorpKey {
   KEY_TO = 4,
   KEY_BASE = 5,
   KEY_VERSION = 6,
-  KEY_GONEOFF = 7
+  KEY_GONEOFF = 7,
+  KEY_TRANSMIT = 8
 };
 
 enum CtrlValues {
   CTRL_RESET = 1
 };
-
-#define DISTRESS_WAIT_SEC 10
-#define WINDOW_HEIGHT 168
 
 #define PERSIST_MEMORY_KEY 12121
 #define PERSIST_CONFIG_KEY 12122
@@ -95,7 +93,7 @@ enum CtrlValues {
 #define SHORT_RETRY_MS 200
 #define LONG_RETRY_MS 60000
 #define NOTICE_DISPLAY_MS 7000
-#define KEYBOARD_DISPLAY_MS 7000
+#define FIVE_MINUTES_MS (5*60*1000)
 
 #define LIMIT 54
 #define DIVISOR 600
@@ -110,7 +108,9 @@ enum CtrlValues {
 #define BUFFER_SIZE 40
 
 #define TWENTY_FOUR_HOURS_IN_SECONDS (24*60*60)
+#define TEN_HOURS_IN_SECONDS (10*60*60)
 #define WAKEUP_AUTO_RESTART 1
+#define WAKEUP_FOR_TRANSMIT 2
 #define ONE_MINUTE 60
 
 typedef struct {
@@ -122,6 +122,7 @@ typedef struct {
   bool ignore[LIMIT];
   bool has_been_reset;
   bool gone_off_sent;
+  bool transmit_sent;
 } InternalData;
 
 typedef struct {
@@ -157,14 +158,7 @@ void power_nap_reset();
 void show_comms_state(bool connected);
 void reset_sleep_period();
 void server_processing(uint16_t biggest);
-void transmit_next_data(void *data);
 void set_progress(uint8_t progress_percent);
-void send_base();
-void send_from();
-void send_to();
-void send_goneoff();
-void send_version();
-void send_point(uint8_t point, uint16_t biggest, bool ignore);
 InternalData *get_internal_data();
 void read_internal_data();
 void save_internal_data();
@@ -200,13 +194,13 @@ void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent
 void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
 void wakeup_init();
 void wakeup_toggle();
-void clear_next_wakeup();
 void set_next_wakeup();
 uint8_t twenty_four_to_twelve(uint8_t hour);
 void post_init_hook();
 void show_set_alarm();
 void trigger_config_save();
 bool is_doing_powernap();
-bool has_version_been_sent();
+void open_comms();
+void start_worker();
 
 #endif /* MORPHEUZ_H_ */

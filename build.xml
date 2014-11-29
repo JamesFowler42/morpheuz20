@@ -1,18 +1,28 @@
 <?xml version="1.0"?>
 <project name="morpheuz" basedir="." default="all">
 	
-	<property name="ver" value="25"/>
-	<property name="dir" value="website/morpheuz"/>
+	<property name="ver" value="26"/>
+	<property name="inc" value="7"/>
+	<property name="builddir" value="website/morpheuz/build"/>
+	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
 
 	<target name="all"  description="all">
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
-			<param name="in.file" value="view-${ver}.css" />
+			<param name="in.file" value="view.css" />
 			<param name="min.file" value="view-${ver}.min.css" />
 		</antcall> 
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
-			<param name="in.file" value="view-${ver}.js" />
+			<param name="in.file" value="view.js" />
 			<param name="min.file" value="view-${ver}.min.js" />
+		</antcall> 
+		<antcall target="shrink" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="utils.js" />
+			<param name="min.file" value="utils.min.js" />
+		</antcall> 
+		<antcall target="copyedit" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="view.html" />
+			<param name="out.file" value="view-${ver}.html" />
 		</antcall> 
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.min.css" />
@@ -20,17 +30,21 @@
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.min.js" />
 		</antcall> 
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="utils.min.js" />
+		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.html" />
 		</antcall> 
 	</target>
 
 	<target name="shrink" description="shrink">
-		<delete file="${dir}/${min.file}"/>
+		<delete file="${builddir}/${min.file}"/>
+		<echo message="Minifying ${srcdir}/${in.file} to ${builddir}/${min.file}"/>
 		<java jar="../yui/yuicompressor-2.4.8.jar" fork="true">
-			<arg value="${dir}/${in.file}" />
+			<arg value="${srcdir}/${in.file}" />
 			<arg value="-o" />
-			<arg value="${dir}/${min.file}" />
+			<arg value="${builddir}/${min.file}" />
 			<classpath>
 				<pathelement location="../yui/yuicompressor-2.4.8.jar" />
 			</classpath>
@@ -38,7 +52,16 @@
 	</target>
 	
     <target name="copy" description="copy">      
-		<copy file="${dir}/${min.file}" tofile="${test.dir}/${min.file}" overwrite="true" force="true" />
+		<echo message="Copying ${builddir}/${min.file} to ${test.dir}/${min.file}"/>
+		<copy file="${builddir}/${min.file}" tofile="${test.dir}/${min.file}" overwrite="true" force="true" />
+    </target>	
+	
+    <target name="copyedit" description="copyedit">     
+		<echo message="Copying ${srcdir}/${in.file} to ${builddir}/${out.file}"/>
+		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" />
+		<echo message="Editing ${builddir}/${out.file}"/>
+    	<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js?v=${inc}"/>
+    	<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css?v=${inc}"/>
     </target>	
     
 </project>
