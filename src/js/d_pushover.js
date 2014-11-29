@@ -25,7 +25,7 @@
 /**
  * Send a pushover message
  */
-function pushoverTransmit(override) {
+function pushoverTransmit() {
   var pouser = nvl(window.localStorage.getItem("pouser"), "");
   var potoken = nvl(window.localStorage.getItem("potoken"), "");
   if (pouser === '' || potoken === '') {
@@ -33,12 +33,6 @@ function pushoverTransmit(override) {
     console.log("pushoverTransmit: potoken and/or pouser not set");
     return;
   }
-  var podone = window.localStorage.getItem("podone");
-  if (podone !== null && override === 0) {
-    console.log("pushoverTransmit: already done");
-    return;
-  }
-  window.localStorage.setItem("podone", "done");
   var base = window.localStorage.getItem("base");
   var resetDate = 'Sleep from ' + new Date(parseInt(base,10)).format('yyyy-MM-dd @ hh:mm');
   var urlToAttach = buildUrl('Y');
@@ -48,7 +42,6 @@ function pushoverTransmit(override) {
   makePostAjaxCall(url, msg, function(resp) {
     console.log("pushoverTransmit: " + JSON.stringify(resp));
     if (resp.status !== 1) {
-      window.localStorage.removeItem("podone");
       window.localStorage.setItem("postat", JSON.stringify(resp.errors));
     } else {
       window.localStorage.setItem("postat", "OK");

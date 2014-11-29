@@ -63,5 +63,5 @@
     	<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js?v=${inc}"/>
     	<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css?v=${inc}"/>
     </target>	
-    
+
 </project>

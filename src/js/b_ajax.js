@@ -54,11 +54,9 @@ function makeGetAjaxCall(url, resp) {
   req.onload = function() {
     if (req.readyState === 4 && req.status === 200) {
       resp({ "status": 1});
-    } else if (req.readyState === 4 && (req.status >= 400 && req.status < 500)) {
-      resp({ "status": 0, "errors": ["4nn error"]});
-    } else if (req.readyState === 4 && (req.status === 500)) {
-      resp({ "status": 0, "errors": ["500 error"]});
-    }
+    } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
+      resp({ "status": 0, "errors": req.responseText});
+    } 
   };
   req.send();
 }

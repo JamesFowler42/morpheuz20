@@ -25,7 +25,7 @@
 /*
  * Transmit to smartwatch pro
  */
-function smartwatchProTransmit(override) {
+function smartwatchProTransmit() {
   var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
   if (doSwp !== 'Y') {
     window.localStorage.setItem("swpstat", "Disabled");
@@ -38,19 +38,12 @@ function smartwatchProTransmit(override) {
     console.log("smartwatchProTransmit: stats couldn't be calculated");
     return;  
   }
-  var swpdone = window.localStorage.getItem("swpdone");
-  if (swpdone !== null && override === 0) {
-    console.log("smartwatchProTransmit: already done");
-    return;
-  }
-  window.localStorage.setItem("swpdone", "done");
   var token = Pebble.getAccountToken();
   var swpUrl = mConst().smartwatchProAPI + stats.tbegin.format('yyyy-MM-ddThh:mm:00') + "&ends=" + stats.tends.format('yyyy-MM-ddThh:mm:00') + "&at=" + token;
   console.log("smartwatchProTransmit: url=" + swpUrl);
   makeGetAjaxCall(swpUrl, function(resp) {
     console.log("smartwatchProTransmit: " + JSON.stringify(resp));
     if (resp.status !== 1) {
-      window.localStorage.removeItem("swpdone");
       window.localStorage.setItem("swpstat", JSON.stringify(resp.errors));
     } else {
       window.localStorage.setItem("swpstat", "OK");

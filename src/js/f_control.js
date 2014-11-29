@@ -158,10 +158,9 @@ Pebble.addEventListener("appmessage", function(e) {
     storePointInfo(top, bottom);
   }
   if (typeof e.payload.keyTransmit !== "undefined") {
-    var override = parseInt(e.payload.keyTransmit, 10);
-    console.log("appmessage transmit (override=" + override + ")");
-    pushoverTransmit(override);
-    smartwatchProTransmit(override);
+    console.log("appmessage transmit");
+    pushoverTransmit();
+    smartwatchProTransmit();
   }
 });
 
