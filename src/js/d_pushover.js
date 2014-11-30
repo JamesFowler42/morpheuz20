@@ -28,16 +28,16 @@
 function pushoverTransmit() {
   var pouser = nvl(window.localStorage.getItem("pouser"), "");
   var potoken = nvl(window.localStorage.getItem("potoken"), "");
-  if (pouser === '' || potoken === '') {
+  if (pouser === "" || potoken === "") {
     window.localStorage.setItem("postat", "Disabled");
     console.log("pushoverTransmit: potoken and/or pouser not set");
     return;
   }
   var base = window.localStorage.getItem("base");
-  var resetDate = 'Sleep from ' + new Date(parseInt(base,10)).format('yyyy-MM-dd @ hh:mm');
-  var urlToAttach = buildUrl('Y');
+  var resetDate = "Sleep from " + new Date(parseInt(base,10)).format("yyyy-MM-dd @ hh:mm");
+  var urlToAttach = buildUrl("Y");
   var url = mConst().pushoverAPI;
-  var msg = 'token=' + potoken + '&user=' + pouser + '&message=' + encodeURIComponent(resetDate) + '&url=' + encodeURIComponent(urlToAttach) + '&url_title=Report' + '&priority=-2' + '&sound=none';
+  var msg = "token=" + potoken + "&user=" + pouser + "&message=" + encodeURIComponent(resetDate) + "&url=" + encodeURIComponent(urlToAttach) + "&url_title=Report" + "&priority=-2" + "&sound=none";
   console.log("pushoverTransmit: msg=" + msg);
   makePostAjaxCall(url, msg, function(resp) {
     console.log("pushoverTransmit: " + JSON.stringify(resp));

@@ -93,16 +93,6 @@
             },
             {
                 "type": "png",
-                "name": "IMAGE_PROGRESS",
-                "file": "images/progress0.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_PROGRESS_FULL",
-                "file": "images/progress100.png"
-            },
-            {
-                "type": "png",
                 "name": "ICON_RECORD",
                 "file": "images/record.png"
             },

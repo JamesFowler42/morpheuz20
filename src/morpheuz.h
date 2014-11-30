@@ -158,7 +158,7 @@ void power_nap_reset();
 void show_comms_state(bool connected);
 void reset_sleep_period();
 void server_processing(uint16_t biggest);
-void set_progress(uint8_t progress_percent);
+void set_progress();
 InternalData *get_internal_data();
 void read_internal_data();
 void save_internal_data();

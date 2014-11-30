@@ -27,7 +27,7 @@
  */
 function smartwatchProTransmit() {
   var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
-  if (doSwp !== 'Y') {
+  if (doSwp !== "Y") {
     window.localStorage.setItem("swpstat", "Disabled");
     console.log("smartwatchProTransmit: swpdo not set");
     return;
@@ -39,7 +39,7 @@ function smartwatchProTransmit() {
     return;  
   }
   var token = Pebble.getAccountToken();
-  var swpUrl = mConst().smartwatchProAPI + stats.tbegin.format('yyyy-MM-ddThh:mm:00') + "&ends=" + stats.tends.format('yyyy-MM-ddThh:mm:00') + "&at=" + token;
+  var swpUrl = mConst().smartwatchProAPI + stats.tbegin.format("yyyy-MM-ddThh:mm:00") + "&ends=" + stats.tends.format("yyyy-MM-ddThh:mm:00") + "&at=" + token;
   console.log("smartwatchProTransmit: url=" + swpUrl);
   makeGetAjaxCall(swpUrl, function(resp) {
     console.log("smartwatchProTransmit: " + JSON.stringify(resp));
@@ -76,7 +76,7 @@ function calculateStats() {
   var tends = null;
   var tendsStop = null;
   for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === '') {
+    if (splitup[i] === "") {
       continue;
     }
     var data = parseInt(splitup[i], 10);
@@ -84,7 +84,7 @@ function calculateStats() {
     var timeStartPoint1 = timeStartPoint;
     timeStartPoint = timeStartPoint.addMinutes(mConst().sampleIntervalMins);
     var teststr2 = timeStartPoint.format("hhmm");
-    if (goneoff != 'N' && goneoff >= teststr1 && goneoff <= teststr2) {
+    if (goneoff != "N" && goneoff >= teststr1 && goneoff <= teststr2) {
       tends = returnAbsoluteMatch(timeStartPoint1, timeStartPoint, goneoff);
       break;
     } else if (data != -1 && data != -2 && data <= mConst().awakeAbove) {

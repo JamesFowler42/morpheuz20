@@ -213,7 +213,7 @@ function buildUrl(noset) {
   var token = "";
   var swpdo = "";
   var swpstat = "";
-  if (noset === 'N') {
+  if (noset === "N") {
     pouser =  nvl(window.localStorage.getItem("pouser"), "") ;
     postat =  nvl(window.localStorage.getItem("postat"), "") ;
     potoken =  nvl(window.localStorage.getItem("potoken"), "") ;
@@ -231,7 +231,7 @@ function buildUrl(noset) {
  * Show the config/display page - this will show a graph and allow a reset
  */
 Pebble.addEventListener("showConfiguration", function(e) {
-  Pebble.openURL(buildUrl('N'));
+  Pebble.openURL(buildUrl("N"));
 });
 
 /*

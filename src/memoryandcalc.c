@@ -227,7 +227,7 @@ static void clear_internal_data() {
  */
 static void set_progress_based_on_persist() {
   if (internal_data.highest_entry != last_progress_highest_entry) {
-    set_progress(internal_data.highest_entry + 1);
+    set_progress();
     analogue_set_progress(internal_data.highest_entry + 1);
     last_progress_highest_entry = internal_data.highest_entry;
   }

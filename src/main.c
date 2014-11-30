@@ -57,8 +57,6 @@ static InverterLayer *full_inverse_layer;
 
 static GBitmap *icon_battery;
 static GBitmap *icon_battery_charge;
-static GBitmap *image_progress;
-static GBitmap *image_progress_full;
 
 static GFont time_font;
 
@@ -67,7 +65,6 @@ static struct PropertyAnimation *animations[MAX_ANIMATIONS];
 static uint8_t battery_level;
 static bool battery_plugged;
 static char powernap_text[3];
-static uint16_t progress_level = 0;
 static uint8_t animation_count = 0;
 static uint8_t previous_mday = 255;
 static time_t last_clock_update;
@@ -145,9 +142,28 @@ static void battery_state_handler(BatteryChargeState charge) {
  * Progress line
  */
 static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
-  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-  graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 131, 5));
-  graphics_draw_bitmap_in_rect(ctx, image_progress_full, GRect(0, 0, progress_level * 131 / LIMIT, 5));
+  //graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+  //graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 131, 5));
+  //graphics_draw_bitmap_in_rect(ctx, image_progress_full, GRect(0, 0, progress_level * 131 / LIMIT, 5));
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+
+  graphics_context_set_fill_color(ctx, GColorWhite);
+
+  graphics_context_set_stroke_color(ctx, GColorWhite);
+
+  for (uint8_t i = 0; i <= 108; i+=12) {
+    graphics_draw_pixel(ctx, GPoint(i,8));
+    graphics_draw_pixel(ctx, GPoint(i,7));
+  }
+
+  for (uint8_t i = 0; i <= get_internal_data()->highest_entry; i++) {
+    if (!get_internal_data()->ignore[i]) {
+      uint16_t height = get_internal_data()->points[i]/500;
+      uint8_t i2 = i*2;
+      graphics_draw_line(ctx, GPoint(i2,8-height), GPoint(i2,8));
+    }
+  }
 }
 
 /*
@@ -248,9 +264,9 @@ void set_alarm_icon(bool show_icon) {
 /*
  * Progress indicator position (1-54)
  */
-void set_progress(uint8_t progress_level_in) {
-  progress_level = progress_level_in;
-  layer_mark_dirty(progress_layer);
+void set_progress() {
+  if (!get_config_data()->analogue)
+    layer_mark_dirty(progress_layer);
 }
 
 /*
@@ -379,9 +395,7 @@ static void morpheuz_load(Window *window) {
 
   macro_bitmap_layer_create(&activity_icon, GRect(144-26-14-10-16-19-15-15, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_ACTIVITY_ICON, false);
 
-  image_progress = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS);
-  image_progress_full = gbitmap_create_with_resource(RESOURCE_ID_IMAGE_PROGRESS_FULL);
-  progress_layer = layer_create(GRect(6,161,131,5));
+  progress_layer = layer_create(GRect(17,157,109,9));
   layer_set_update_proc(progress_layer, &progress_layer_update_callback);
   layer_add_child(window_layer, progress_layer);
 
@@ -459,8 +473,6 @@ static void morpheuz_unload(Window *window) {
 
   gbitmap_destroy(icon_battery);
   gbitmap_destroy(icon_battery_charge);
-  gbitmap_destroy(image_progress);
-  gbitmap_destroy(image_progress_full);
 
   fonts_unload_custom_font(time_font);
   fonts_unload_custom_font(notice_font);

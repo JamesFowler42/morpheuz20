@@ -27,10 +27,10 @@
  */
 function makePostAjaxCall(url, msg, resp) {
   var req = new XMLHttpRequest();
-  req.open('POST', url, true);
-  req.setRequestHeader('Content-type', 'application/x-www-form-urlencoded');
-  req.setRequestHeader('Content-length', msg.length);
-  req.setRequestHeader('Connection', 'close');
+  req.open("POST", url, true);
+  req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+  req.setRequestHeader("Content-length", msg.length);
+  req.setRequestHeader("Connection", "close");
   req.onload = function() {
     if (req.readyState === 4 && req.status === 200) {
       var result = JSON.parse(req.responseText);
@@ -50,12 +50,13 @@ function makePostAjaxCall(url, msg, resp) {
  */
 function makeGetAjaxCall(url, resp) {
   var req = new XMLHttpRequest();
-  req.open('GET', url, true);
+  req.open("GET", url, true);
+  req.setRequestHeader("Connection", "close");
   req.onload = function() {
     if (req.readyState === 4 && req.status === 200) {
       resp({ "status": 1});
     } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
-      resp({ "status": 0, "errors": req.responseText});
+      resp({ "status": 0, "errors": [req.status, nvl(req.responseText, "No Msg")]});
     } 
   };
   req.send();

@@ -36,8 +36,8 @@ function mConst() {
     fromminDef : "30",
     tohrDef : "7",
     tominDef : "15",
-    pushoverAPI : 'https://api.pushover.net/1/messages.json',
-    smartwatchProAPI: 'http://2hk.smartwatch.pro/?source=Morpheuz&starts=',
+    pushoverAPI : "https://api.pushover.net/1/messages.json",
+    smartwatchProAPI: "http://2hk.smartwatch.pro/?source=Morpheuz&starts=",
     sampleIntervalMins : 10,
     awakeAbove : 1000
   };

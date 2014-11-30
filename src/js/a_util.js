@@ -29,7 +29,7 @@
  */
 Date.prototype.format = function(format) // author: meizz
 {
-  var monName = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+  var monName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
   var o = {
     "M+" : this.getMonth() + 1, // month
     "N+" : monName[this.getMonth()], // month short name
@@ -68,7 +68,7 @@ Date.prototype.addMinutes = function(minutes) {
  * Protection against nulls
  */
 function nvl(field, defval) {
-  return field === null || field === "null" ? defval : field;
+  return field === null || field === "null" || typeof field === "undefined" ? defval : field;
 }
 
 
@@ -78,6 +78,6 @@ function nvl(field, defval) {
 function fixLen(inStr) {
   if (inStr === null || inStr.length > 1)
     return inStr;
-  return '0' + inStr;
+  return "0" + inStr;
 }
 
