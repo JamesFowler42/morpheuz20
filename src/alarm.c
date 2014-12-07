@@ -27,10 +27,12 @@
 #include "language.h"
 
 // Times (in seconds) between each buzz (gives a progressive alarm and gaps between phases)
-static uint8_t alarm_pattern[] = { 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 60, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 60, 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1 };
+static uint8_t alarm_pattern[] = { 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 60 };
 
 static uint8_t alarm_count;
 static AppTimer *alarm_timer;
+
+#define ALARM_LIMIT (ARRAY_LENGTH(alarm_pattern) * ALARM_PATTERN_MAX_REPEAT)
 
 /*
  * Alarm timer loop
@@ -38,7 +40,7 @@ static AppTimer *alarm_timer;
 static void do_alarm(void *data) {
 
   // Already hit the limit
-  if (alarm_count >= ARRAY_LENGTH(alarm_pattern)) {
+  if (alarm_count >= ALARM_LIMIT) {
     return;
   }
 
@@ -49,7 +51,7 @@ static void do_alarm(void *data) {
     vibes_long_pulse();
 
   // Prepare the time for the next buzz (this gives progressing and phasing)
-  alarm_timer = app_timer_register(((uint16_t) alarm_pattern[alarm_count]) * 1000, do_alarm, NULL);
+  alarm_timer = app_timer_register(((uint16_t) alarm_pattern[alarm_count % (ARRAY_LENGTH(alarm_pattern))]) * 1000, do_alarm, NULL);
 
   alarm_count++;
 
@@ -59,7 +61,7 @@ static void do_alarm(void *data) {
   }
 
   // Reset powernap and finish alarm
-  if (alarm_count >= ARRAY_LENGTH(alarm_pattern)) {
+  if (alarm_count >= ALARM_LIMIT) {
     power_nap_reset();
     set_alarm_icon(false);
   }
@@ -95,7 +97,7 @@ void snooze_alarm() {
  * Check alarm
  */
 bool check_alarm() {
-  return alarm_count < ARRAY_LENGTH(alarm_pattern);
+  return alarm_count < ALARM_LIMIT;
 }
 
 /*
@@ -112,7 +114,7 @@ void cancel_alarm() {
   app_timer_cancel(alarm_timer);
 
   // Max out the count
-  alarm_count = ARRAY_LENGTH(alarm_pattern);
+  alarm_count = ALARM_LIMIT;
 
   // Reset power nap if not already done so
   power_nap_reset();
@@ -126,6 +128,6 @@ void cancel_alarm() {
  */
 void init_alarm() {
   // Max out the count
-  alarm_count = ARRAY_LENGTH(alarm_pattern);
+  alarm_count = ALARM_LIMIT;
 }
 

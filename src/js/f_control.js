@@ -159,10 +159,28 @@ Pebble.addEventListener("appmessage", function(e) {
   }
   if (typeof e.payload.keyTransmit !== "undefined") {
     console.log("appmessage transmit");
-    pushoverTransmit();
-    smartwatchProTransmit();
+    transmitMethods();
   }
 });
+
+/*
+ * Transmit method list 
+ */
+function transmitMethods() {
+  // Protect against double send without resetting
+  var transmitDone = window.localStorage.getItem("transmitDone");
+  if (transmitDone !== null) {
+    console.log("transmit already done");
+    return;
+  }
+  
+  // Send
+  pushoverTransmit();
+  smartwatchProTransmit();
+  
+  // Protect
+  window.localStorage.setItem("transmitDone", "done");
+}
 
 /*
  * Monitor the closing of the config/display screen so as we can do a reset if

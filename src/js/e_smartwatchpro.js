@@ -44,6 +44,7 @@ function smartwatchProTransmit() {
   makeGetAjaxCall(swpUrl, function(resp) {
     console.log("smartwatchProTransmit: " + JSON.stringify(resp));
     if (resp.status !== 1) {
+      window.localStorage.setItem("swpdo", "N"); // Turn off send on error
       window.localStorage.setItem("swpstat", JSON.stringify(resp.errors));
     } else {
       window.localStorage.setItem("swpstat", "OK");

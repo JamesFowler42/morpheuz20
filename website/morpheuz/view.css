@@ -106,10 +106,6 @@ a {
     background-color: #fff;
 }
 
-.swpdiv {
-    margin-top: 5px;
-}
-
 #swp {
     background: url('img/exportswp.png') no-repeat 5% 30%;
     background-color: #fff;
@@ -125,11 +121,6 @@ a {
     padding-right: 5px;
     height: 16px;
     margin-left: 2px;
-}
-
-.afterswpdiv {
-    clear: both;
-    height: 5px;
 }
 
 #emailto {
@@ -241,4 +232,44 @@ div.jqplot-pie-series.jqplot-data-label {
 .error {
     color: red;
     font-size: 10px;
+}
+
+li.grey {
+    list-style-image: url('img/greybullet.png');
+    margin-bottom: 15px;
+}
+
+li.green {
+    list-style-image: url('img/greenbullet.png');
+    margin-bottom: 15px;
+}
+
+li.blue {
+    list-style-image: url('img/bluebullet.png');
+    margin-bottom: 15px;
+}
+
+li.red {
+    list-style-image: url('img/redbullet.png');
+    margin-bottom: 15px;
+}
+
+span.green {
+    color: green;
+}
+
+span.blue {
+    color: blue;
+}
+
+span.red {
+    color: red;
+}
+
+.padded {
+    padding-top: 5px;
+}
+
+.paddedbottom {
+    padding-bottom: 5px;
 }

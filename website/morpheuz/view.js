@@ -354,6 +354,30 @@ $('document').ready(function() {
   getEl("presult").textContent = postat;
   getEl("swpstat").textContent = swpstat;
 
+  // Set the status bullets for pushover
+  if (postat === "OK") {
+    $("#lipushover").addClass("green");
+    $("#presult").addClass("green");
+  } else if (postat === "" || postat === null || postat === "Disabled") {
+    $("#lipushover").addClass("blue");
+    $("#presult").addClass("blue");
+  } else {
+    $("#lipushover").addClass("red");
+    $("#presult").addClass("red");
+  }
+
+  // Set the status bullets for smartwach pro
+  if (swpstat === "OK") {
+    $("#liswp").addClass("green");
+    $("#swpstat").addClass("green");
+  } else if (swpstat === "" || swpstat === null || swpstat === "Disabled") {
+    $("#liswp").addClass("blue");
+    $("#swpstat").addClass("blue");
+  } else {
+    $("#liswp").addClass("red");
+    $("#swpstat").addClass("red");
+  }
+
   getEl("version").textContent = parseInt(vers, 10) / 10;
 
   if ((new Date().valueOf()) % 10 === 0) {
@@ -409,6 +433,12 @@ $('document').ready(function() {
     ;
   } else {
     $("#swp").hide();
+  }
+  
+  getEl('swplink').onclick = function() {
+    setTimeout(function() {
+      window.location.href = 'pebblejs://close';
+    }, 250);
   }
 
   // Build the pie chart data
