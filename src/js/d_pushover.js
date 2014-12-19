@@ -22,6 +22,15 @@
  * THE SOFTWARE.
  */
 
+/*
+ * Is Pushover configured?
+ */
+function pushoverConfigured() {
+  var pouser = nvl(window.localStorage.getItem("pouser"), "");
+  var potoken = nvl(window.localStorage.getItem("potoken"), "");
+  return (pouser !== "" && potoken !== "");
+}
+
 /**
  * Send a pushover message
  */

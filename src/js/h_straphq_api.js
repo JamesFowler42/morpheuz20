@@ -138,7 +138,7 @@ function strap_log_event(evtText, appId) {
 
   var e = {
     "payload" : {
-      "51000" : evtText
+      "51000" : encodeURIComponent(evtText)
     }
   };
 

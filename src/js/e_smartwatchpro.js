@@ -23,6 +23,14 @@
  */
 
 /*
+ * Is Smartwatch Pro configured?
+ */
+function smartwatchProConfigured() {
+  var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
+  return (doSwp === "Y");
+}
+
+/*
  * Transmit to smartwatch pro
  */
 function smartwatchProTransmit() {

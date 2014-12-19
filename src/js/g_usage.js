@@ -32,11 +32,15 @@ function sendAnonymousUsageData() {
       console.log("usage opted out");
       return;
     }
-    var version = "/v" + window.localStorage.getItem("version");
-    console.log("sendAnonymousUsageData: event=" + version);
+    var smart = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
+    var version = window.localStorage.getItem("version");
+    var pushover = pushoverConfigured() ? "Y" : "N";
+    var health = smartwatchProConfigured()  ? "Y" : "N";
+    var actionUrl = "/v" + version + "?smart=" + smart + "&pushover=" + pushover + "&healthkit=" + health;
+    console.log("sendAnonymousUsageData: event=" + actionUrl);
     var k = ai();
     var apiKey = k.j + k.k + k.f;
-    strap_log_event(version, apiKey);
+    strap_log_event(actionUrl, apiKey);
   } catch (err) {
     console.log("strap failed");
   }
