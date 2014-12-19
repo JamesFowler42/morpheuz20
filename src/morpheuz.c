@@ -35,7 +35,7 @@ static uint16_t biggest_movement_in_one_minute = 0;
 void set_smart_status() {
   static char status_text[15];
   snprintf(status_text, sizeof(status_text), "%d:%02d - %d:%02d", twenty_four_to_twelve(get_config_data()->fromhr), get_config_data()->frommin, twenty_four_to_twelve(get_config_data()->tohr), get_config_data()->tomin);
-  set_weekend_icon(get_config_data()->smart && get_config_data()->weekend_until != 0);
+  set_icon(get_config_data()->smart && get_config_data()->weekend_until != 0, IS_WEEKEND);
   set_smart_status_on_screen(get_config_data()->smart, status_text);
   analogue_set_smart_times();
 }

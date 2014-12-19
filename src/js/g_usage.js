@@ -22,36 +22,22 @@
  * THE SOFTWARE.
  */
 
-/*
- * Constants
+/**
+ * Send a usage data
  */
-function mConst() {
-  return {
-    limit : 54,
-    divisor : 600000,
-    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
-    versionDef : "22",
-    smartDef : "N",
-    fromhrDef : "6",
-    fromminDef : "30",
-    tohrDef : "7",
-    tominDef : "15",
-    pushoverAPI : "https://api.pushover.net/1/messages.json",
-    smartwatchProAPI: "http://2hk.smartwatch.pro/?source=Morpheuz&starts=",
-    sampleIntervalMins : 10,
-    awakeAbove : 1000,
-    ctrlTransmitDone: 1, 
-    displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
-    swpUrlDate: "yyyy-MM-ddThh:mm:00",
-    timeout: 4000
-  };
-}
-
-function mLang() {
-  return {
-    ok : "OK",
-    sending : "Sending",
-    disabled : "Disabled",
-    cnc : "Could not calculate"
+function sendAnonymousUsageData() {
+  try {
+    var usage = nvl(window.localStorage.getItem("usage"), "Y");
+    if (usage !== "Y") {
+      console.log("usage opted out");
+      return;
+    }
+    var version = "/v" + window.localStorage.getItem("version");
+    console.log("sendAnonymousUsageData: event=" + version);
+    var k = ai();
+    var apiKey = k.j + k.k + k.f;
+    strap_log_event(version, apiKey);
+  } catch (err) {
+    console.log("strap failed");
   }
 }

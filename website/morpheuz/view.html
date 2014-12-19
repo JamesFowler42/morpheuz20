@@ -39,17 +39,17 @@
 <script type="text/javascript" src="jqplot/plugins/jqplot.trendline.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.pieRenderer.min.js"></script>
 
-<script type="text/javascript" src='utils.min.js'></script>
+<script type="text/javascript" src="utils.js?v=1"></script>
 <link rel="stylesheet" type="text/css" href="view.css?v=1" />
-<script type="text/javascript" src='view.js?v=1'></script>
+<script type="text/javascript" src="view.js?v=1"></script>
 
 </head>
 <body>
   <form action="">
     <div id="version">v0.5</div>
-    <h2 id="title">Morpheuz Sleep Monitor</h2>
+    <h2 id="title"><img src="img/morpheuz.png"/>Morpheuz Sleep Monitor</h2>
+    <h3 id="sleep-time"></h3>
     <div id="info-message" style="display: none">
-      <h3>Information</h3>
       <p class="settingswrap">
         Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a>.
       </p>
@@ -62,38 +62,38 @@
     <table class="statstable">
       <col width="50%">
       <col width="50%">
-      <tr class='stat'>
+      <tr class="stat">
         <td>Total</td>
-        <td id='ttotal'>-</td>
+        <td id="ttotal">-</td>
       </tr>
-      <tr class='stat'>
+      <tr class="stat">
         <td>Awake?</td>
-        <td id='tawake'>-</td>
+        <td id="tawake">-</td>
       </tr>
-      <tr class='stat'>
+      <tr class="stat">
         <td>Light</td>
-        <td id='tlight'>-</td>
+        <td id="tlight">-</td>
       </tr>
-      <tr class='stat'>
+      <tr class="stat">
         <td>Deep</td>
-        <td id='tdeep'>-</td>
+        <td id="tdeep">-</td>
       </tr>
-      <tr class='stat'>
+      <tr class="stat">
         <td>Ignore</td>
-        <td id='tignore'>-</td>
+        <td id="tignore">-</td>
       </tr>
     </table>
     <h4>Sleep Analysis Data Point</h4>
     <table class="statstable">
       <col width="50%">
       <col width="50%">
-      <tr class='stat'>
+      <tr class="stat">
         <td>Starts</td>
-        <td id='tstarts'>-</td>
+        <td id="tstarts">-</td>
       </tr>
-      <tr class='stat'>
+      <tr class="stat">
         <td>Ends</td>
-        <td id='tends'>-</td>
+        <td id="tends">-</td>
       </tr>
     </table>
     <h3 class="exporthead">Export</h3>
@@ -109,32 +109,50 @@
           <p class="small noset">'To' only saved by pressing Save.</p>
         </li>
         <li id="lipushover" class="noset">
-          <p>Pushover</p> <label for="ptoken">Token:</label><input id="ptoken" type="text" maxlength="50" /><br/><label for="puser">User:</label><input id="puser" type="text" maxlength="50" />
+          <p>Pushover</p> <label for="ptoken">Token:</label><input id="ptoken" type="text" maxlength="50" /><br />
+        <label for="puser">User:</label><input id="puser" type="text" maxlength="50" />
           <p class="small">'token' & 'user' only saved by pressing Save.</p>
           <p class="small">Setting these values will enable automatic push messages to Pushover</p>
-          <p class="small">Last result: <span id="presult"></span></p>
+          <p class="small">
+            Last result: <span id="presult"></span>
+          </p>
         </li>
         <li class="grey noset ios">
-          <p class="paddedbottom">Manual Healthkit export via Smartwatch Pro</p> 
-          <a id="swp" href="swpro2hk://"></a>
-          <p class="small padded">Needs iOS8 (or above) with <a id="swplink" href="itms://itunes.com/app/smartwatchproforpebble" >Smartwatch Pro</a> installed</p>
+          <p class="paddedbottom">Manual Healthkit export via Smartwatch Pro</p> <a id="swp" href="swpro2hk://">Export</a>
+          <p class="small" id="swpnodata">The recorded data is not yet complete enough for export.</p>
+          <p class="small padded">
+            Needs iOS8 (or above) with <a id="swplink">Smartwatch Pro</a> installed
+          </p>
         </li>
         <li id="liswp" class="noset ios">
-          <p>Automatic Healthkit export via Smartwatch Pro</p> <label for="swpdo">Automatic:</label><input id="swpdo"	type="checkbox" />
+          <p>Automatic Healthkit export via Smartwatch Pro</p> <label for="swpdo">Automatic:</label><input id="swpdo" type="checkbox" />
           <p class="small">One manual export is required before activating automatic mode</p>
-          <p class="small">Last result: <span id="swpstat"></span></p>
+          <p class="small">
+            Last result: <span id="swpstat"></span>
+          </p>
         </li>
       </ol>
-      <input class="noset" type='button' id="save" value="Save" />
+      <p class="small noset indent">
+            Last auto export done: <span id="exptime"></span>
+      </p>
+      <input class="noset save" type="button" id="save" value="Save" />
+
     </div>
     <h3>See also</h3>
     <p>
     <ul>
       <li><a href="http://www.morpheuz.net/p/instructions.html" target="_blank">Instructions @ www.morpheuz.net</a></li>
-      <li><a class='ios' href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class='android'>morpheuzsleepmonitor on Facebook</span></li>
-      <li><a class='ios' href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class='android'>@MorpheuzSleep on Twitter</span></li>
+      <li><a class="ios" href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class="android">morpheuzsleepmonitor on Facebook</span></li>
+      <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
     </ul>
     </p>
+    <h3 class="exporthead noset">Usage Reporting</h3>
+    <div class="exportwrap noset usageindent">
+    <p>Help to improve Morpheuz allowing once a day anonymous usage statistics.</p> 
+    <label for="usage">Allow:</label><input id="usage" type="checkbox" />
+    <p class="small">Provided by <a href="http://www.straphq.com">Strap</a></p>
+    <input type="button" id="save2" class="save" value="Save" />
+    </div>
     <p class="centre small">&copy; 2013-2014 James Fowler</p>
   </form>
 </body>

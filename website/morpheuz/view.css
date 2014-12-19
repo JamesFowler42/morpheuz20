@@ -28,12 +28,25 @@ body {
 }
 
 h2 {
-    text-align: center;
     position: relative;
     top: -7px;
     margin-top: 0px;
     font-size: 17px;
     margin-bottom: 0px;
+}
+
+h2 img {
+    vertical-align: -25%;
+    margin-right: 5px;
+    margin-left: 5px;
+    margin-top: 5px;
+    border-radius: 5px;
+    height: 24px;
+    width: 24px;
+}
+
+.settingswrap {
+    padding-left: 5px;
 }
 
 h3 {
@@ -75,7 +88,7 @@ p.buttons {
     text-align: right;
 }
 
-#save {
+.save {
     background: url('img/save.png') no-repeat 9% 45%;
     font-size: 12px;
     padding-left: 27px;
@@ -110,7 +123,7 @@ a {
     background: url('img/exportswp.png') no-repeat 5% 30%;
     background-color: #fff;
     font-size: 12px;
-    padding-left: 69px;
+    padding-left: 80px;
     padding-bottom: 5px;
     padding-top: 3px;
     border: #ccc solid 1px;
@@ -118,7 +131,7 @@ a {
     cursor: pointer;
     text-decoration: none;
     color: black;
-    padding-right: 5px;
+    padding-right: 8px;
     height: 16px;
     margin-left: 2px;
 }
@@ -272,4 +285,18 @@ span.red {
 
 .paddedbottom {
     padding-bottom: 5px;
+}
+
+.indent {
+    padding-left: 5px;
+}
+
+.usageindent {
+    padding-left: 5px;
+    font-size: 12px;
+    padding-right: 5px;
+}
+
+input#save2.save {
+    margin-left: -2px;
 }

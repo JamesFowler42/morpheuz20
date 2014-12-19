@@ -39,6 +39,8 @@ function resetWithPreserve() {
   var potoken = window.localStorage.getItem("potoken");
   var swpdo = window.localStorage.getItem("swpdo");
   var swpstat = window.localStorage.getItem("swpstat");
+  var exptime = window.localStorage.getItem("exptime");
+  var usage = window.localStorage.getItem("usage");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -52,6 +54,8 @@ function resetWithPreserve() {
   window.localStorage.setItem("potoken", nvl(potoken, ""));
   window.localStorage.setItem("swpdo", nvl(swpdo, ""));
   window.localStorage.setItem("swpstat", nvl(swpstat, ""));
+  window.localStorage.setItem("exptime", nvl(exptime, ""));
+  window.localStorage.setItem("usage", nvl(usage, "Y"));
 }
 
 /*
@@ -174,12 +178,19 @@ function transmitMethods() {
     return;
   }
   
-  // Send
+  // Sends
   pushoverTransmit();
   smartwatchProTransmit();
+  sendAnonymousUsageData();
   
-  // Protect
+  // Protect and report time
   window.localStorage.setItem("transmitDone", "done");
+  window.localStorage.setItem("exptime", new Date().format(mConst().displayDateFmt));
+  
+  // Let the watchapp know it's done
+  Pebble.sendAppMessage({
+    "keyCtrl" : mConst().ctrlTransmitDone
+  });
 }
 
 /*
@@ -196,6 +207,7 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("pouser", dataElems[8]);
     window.localStorage.setItem("potoken", dataElems[10]);
     window.localStorage.setItem("swpdo", dataElems[12]);
+    window.localStorage.setItem("usage", dataElems[13]);
   }
 });
 
@@ -231,6 +243,8 @@ function buildUrl(noset) {
   var token = "";
   var swpdo = "";
   var swpstat = "";
+  var exptime = "";
+  var usage = "";
   if (noset === "N") {
     pouser =  nvl(window.localStorage.getItem("pouser"), "") ;
     postat =  nvl(window.localStorage.getItem("postat"), "") ;
@@ -238,9 +252,11 @@ function buildUrl(noset) {
     token = Pebble.getAccountToken();
     swpdo =  nvl(window.localStorage.getItem("swpdo"), "") ;
     swpstat =  nvl(window.localStorage.getItem("swpstat"), "") ;
+    exptime =  nvl(window.localStorage.getItem("exptime"), "") ;
+    usage =  nvl(window.localStorage.getItem("usage"), "Y") ;
   }
 
-  var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&noset=" + noset + "&token=" + token + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat);
+  var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&noset=" + noset + "&token=" + token + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + "&usage=" + usage;
   console.log("url=" + url + " (len=" + url.length + ")");
   return url;
 }

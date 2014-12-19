@@ -37,13 +37,6 @@ static GPath *hour_arrow;
 static Layer *hands_layer;
 static struct PropertyAnimation* analogue_animation;
 
-static BitmapLayerComp logo;
-
-static TextLayer *text_12;
-static TextLayer *text_3;
-static TextLayer *text_6;
-static TextLayer *text_9;
-
 static bool show_smart_points;
 static int16_t from_time;
 static int16_t to_time;
@@ -105,6 +98,17 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   // Hours and minute marks
   draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7);
   draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, 24, 1);
+
+  // Hour text
+  graphics_draw_text(ctx, TEXT_12, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144/2-14, 21, 20, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_3, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144-34, 144/2-9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_6, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144/2-6, 144-39, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_9, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(21, 144/2-9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+
+  // Small logo
+  GBitmap *bitmap = gbitmap_create_with_resource(RESOURCE_ID_SMALL_LOGO);
+  graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(144/2-25, 144/2-15-31+10, 50, 31));
+  gbitmap_destroy(bitmap);
 
   // Start and first and last times for smart alarm
   if (show_smart_points) {
@@ -222,20 +226,6 @@ void analogue_window_load(Window *window) {
   layer_set_update_proc(analgue_layer, bg_update_proc);
   layer_add_child(window_layer, analgue_layer);
 
-  macro_bitmap_layer_create(&logo, GRect(144/2-25, 144/2-15-31+10, 50, 31), analgue_layer, RESOURCE_ID_SMALL_LOGO, true);
-
-  text_12 = macro_text_layer_create(GRect(144/2-14, 21, 20, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
-  text_layer_set_text(text_12, TEXT_12);
-
-  text_3 = macro_text_layer_create(GRect(144-34, 144/2-9, 10, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
-  text_layer_set_text(text_3, TEXT_3);
-
-  text_6 = macro_text_layer_create(GRect(144/2-6, 144-39, 10, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
-  text_layer_set_text(text_6, TEXT_6);
-
-  text_9 = macro_text_layer_create(GRect(21, 144/2-9, 10, 32), analgue_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentRight);
-  text_layer_set_text(text_9, TEXT_9);
-
   // init hands
   // init hand paths
   minute_arrow = gpath_create(&MINUTE_HAND_POINTS);
@@ -297,11 +287,6 @@ void analogue_visible(bool visible, bool call_post_init) {
 void analogue_window_unload() {
   gpath_destroy(minute_arrow);
   gpath_destroy(hour_arrow);
-  macro_bitmap_layer_destroy(&logo);
-  text_layer_destroy(text_12);
-  text_layer_destroy(text_3);
-  text_layer_destroy(text_6);
-  text_layer_destroy(text_9);
   layer_destroy(hands_layer);
   layer_destroy(analgue_layer);
 }

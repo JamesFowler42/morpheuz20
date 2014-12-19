@@ -30,18 +30,17 @@
 Date.prototype.format = function(format) // author: meizz
 {
   var monName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+  var dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
   var o = {
     "M+" : this.getMonth() + 1, // month
-    "N+" : monName[this.getMonth()], // month short name
     "d+" : this.getDate(), // day
     "h+" : this.getHours(), // hour
     "i+" : this.getHours() + 1, // hour + 1
     "m+" : this.getMinutes(), // minute
     "s+" : this.getSeconds(), // second
     "q+" : Math.floor((this.getMonth() + 3) / 3), // quarter
-    "S" : this.getMilliseconds()
-  // millisecond
-  };
+    "S" : this.getMilliseconds()  // millisecond
+  }
 
   if (/(y+)/.test(format)) {
     format = format.replace(RegExp.$1, (this.getFullYear() + "")
@@ -49,9 +48,15 @@ Date.prototype.format = function(format) // author: meizz
   }
   for ( var k in o) {
     if (new RegExp("(" + k + ")").test(format)) {
-      format = format.replace(RegExp.$1, RegExp.$1.length === 1 ? o[k]
+      format = format.replace(RegExp.$1, RegExp.$1.length == 1 ? o[k]
           : ("00" + o[k]).substr(("" + o[k]).length));
     }
+  }
+  if (/(N+)/.test(format)) {
+     format = format.replace(RegExp.$1, monName[this.getMonth()]);
+  } 
+  if (/(W+)/.test(format)) {
+    format = format.replace(RegExp.$1, dayName[this.getDay()]);
   }
   return format;
 }

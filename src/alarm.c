@@ -55,15 +55,10 @@ static void do_alarm(void *data) {
 
   alarm_count++;
 
-  // Flash light
-  if (alarm_count % 5 == 0) {
-    light_enable_interaction();
-  }
-
   // Reset powernap and finish alarm
   if (alarm_count >= ALARM_LIMIT) {
     power_nap_reset();
-    set_alarm_icon(false);
+    set_icon(false, IS_ALARM_RING);
   }
 
 }
@@ -74,7 +69,7 @@ static void do_alarm(void *data) {
 void fire_alarm() {
   alarm_count = 0;
   do_alarm(NULL);
-  set_alarm_icon(true);
+  set_icon(true, IS_ALARM_RING);
 }
 
 /*
@@ -82,7 +77,7 @@ void fire_alarm() {
  */
 void snooze_alarm() {
   // Already hit the limit so cannot snooze
-  if (!check_alarm()) {
+  if (alarm_count >= ALARM_LIMIT) {
     return;
   }
 
@@ -93,20 +88,13 @@ void snooze_alarm() {
   alarm_count = 0;
 }
 
-/**
- * Check alarm
- */
-bool check_alarm() {
-  return alarm_count < ALARM_LIMIT;
-}
-
 /*
  * Cancel alarm - if there is one
  */
 void cancel_alarm() {
 
   // Already hit the limit - nothing to cancel
-  if (!check_alarm()) {
+  if (alarm_count >= ALARM_LIMIT) {
     return;
   }
 
@@ -120,7 +108,7 @@ void cancel_alarm() {
   power_nap_reset();
 
   // Clear the alarm indicator
-  set_alarm_icon(false);
+  set_icon(false, IS_ALARM_RING);
 }
 
 /*

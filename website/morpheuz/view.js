@@ -26,13 +26,16 @@
  * Constants
  */
 function mConst() {
-  var cfg = {
+  return {
     awakeAbove : 1000,
     lightAbove : 120,
     sampleIntervalMins : 10,
-    vers : 25
+    vers : 25,
+    swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&ct=morpheuz_web",
+    displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
+    iosDateFormat : "dd N yyyy hh:mm",
+    swpUrlDate: "yyyy-MM-ddThh:mm:00"
   };
-  return cfg;
 }
 
 /*
@@ -41,7 +44,7 @@ function mConst() {
 function buildGraphDataSet(base, splitup, more) {
   var startPoint = new Date(base);
   for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === '') {
+    if (splitup[i] === "") {
       continue;
     }
     var element = new Array();
@@ -62,7 +65,7 @@ function populateIgnore(base, canvasOverlayConf, splitup) {
 
   var startPoint = new Date(base);
   for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === '') {
+    if (splitup[i] === "") {
       continue;
     }
     if (parseInt(splitup[i], 10) == -2) {
@@ -72,7 +75,7 @@ function populateIgnore(base, canvasOverlayConf, splitup) {
           x : startPoint,
           lineWidth : 5,
           yOffset : 0,
-          color : '#184E99',
+          color : "#184E99",
           shadow : false
         }
       };
@@ -131,7 +134,7 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
           lineWidth : 1,
           yOffset : 0,
           dashPattern : [ 1, 4 ],
-          color : 'rgb(76, 217, 100)',
+          color : "rgb(76, 217, 100)",
           shadow : false
         }
       };
@@ -146,7 +149,7 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
           lineWidth : 1,
           yOffset : 0,
           dashPattern : [ 1, 4 ],
-          color : 'rgb(255, 59, 48)',
+          color : "rgb(255, 59, 48)",
           shadow : false
         }
       };
@@ -171,7 +174,7 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
   var tendsStop = null;
   var iendsStop = null;
   for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === '') {
+    if (splitup[i] === "") {
       continue;
     }
     var data = parseInt(splitup[i], 10);
@@ -179,7 +182,7 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
     var pieStartPoint1 = pieStartPoint;
     pieStartPoint = pieStartPoint.addMinutes(mConst().sampleIntervalMins);
     var teststr2 = pieStartPoint.format("hhmm");
-    if (goneoff != 'N' && goneoff >= teststr1 && goneoff <= teststr2) {
+    if (goneoff != "N" && goneoff >= teststr1 && goneoff <= teststr2) {
       tends = returnAbsoluteMatch(pieStartPoint1, pieStartPoint, goneoff);
       iends = i;
       break;
@@ -193,7 +196,7 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
             x : tbegin,
             lineWidth : 1,
             yOffset : 0,
-            color : 'rgb(255, 149, 0)',
+            color : "rgb(255, 149, 0)",
             shadow : false
           }
         };
@@ -219,7 +222,7 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
   var light = 0;
   var ignore = 0;
   for (var j = ibegin; j <= iends; j++) {
-    if (splitup[j] === '') {
+    if (splitup[j] === "") {
       continue;
     }
     var data2 = parseInt(splitup[j], 10);
@@ -242,7 +245,7 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
         x : tends,
         lineWidth : 1,
         yOffset : 0,
-        color : 'rgb(255, 149, 0)',
+        color : "rgb(255, 149, 0)",
         shadow : false
       }
     };
@@ -265,26 +268,26 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
 function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff) {
 
   var timePoint = new Date(base);
-  var body = '&body=';
-  var copyBody = '';
+  var body = "&body=";
+  var copyBody = "";
 
   for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === '') {
+    if (splitup[i] === "") {
       continue;
     }
-    body = body + timePoint.format('hh:mm') + ',' + splitup[i] + '%0D%0A';
-    copyBody = copyBody + timePoint.format('hh:mm') + ',' + splitup[i] + "\r\n";
+    body = body + timePoint.format("hh:mm") + "," + splitup[i] + "%0D%0A";
+    copyBody = copyBody + timePoint.format("hh:mm") + "," + splitup[i] + "\r\n";
     timePoint = timePoint.addMinutes(mConst().sampleIntervalMins);
   }
 
   // Add smart alarm info into CSV data
   if (smartOn) {
-    body = body + fromhr + ':' + frommin + ',START%0D%0A' + tohr + ':' + tomin + ',END%0D%0A';
-    copyBody = copyBody + fromhr + ':' + frommin + ',START\r\n' + tohr + ':' + tomin + ',END\r\n';
-    if (goneoff != 'N') {
-      var goneoffstr = goneoff.substr(0, 2) + ':' + goneoff.substr(2, 2);
-      body = body + goneoffstr + ',ALARM%0D%0A';
-      copyBody = copyBody + goneoffstr + ',ALARM\r\n';
+    body = body + fromhr + ":" + frommin + ",START%0D%0A" + tohr + ":" + tomin + ",END%0D%0A";
+    copyBody = copyBody + fromhr + ":" + frommin + ",START\r\n" + tohr + ":" + tomin + ",END\r\n";
+    if (goneoff != "N") {
+      var goneoffstr = goneoff.substr(0, 2) + ":" + goneoff.substr(2, 2);
+      body = body + goneoffstr + ",ALARM%0D%0A";
+      copyBody = copyBody + goneoffstr + ",ALARM\r\n";
     }
   }
   return {
@@ -293,20 +296,13 @@ function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tom
   };
 }
 
-/*
- * Get element
- */
-function getEl(name) {
-  return document.getElementById(name);
-}
-
 /*******************************************************************************
  * 
  * Main process
  * 
  ******************************************************************************/
 
-$('document').ready(function() {
+$("document").ready(function() {
 
   // Spot if we are on iOS or not
   document.ios = navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i);
@@ -318,9 +314,9 @@ $('document').ready(function() {
   }
 
   // Pick up parameters from URL
-  var baseStr = getParameterByName('base');
+  var baseStr = getParameterByName("base");
   var base = new Date().valueOf();
-  if (baseStr !== "" && baseStr !== 'null') {
+  if (baseStr !== "" && baseStr !== "null") {
     base = parseInt(baseStr, 10);
   }
   var graph = getParameterByName("graph");
@@ -331,28 +327,32 @@ $('document').ready(function() {
   var smart = getParameterByName("smart");
   var vers = getParameterByName("vers");
   var goneoff = getParameterByName("goneoff");
-  var emailto = decodeURIComponent(getParameterByName('emailto'));
-  var potoken = decodeURIComponent(getParameterByName('potoken'));
-  var pouser = decodeURIComponent(getParameterByName('pouser'));
-  var postat = decodeURIComponent(getParameterByName('postat'));
-  var swpdo = decodeURIComponent(getParameterByName('swpdo'));
-  var swpstat = decodeURIComponent(getParameterByName('swpstat'));
-  var noset = getParameterByName('noset');
-  var token = getParameterByName('token');
+  var emailto = decodeURIComponent(getParameterByName("emailto"));
+  var potoken = decodeURIComponent(getParameterByName("potoken"));
+  var pouser = decodeURIComponent(getParameterByName("pouser"));
+  var postat = decodeURIComponent(getParameterByName("postat"));
+  var swpdo = decodeURIComponent(getParameterByName("swpdo"));
+  var swpstat = decodeURIComponent(getParameterByName("swpstat"));
+  var noset = getParameterByName("noset");
+  var token = getParameterByName("token");
+  var exptime = decodeURIComponent(getParameterByName("exptime"));
+  var usage = getParameterByName("usage");
 
-  var smartOn = smart === 'Y';
-  var nosetOn = noset === 'Y';
+  var smartOn = smart === "Y";
+  var nosetOn = noset === "Y";
   if (nosetOn) {
     $(".noset").hide();
   }
 
   // Set screen fields
-  getEl('emailto').value = emailto;
-  getEl('ptoken').value = potoken;
-  getEl('puser').value = pouser;
-  getEl('swpdo').checked = swpdo === 'Y';
-  getEl("presult").textContent = postat;
-  getEl("swpstat").textContent = swpstat;
+  $("#emailto").val(emailto);
+  $("#ptoken").val(potoken);
+  $("#puser").val(pouser);
+  $("#swpdo").prop("checked", swpdo === "Y");
+  $("#presult").text(postat);
+  $("#swpstat").text(swpstat);
+  $("#exptime").text(exptime);
+  $("#usage").prop("checked", usage !== "N");
 
   // Set the status bullets for pushover
   if (postat === "OK") {
@@ -378,10 +378,11 @@ $('document').ready(function() {
     $("#swpstat").addClass("red");
   }
 
-  getEl("version").textContent = parseInt(vers, 10) / 10;
+  $("#version").text(parseInt(vers, 10) / 10);
+  $("#sleep-time").text(new Date(base).format(mConst().displayDateFmt));
 
   if ((new Date().valueOf()) % 10 === 0) {
-    getEl('info-message').style.display = 'block';
+    $("#info-message").css("display", "block");
   }
 
   var splitup = graph.split("!");
@@ -406,52 +407,53 @@ $('document').ready(function() {
   var out = calculateStats(base, splitup, goneoff, canvasOverlayConf);
 
   // Populate the statistics area
-  getEl('ttotal').textContent = hrsmin((out.deep + out.light + out.awake + out.ignore) * mConst().sampleIntervalMins);
-  getEl('tawake').textContent = hrsmin(out.awake * mConst().sampleIntervalMins);
-  getEl('tlight').textContent = hrsmin(out.light * mConst().sampleIntervalMins);
-  getEl('tdeep').textContent = hrsmin(out.deep * mConst().sampleIntervalMins);
-  getEl('tignore').textContent = hrsmin(out.ignore * mConst().sampleIntervalMins);
+  $("#ttotal").text(hrsmin((out.deep + out.light + out.awake + out.ignore) * mConst().sampleIntervalMins));
+  $("#tawake").text(hrsmin(out.awake * mConst().sampleIntervalMins));
+  $("#tlight").text(hrsmin(out.light * mConst().sampleIntervalMins));
+  $("#tdeep").text(hrsmin(out.deep * mConst().sampleIntervalMins));
+  $("#tignore").text(hrsmin(out.ignore * mConst().sampleIntervalMins));
 
   // If we have a begin and an end then show this in our 'HealthKit' datapoint
   // section and
   // Make it exportable
   if (out.tbegin !== null && out.tends !== null) {
-    getEl('tstarts').textContent = out.tbegin.format('dd N yyyy hh:mm');
-    getEl('tends').textContent = out.tends.format('dd N yyyy hh:mm');
-    var swpUrl = "swpro2hk://?source=Morpheuz&starts=" + out.tbegin.format('yyyy-MM-ddThh:mm:00') + "&ends=" + out.tends.format('yyyy-MM-ddThh:mm:00');
-    if (token != null && token !== '') {
+    $("#swpnodata").hide();
+    $("#tstarts").text(out.tbegin.format(mConst().iosDateFormat));
+    $("#tends").text(out.tends.format(mConst().iosDateFormat));
+    var swpUrl = "swpro2hk://?source=Morpheuz&starts=" + out.tbegin.format(mConst().swpUrlDate) + "&ends=" + out.tends.format(mConst().swpUrlDate);
+    if (token != null && token !== "") {
       swpUrl += "&at=" + token;
     }
-    getEl('swp').href = swpUrl;
+    $("#swp").prop("href", swpUrl);
     if (!nosetOn) {
-      getEl('swp').onclick = function() {
+      $("#swp").click(function() {
         setTimeout(function() {
-          window.location.href = 'pebblejs://close';
+          window.location.href = "pebblejs://close";
         }, 250);
-      }
+      });
     }
-    ;
   } else {
     $("#swp").hide();
   }
-  
-  getEl('swplink').onclick = function() {
+
+  $("#swplink").prop("href", mConst().swpAppStoreUrl);
+  $("#swplink").click(function() {
     setTimeout(function() {
-      window.location.href = 'pebblejs://close';
+      window.location.href = "pebblejs://close";
     }, 250);
-  }
+  });
 
   // Build the pie chart data
-  var data2 = [ [ 'Awake?', out.awake ], [ 'Light', out.light ], [ 'Deep', out.deep ], [ 'Ignore', out.ignore ] ];
+  var data2 = [ [ "Awake?", out.awake ], [ "Light", out.light ], [ "Deep", out.deep ], [ "Ignore", out.ignore ] ];
 
   // Prepare the graph
   $(document).ready(function() {
 
-    var plot1 = $.jqplot('chart1', [ more ], {
+    var plot1 = $.jqplot("chart1", [ more ], {
       grid : {
-        background : '#2066C7',
-        gridLineColor : '#1E75D7',
-        borderColor : '#1E75D7',
+        background : "#2066C7",
+        gridLineColor : "#1E75D7",
+        borderColor : "#1E75D7",
         shadow : false
       },
       animate : true,
@@ -459,8 +461,8 @@ $('document').ready(function() {
       series : [ {
         showMarker : false,
         breakOnNull : true,
-        color : '#40ADEB',
-        label : new Date(base).format('yyyy-MM-dd'),
+        color : "#40ADEB",
+        label : new Date(base).format("yyyy-MM-dd"),
         shadow : false
       } ],
       // You can specify options for all axes on the plot at once with
@@ -473,7 +475,7 @@ $('document').ready(function() {
       },
       legend : {
         show : false,
-        location : 'ne'
+        location : "ne"
       },
       // An axes object holds options for all axes.
       // Allowable axes are xaxis, x2axis, yaxis, y2axis, y3axis, ...
@@ -485,12 +487,12 @@ $('document').ready(function() {
           renderer : $.jqplot.DateAxisRenderer,
           tickRenderer : $.jqplot.CanvasAxisTickRenderer,
           tickOptions : {
-            formatString : '%R',
+            formatString : "%R",
             angle : -30,
-            fontSize : '8pt',
-            textColor : '#40ADEB'
+            fontSize : "8pt",
+            textColor : "#40ADEB"
           },
-          tickInterval : '1 hour',
+          tickInterval : "1 hour",
           // Turn off "padding". This will allow data point to lie
           // on the
           // edges of the grid. Default padding is 1.2 and will
@@ -507,16 +509,16 @@ $('document').ready(function() {
           min : -50,
           max : 4000,
           labelOptions : {
-            textColor : '#1898FF'
+            textColor : "#1898FF"
           }
         }
       }
     });
 
-    var plot2 = jQuery.jqplot('chart2', [ data2 ], {
+    var plot2 = jQuery.jqplot("chart2", [ data2 ], {
       grid : {
-        background : '#FF7D48',
-        borderColor : '#FF7D48',
+        background : "#FF7D48",
+        borderColor : "#FF7D48",
         shadow : false
       },
       seriesColors : [ "#FFFF92", "#FFA966", "#FF3C31", "rgb(130,130,130)" ],
@@ -532,7 +534,7 @@ $('document').ready(function() {
       },
       legend : {
         show : true,
-        location : 'e'
+        location : "e"
       }
     });
 
@@ -541,18 +543,18 @@ $('document').ready(function() {
   // Generate data to copy and email
   var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
 
-  var mailto = '?subject=Morpheuz-' + new Date(base).format('yyyy-MM-dd') + '.csv' + cpy.body;
+  var mailto = "?subject=Morpheuz-" + new Date(base).format("yyyy-MM-dd") + ".csv" + cpy.body;
 
-  getEl('mailtemp').value = mailto;
-  getEl('mail').href = 'mailto:' + emailto + mailto;
-  getEl('copy').value = cpy.copyBody;
+  $("#mailtemp").val(mailto);
+  $("#mail").prop("href", "mailto:" + emailto + mailto);
+  $("#copy").val(cpy.copyBody);
 
   if (!nosetOn) {
-    getEl('mail').onclick = function() {
+    $("#mail").click(function() {
       setTimeout(function() {
-        window.location.href = 'pebblejs://close';
+        window.location.href = "pebblejs://close";
       }, 250);
-    };
+    });
   }
 
   $("#copy").focus(function() {
@@ -568,21 +570,22 @@ $('document').ready(function() {
   });
 
   // Change the mailto
-  getEl('emailto').onchange = function() {
-    var mailtemp = getEl('mailtemp').value;
-    var emailto = getEl('emailto').value;
-    getEl('mail').href = 'mailto:' + emailto + mailtemp;
-  };
+  $("#emailto").change(function() {
+    var mailtemp = $("#mailtemp").val();
+    var emailto = $("#emailto").val();
+    $("#mail").prop("href", "mailto:" + emailto + mailtemp);
+  });
 
   // Handle the Save and reset option
-  getEl('save').onclick = function() {
+  $(".save").click(function() {
     var unused = "N";
     var blank = "";
-    var emailpart = encodeURIComponent(getEl('emailto').value);
-    var potoken = encodeURIComponent(getEl('ptoken').value);
-    var pouser = encodeURIComponent(getEl('puser').value);
-    var swpdo = getEl('swpdo').checked ? 'Y' : 'N';
-    window.location.href = 'pebblejs://close#reset' + '!' + unused + '!' + blank + '!' + blank + '!' + blank + '!' + blank + '!' + unused + '!' + emailpart + '!' + pouser + '!' + blank + '!' + potoken + '!' + unused + '!' + swpdo;
-  };
+    var emailpart = encodeURIComponent($("#emailto").val());
+    var potoken = encodeURIComponent($("#ptoken").val());
+    var pouser = encodeURIComponent($("#puser").val());
+    var swpdo = $("#swpdo").is(':checked') ? "Y" : "N";
+    var usage = $("#usage").is(':checked') ? "Y" : "N";
+    window.location.href = "pebblejs://close#reset" + "!" + unused + "!" + blank + "!" + blank + "!" + blank + "!" + blank + "!" + unused + "!" + emailpart + "!" + pouser + "!" + blank + "!" + potoken + "!" + unused + "!" + swpdo + "!" + usage;
+  });
 
 });

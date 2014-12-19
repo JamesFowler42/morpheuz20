@@ -26,37 +26,43 @@
  * Transmit to smartwatch pro
  */
 function smartwatchProTransmit() {
-  var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
-  if (doSwp !== "Y") {
-    window.localStorage.setItem("swpstat", "Disabled");
-    console.log("smartwatchProTransmit: swpdo not set");
-    return;
-  }
-  var stats = calculateStats();
-  if (stats.tbegin === null || stats.tends === null) {
-    window.localStorage.setItem("swpstat", "Could not calculate");
-    console.log("smartwatchProTransmit: stats couldn't be calculated");
-    return;  
-  }
-  var token = Pebble.getAccountToken();
-  var swpUrl = mConst().smartwatchProAPI + stats.tbegin.format("yyyy-MM-ddThh:mm:00") + "&ends=" + stats.tends.format("yyyy-MM-ddThh:mm:00") + "&at=" + token;
-  console.log("smartwatchProTransmit: url=" + swpUrl);
-  makeGetAjaxCall(swpUrl, function(resp) {
-    console.log("smartwatchProTransmit: " + JSON.stringify(resp));
-    if (resp.status !== 1) {
-      window.localStorage.setItem("swpdo", "N"); // Turn off send on error
-      window.localStorage.setItem("swpstat", JSON.stringify(resp.errors));
-    } else {
-      window.localStorage.setItem("swpstat", "OK");
+  try {
+    var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
+    if (doSwp !== "Y") {
+      window.localStorage.setItem("swpstat", mLang().disabled);
+      console.log("smartwatchProTransmit: swpdo not set");
+      return;
     }
-  });
+    window.localStorage.setItem("swpstat", mLang().sending);
+    var stats = calculateStats();
+    if (stats.tbegin === null || stats.tends === null) {
+      window.localStorage.setItem("swpstat", mLang().cnc);
+      console.log("smartwatchProTransmit: stats couldn't be calculated");
+      return;
+    }
+    var token = Pebble.getAccountToken();
+    var swpUrl = mConst().smartwatchProAPI + stats.tbegin.format(mConst().swpUrlDate) + "&ends=" + stats.tends.format(mConst().swpUrlDate) + "&at=" + token;
+    console.log("smartwatchProTransmit: url=" + swpUrl);
+    makeGetAjaxCall(swpUrl, function(resp) {
+      console.log("smartwatchProTransmit: " + JSON.stringify(resp));
+      if (resp.status !== 1) {
+        window.localStorage.setItem("swpdo", "N"); // Turn off send on error
+        window.localStorage.setItem("swpstat", JSON.stringify(resp.errors));
+      } else {
+        window.localStorage.setItem("swpstat", mLang().ok);
+      }
+    });
+  } catch (err) {
+    window.localStorage.setItem("swpdo", "N"); // Turn off send on error
+    window.localStorage.setItem("swpstat", err.message);
+  }
 }
 
 /*
  * Calculate stats
  */
 function calculateStats() {
-  var base = parseInt(window.localStorage.getItem("base"),10);
+  var base = parseInt(window.localStorage.getItem("base"), 10);
   var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
   var splitup = new Array();
   for (var i = 0; i < mConst().limit; i++) {
@@ -68,7 +74,7 @@ function calculateStats() {
       splitup[i] = valueStr;
     }
   }
-  
+
   // Get the full set of data up to the wake up point.
   // Ignore nulls
   var timeStartPoint = new Date(base);

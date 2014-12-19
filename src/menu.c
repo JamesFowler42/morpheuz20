@@ -67,20 +67,7 @@ typedef struct {
 #define OPT_WAKEUP 6
 
 // Define the menu
-static MenuDef menu_def[] = {
-    { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm },
-    { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm },
-    { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment },
-    { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period },
-    { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm },
-    { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode },
-    { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle },
-    { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap },
-    { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert },
-    { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue },
-    { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend },
-    { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz }
-};
+static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm }, { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm }, { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment }, { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period }, { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm }, { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode }, { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle }, { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap }, { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert }, { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue }, { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend }, { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz } };
 
 /*
  * A callback is used to specify the amount of sections of menu items
@@ -95,7 +82,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
  * You can also dynamically add and remove items using this
  */
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-   return ARRAY_LENGTH(menu_def) - (alarm_on ? 0 : 2);
+  return ARRAY_LENGTH(menu_def) - (alarm_on ? 0 : 2);
 }
 
 /*
@@ -123,8 +110,8 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   GBitmap *icon = menu_def[index].state == NULL ? NULL : menu_icons[*(menu_def[index].state)];
 
   if (index == OPT_WAKEUP && auto_reset_state == 1) {
-     snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin);
-     subtitle = menu_text;
+    snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin);
+    subtitle = menu_text;
   }
 
   menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, subtitle, icon);
@@ -168,7 +155,7 @@ static void menu_resend() {
  */
 void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
-  selected_row = alarm_on ? cell_index->row  : cell_index->row + 2;
+  selected_row = alarm_on ? cell_index->row : cell_index->row + 2;
   hide_menu();
   app_timer_register(MENU_ACTION_MS, do_menu_action, NULL);
 }
@@ -206,13 +193,13 @@ void window_unload(Window *window) {
  * Show the menu
  */
 void show_menu() {
-  ignore_state = get_ignore_state();
+  ignore_state = get_icon(IS_IGNORE);
   weekend_state = get_config_data()->weekend_until != 0;
   inverse_state = get_config_data()->invert;
   analogue_state = get_config_data()->analogue;
   power_nap_state = is_doing_powernap();
   auto_reset_state = get_config_data()->auto_reset;
-  alarm_on = check_alarm();
+  alarm_on = get_icon(IS_ALARM_RING);
   smart_alarm_state = get_config_data()->smart;
   window = window_create();
   // Setup the window handlers

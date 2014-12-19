@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 26
-#define VERSION_TXT "2.6"
+#define VERSION 27
+#define VERSION_TXT "2.7"
 
 // Uncomment for release
 #undef APP_LOG
@@ -64,6 +64,9 @@
 #define MOON_FINISH GRect(6, 5, 58, 46)
 #define MOON_START GRect(144+6, 72, 58, 46)
 #define ICON_TOPS 1
+#define ICON_PAD 5
+#define ICON_PAD_BATTERY 4
+#define ICON_BAR_WIDTH 118
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
 #define bitmap_layer_get_layer_jf(x) ((Layer *)(x))
@@ -85,8 +88,22 @@ enum MorpKey {
 };
 
 enum CtrlValues {
-  CTRL_RESET = 1
+  CTRL_TRANSMIT_DONE = 1
 };
+
+typedef enum {
+  IS_COMMS = 0,
+  IS_RECORD,
+  IS_IGNORE,
+  IS_ACTIVITY,
+  IS_WEEKEND,
+  IS_ALARM,
+  IS_ALARM_RING,
+  IS_BLUETOOTH,
+  IS_EXPORT
+} IconState;
+
+#define MAX_ICON_STATE 9
 
 #define PERSIST_MEMORY_KEY 12121
 #define PERSIST_CONFIG_KEY 12122
@@ -157,14 +174,12 @@ void power_nap_check(uint16_t biggest);
 void click_config_provider(Window *window);
 void set_smart_status();
 void power_nap_reset();
-void show_comms_state(bool connected);
 void reset_sleep_period();
 void server_processing(uint16_t biggest);
 void set_progress();
 InternalData *get_internal_data();
 void read_internal_data();
 void save_internal_data();
-void show_record(bool recording);
 void save_config_data(void *data);
 void read_config_data();
 ConfigData *get_config_data();
@@ -174,23 +189,19 @@ void cancel_alarm();
 void fire_alarm();
 void snooze_alarm();
 void init_alarm();
-void set_alarm_icon(bool show_icon);
 uint16_t every_minute_processing();
 void toggle_weekend_mode();
 TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment);
 int32_t join_value(int16_t top, int16_t bottom);
 int32_t dirty_checksum(void *data, uint8_t data_size);
 void set_ignore_on_current_time_segment();
-void show_ignore_state(bool ignore);
 void resend_all_data(bool silent);
 void bed_visible(bool value);
 bool is_animation_complete();
 void show_menu();
 void hide_menu();
-bool get_ignore_state();
 void toggle_power_nap();
 void close_morpheuz();
-bool check_alarm();
 bool is_notice_showing();
 void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible);
 void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
@@ -204,5 +215,7 @@ void trigger_config_save();
 bool is_doing_powernap();
 void open_comms();
 void start_worker();
+void set_icon(bool enabled, IconState icon);
+bool get_icon(IconState icon);
 
 #endif /* MORPHEUZ_H_ */

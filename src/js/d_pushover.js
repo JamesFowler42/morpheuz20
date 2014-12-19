@@ -26,28 +26,30 @@
  * Send a pushover message
  */
 function pushoverTransmit() {
-  var pouser = nvl(window.localStorage.getItem("pouser"), "");
-  var potoken = nvl(window.localStorage.getItem("potoken"), "");
-  if (pouser === "" || potoken === "") {
-    window.localStorage.setItem("postat", "Disabled");
-    console.log("pushoverTransmit: potoken and/or pouser not set");
-    return;
-  }
-  var base = window.localStorage.getItem("base");
-  var resetDate = "Sleep from " + new Date(parseInt(base,10)).format("yyyy-MM-dd @ hh:mm");
-  var urlToAttach = buildUrl("Y");
-  var url = mConst().pushoverAPI;
-  var msg = "token=" + potoken + "&user=" + pouser + "&message=" + encodeURIComponent(resetDate) + "&url=" + encodeURIComponent(urlToAttach) + "&url_title=Report" + "&priority=-2" + "&sound=none";
-  console.log("pushoverTransmit: msg=" + msg);
-  makePostAjaxCall(url, msg, function(resp) {
-    console.log("pushoverTransmit: " + JSON.stringify(resp));
-    if (resp.status !== 1) {
-      window.localStorage.setItem("postat", JSON.stringify(resp.errors));
-    } else {
-      window.localStorage.setItem("postat", "OK");
+  try {
+    var pouser = nvl(window.localStorage.getItem("pouser"), "");
+    var potoken = nvl(window.localStorage.getItem("potoken"), "");
+    if (pouser === "" || potoken === "") {
+      window.localStorage.setItem("postat", mLang().disabled);
+      console.log("pushoverTransmit: potoken and/or pouser not set");
+      return;
     }
-  });
+    window.localStorage.setItem("postat", mLang().sending);
+    var base = window.localStorage.getItem("base");
+    var resetDate = new Date(parseInt(base, 10)).format(mConst().displayDateFmt);
+    var urlToAttach = buildUrl("Y");
+    var url = mConst().pushoverAPI;
+    var msg = "token=" + potoken + "&user=" + pouser + "&message=" + encodeURIComponent(resetDate) + "&url=" + encodeURIComponent(urlToAttach) + "&url_title=Report" + "&priority=-2" + "&sound=none";
+    console.log("pushoverTransmit: msg=" + msg);
+    makePostAjaxCall(url, msg, function(resp) {
+      console.log("pushoverTransmit: " + JSON.stringify(resp));
+      if (resp.status !== 1) {
+        window.localStorage.setItem("postat", JSON.stringify(resp.errors));
+      } else {
+        window.localStorage.setItem("postat", mLang().ok);
+      }
+    });
+  } catch (err) {
+    window.localStorage.setItem("postat", err.message);
+  }
 }
-
-
-

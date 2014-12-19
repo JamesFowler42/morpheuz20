@@ -26,19 +26,30 @@
  * Standard Post Ajax call routine
  */
 function makePostAjaxCall(url, msg, resp) {
+  var tout = setTimeout(function() {
+    resp({ "status": 0, "errors": ["timeout"]});
+  }, mConst().timeout);
   var req = new XMLHttpRequest();
   req.open("POST", url, true);
   req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
   req.setRequestHeader("Content-length", msg.length);
   req.setRequestHeader("Connection", "close");
+  req.timeout = mConst().timeout;
+  req.ontimeout = function () { 
+    resp({ "status": 0, "errors": ["timeout"]});
+    clearTimeout(tout);
+  };
   req.onload = function() {
     if (req.readyState === 4 && req.status === 200) {
+      clearTimeout(tout);
       var result = JSON.parse(req.responseText);
       resp(result);
     } else if (req.readyState === 4 && (req.status >= 400 && req.status < 500)) {
+      clearTimeout(tout);
       var result = JSON.parse(req.responseText);
       resp(result);
     } else if (req.readyState === 4 && (req.status === 500)) {
+      clearTimeout(tout);
       resp({ "status": 0, "errors": ["500 error"]});
     }
   };
@@ -49,16 +60,27 @@ function makePostAjaxCall(url, msg, resp) {
  * Standard Get Ajax call routine
  */
 function makeGetAjaxCall(url, resp) {
+  var tout = setTimeout(function() {
+    resp({ "status": 0, "errors": ["timeout"]});
+  }, mConst().timeout);
   var req = new XMLHttpRequest();
   req.open("GET", url, true);
   req.setRequestHeader("Connection", "close");
+  req.timeout = mConst().timeout;
+  req.ontimeout = function () { 
+    resp({ "status": 0, "errors": ["timeout"]});
+    clearTimeout(tout);
+  };
   req.onload = function() {
     if (req.readyState === 4 && req.status === 200) {
+      clearTimeout(tout);
       resp({ "status": 1});
     } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
+      clearTimeout(tout);
       resp({ "status": 0, "errors": [req.status, nvl(req.responseText, "No Msg")]});
     } 
   };
   req.send();
+
 }
 

@@ -1,5 +1,5 @@
 {
-    "versionLabel": "2.6",
+    "versionLabel": "2.7",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -12,7 +12,7 @@
         "keyTransmit": 8
     },
     "longName": "Morpheuz",
-    "versionCode": 26,
+    "versionCode": 27,
     "capabilities": [
         "configurable"
     ],
@@ -184,6 +184,11 @@
             {
                 "file": "images/next.png",
                 "name": "PICK_NEXT",
+                "type": "png"
+            },
+            {
+                "file": "images/export.png",
+                "name": "EXPORT",
                 "type": "png"
             }
         ]

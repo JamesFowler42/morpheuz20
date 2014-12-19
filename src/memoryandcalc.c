@@ -41,7 +41,6 @@ static char version_context[] = "V";
 static char goneoff_context[] = "G";
 static char clear_context[] = "C";
 static char do_next_context[] = "N";
-static char transmit_context[] = "T";
 
 static bool version_sent = false;
 
@@ -75,7 +74,7 @@ static void send_to_phone(const uint32_t key, void *context, int32_t tophone) {
  */
 static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
   APP_LOG(APP_LOG_LEVEL_ERROR, "Send Fail %d", reason);
-  show_comms_state(false);
+  set_icon(false, IS_COMMS);
   app_message_set_context(clear_context);
 }
 
@@ -83,18 +82,16 @@ static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reas
  * Outgoing message success handler
  */
 static void out_sent_handler(DictionaryIterator *iterator, void *context) {
-  if (context == do_next_context) {
-    app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
-  } else if (context == goneoff_context) {
+  if (context == goneoff_context) {
     internal_data.gone_off_sent = true;
-    app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
   } else if (context == version_context) {
     version_sent = true;
-  } else if (context == transmit_context) {
-    internal_data.transmit_sent = true;
   }
-  app_message_set_context(clear_context);
-  show_comms_state(true);
+  if (context != clear_context) {
+    app_message_set_context(clear_context);
+    app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
+  }
+  set_icon(true, IS_COMMS);
 }
 
 /*
@@ -123,30 +120,14 @@ static void send_version(void *data) {
 static void in_received_handler(DictionaryIterator *iter, void *context) {
   Tuple *ctrl_tuple = dict_find(iter, KEY_CTRL);
   if (ctrl_tuple) {
-    show_comms_state(true);
+    set_icon(true, IS_COMMS);
+    int32_t ctrl_value = ctrl_tuple->value->int32;
+    if (ctrl_value & CTRL_TRANSMIT_DONE) {
+      internal_data.transmit_sent = true;
+      set_icon(true, IS_EXPORT);
+    }
     app_timer_register(SHORT_RETRY_MS, send_version, NULL);
   }
-}
-
-/*
- * Send a base to javascript
- */
-static void send_base() {
-  send_to_phone(KEY_BASE, do_next_context, internal_data.base);
-}
-
-/*
- * Send a from to javascript
- */
-static void send_from() {
-  send_to_phone(KEY_FROM, do_next_context, config_data.smart ? (int32_t) config_data.from : -1);
-}
-
-/*
- * Send a to to javascript
- */
-static void send_to() {
-  send_to_phone(KEY_TO, do_next_context, config_data.smart ? (int32_t) config_data.to : -1);
 }
 
 /*
@@ -154,13 +135,6 @@ static void send_to() {
  */
 static void send_goneoff() {
   send_to_phone(KEY_GONEOFF, goneoff_context, internal_data.gone_off);
-}
-
-/*
- * Send a transmit to javascript
- */
-static void send_transmit() {
-  send_to_phone(KEY_TRANSMIT, transmit_context, 0);
 }
 
 /*
@@ -316,8 +290,9 @@ void reset_sleep_period() {
   internal_data.base = now;
   internal_data.last_sent = LAST_SENT_INIT;
   internal_data.has_been_reset = true;
-  show_record(false);
-  show_ignore_state(false);
+  set_icon(false, IS_RECORD);
+  set_icon(false, IS_IGNORE);
+  set_icon(false, IS_EXPORT);
   analogue_set_base(internal_data.base);
   set_progress_based_on_persist();
   set_next_wakeup();
@@ -343,6 +318,7 @@ void resend_all_data(bool invoked_by_change_of_time) {
   internal_data.last_sent = LAST_SENT_INIT;
   internal_data.gone_off_sent = false;
   internal_data.transmit_sent = false;
+  set_icon(false, IS_EXPORT);
 }
 
 /*
@@ -362,12 +338,12 @@ void set_ignore_on_current_time_segment() {
   int32_t offset = calc_offset();
 
   if (offset >= LIMIT || offset < 0) {
-    show_ignore_state(false);
+    set_icon(false, IS_IGNORE);
     return;
   }
 
   internal_data.ignore[offset] = !internal_data.ignore[offset];
-  show_ignore_state(internal_data.ignore[offset]);
+  set_icon(internal_data.ignore[offset], IS_IGNORE);
 
 }
 
@@ -379,8 +355,8 @@ static void store_point_info(uint16_t point) {
   int32_t offset = calc_offset();
 
   if (offset >= LIMIT || offset < 0) {
-    show_record(false);
-    show_ignore_state(false);
+    set_icon(false, IS_RECORD);
+    set_icon(false, IS_IGNORE);
     if (no_record_warning) {
       show_notice(RESOURCE_ID_NOTICE_END_OF_RECORDING);
       no_record_warning = false;
@@ -390,8 +366,8 @@ static void store_point_info(uint16_t point) {
   }
 
   at_limit = false;
-  show_record(true);
-  show_ignore_state(internal_data.ignore[offset]);
+  set_icon(true, IS_RECORD);
+  set_icon(internal_data.ignore[offset], IS_IGNORE);
 
   // Remember the highest entry
   internal_data.highest_entry = offset;
@@ -468,15 +444,16 @@ static bool smart_alarm(uint16_t point) {
 }
 
 static void transmit_points_or_background_data() {
+
   switch (internal_data.last_sent) {
     case -3:
-      send_from();
+      send_to_phone(KEY_FROM, do_next_context, config_data.smart ? (int32_t) config_data.from : -1);
       break;
     case -2:
-      send_to();
+      send_to_phone(KEY_TO, do_next_context, config_data.smart ? (int32_t) config_data.to : -1);
       break;
     case -1:
-      send_base();
+      send_to_phone(KEY_BASE, do_next_context, internal_data.base);
       break;
     default:
       send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent], internal_data.ignore[internal_data.last_sent]);
@@ -516,7 +493,7 @@ static void transmit_next_data(void *data) {
     } else if (!version_sent) {
       app_timer_register(SHORT_RETRY_MS, send_version, NULL);
     } else if (!internal_data.transmit_sent && at_limit) {
-      send_transmit();
+      send_to_phone(KEY_TRANSMIT, clear_context, 0);
     }
     return;
   }

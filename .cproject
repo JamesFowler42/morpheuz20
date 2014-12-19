@@ -25,6 +25,7 @@
 								<option id="llvm.c_cpp.compiler.option.include.paths.1303379785" name="Include paths (-I)" superClass="llvm.c_cpp.compiler.option.include.paths" valueType="includePath">
 									<listOptionValue builtIn="false" value="/Users/keith/pebble-dev/PebbleSDK-2.7/Pebble/include"/>
 								</option>
+								<option id="llvm.c_cpp.compiler.option.misc.other.428154789" superClass="llvm.c_cpp.compiler.option.misc.other" value="-c -fmessage-length=0 -std=c99" valueType="string"/>
 								<inputType id="cdt.managedbuild.tool.llvm.c.compiler.input.1017524008" superClass="cdt.managedbuild.tool.llvm.c.compiler.input"/>
 							</tool>
 							<tool id="cdt.managedbuild.tool.llvm.clang.macosx.cpp.compiler.exe.debug.354963598" name="LLVM Clang++" superClass="cdt.managedbuild.tool.llvm.clang.macosx.cpp.compiler.exe.debug">

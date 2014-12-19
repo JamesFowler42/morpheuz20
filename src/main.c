@@ -30,35 +30,23 @@
 static Window *window;
 
 static Layer *progress_layer;
-static Layer *battery_layer;
+static Layer *icon_bar;
 
-static TextLayer *text_date_layer;
-static TextLayer *smart_alarm_range_layer;
+static TextLayer *text_date_smart_alarm_range_layer;
 static TextLayer *text_time_layer;
 static TextLayer *version_text;
 static TextLayer *block_layer;
-static TextLayer *block_layer2;
 static TextLayer *powernap_layer;
 
 static BitmapLayerComp logo_bed;
 static BitmapLayerComp logo_sleeper;
 static BitmapLayerComp logo_text;
 static BitmapLayerComp logo_head;
-static BitmapLayerComp alarm_icon;
-static BitmapLayerComp bluetooth_icon;
-static BitmapLayerComp comms_icon;
-static BitmapLayerComp record_icon;
-static BitmapLayerComp alarm_ring;
-static BitmapLayerComp ignore_icon;
-static BitmapLayerComp activity_icon;
-static BitmapLayerComp weekend;
 
 static InverterLayer *full_inverse_layer;
 
-static GBitmap *icon_battery;
-static GBitmap *icon_battery_charge;
-
 static GFont time_font;
+GFont notice_font;
 
 static struct PropertyAnimation *animations[MAX_ANIMATIONS];
 
@@ -70,7 +58,32 @@ static uint8_t previous_mday = 255;
 static time_t last_clock_update;
 
 char date_text[16] = "";
-GFont notice_font;
+
+static bool icon_state[MAX_ICON_STATE];
+
+/*
+ * Set the icon state for any icon
+ */
+void set_icon(bool enabled, IconState icon) {
+  if (enabled != icon_state[icon]) {
+    icon_state[icon] = enabled;
+    layer_mark_dirty(icon_bar);
+  }
+}
+
+/*
+ * Get the icon state
+ */
+bool get_icon(IconState icon) {
+  return icon_state[icon];
+}
+
+/**
+ * Show worker icon
+ */
+static void show_worker() {
+  set_icon(app_worker_is_running(), IS_ACTIVITY);
+}
 
 /*
  * Boot up background process
@@ -78,9 +91,8 @@ GFont notice_font;
 void start_worker() {
   AppWorkerResult result = app_worker_launch();
   if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
-    layer_set_hidden(bitmap_layer_get_layer_jf(activity_icon.layer), false);
-  }
-  APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
+    show_worker();
+  } APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
 }
 
 /**
@@ -96,36 +108,89 @@ static void stop_worker() {
   }
 }
 
-/**
- * Show worker icon
- */
-static void show_worker() {
-  layer_set_hidden(bitmap_layer_get_layer_jf(activity_icon.layer), !app_worker_is_running());
-}
-
 /*
  * Set the smart alarm status details
  */
 void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_icon.layer), !smart_alarm_on);
-  layer_set_hidden(text_layer_get_layer_jf(smart_alarm_range_layer), !smart_alarm_on);
+  set_icon(smart_alarm_on, IS_ALARM);
   if (smart_alarm_on)
-    text_layer_set_text(smart_alarm_range_layer, special_text);
+    text_layer_set_text(text_date_smart_alarm_range_layer, special_text);
+  else
+    text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
 }
 
 /*
- * Battery icon callback handler
+ * Build an icon
  */
-static void battery_layer_update_callback(Layer *layer, GContext *ctx) {
+static void paint_icon(GContext *ctx, int *running_horizontal, int width, uint32_t resource_id) {
+  GBitmap *bitmap = gbitmap_create_with_resource(resource_id);
+  *running_horizontal -= width + ICON_PAD;
+  graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(*running_horizontal, 0, width, 12));
+  gbitmap_destroy(bitmap);
+}
+
+/*
+ * Battery icon callback handler (called via icon bar update now)
+ */
+static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *running_horizontal) {
 
   graphics_context_set_compositing_mode(ctx, GCompOpAssign);
   if (!battery_plugged) {
-    graphics_draw_bitmap_in_rect(ctx, icon_battery, GRect(0, 0, 24, 12));
+    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
     graphics_context_set_stroke_color(ctx, GColorBlack);
     graphics_context_set_fill_color(ctx, GColorWhite);
-    graphics_fill_rect(ctx, GRect(7, 4, battery_level / 9, 4), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, battery_level / 9, 4), 0, GCornerNone);
   } else {
-    graphics_draw_bitmap_in_rect(ctx, icon_battery_charge, GRect(0, 0, 24, 12));
+    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
+  }
+}
+
+/*
+ * Icon bar update handler
+ */
+static void icon_bar_update_callback(Layer *layer, GContext *ctx) {
+
+  int running_horizontal = ICON_BAR_WIDTH;
+
+  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+
+  // Don't draw if we're currently doing
+  if (!is_animation_complete())
+    return;
+
+  // Battery icon (always showing)
+  battery_layer_update_callback(layer, ctx, &running_horizontal);
+  running_horizontal += ICON_PAD_BATTERY;
+
+  // Comms icon / Bluetooth icon
+  if (icon_state[IS_COMMS] || icon_state[IS_BLUETOOTH]) {
+    paint_icon(ctx, &running_horizontal, 9, icon_state[IS_COMMS] ? RESOURCE_ID_COMMS_ICON : RESOURCE_ID_BLUETOOTH_ICON);
+  }
+
+  // Record icon
+  if (icon_state[IS_RECORD]) {
+    paint_icon(ctx, &running_horizontal, 10, RESOURCE_ID_ICON_RECORD);
+  }
+
+  // Alarm icon
+  if (icon_state[IS_ALARM_RING] || icon_state[IS_WEEKEND] || icon_state[IS_ALARM]) {
+    paint_icon(ctx, &running_horizontal, 12, icon_state[IS_ALARM_RING] ? RESOURCE_ID_ALARM_RING_ICON : (icon_state[IS_WEEKEND] ? RESOURCE_ID_WEEKEND_ICON : RESOURCE_ID_ALARM_ICON));
+  }
+
+  // Ignore icon
+  if (icon_state[IS_IGNORE]) {
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_IGNORE);
+  }
+
+  // Activity icon
+  if (icon_state[IS_ACTIVITY]) {
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_ACTIVITY_ICON);
+  }
+
+  // Export icon
+  if (icon_state[IS_EXPORT]) {
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_EXPORT);
   }
 }
 
@@ -135,16 +200,13 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx) {
 static void battery_state_handler(BatteryChargeState charge) {
   battery_level = charge.charge_percent;
   battery_plugged = charge.is_plugged;
-  layer_mark_dirty(battery_layer);
+  layer_mark_dirty(icon_bar);
 }
 
 /*
  * Progress line
  */
 static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
-  //graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-  //graphics_draw_bitmap_in_rect(ctx, image_progress, GRect(0, 0, 131, 5));
-  //graphics_draw_bitmap_in_rect(ctx, image_progress_full, GRect(0, 0, progress_level * 131 / LIMIT, 5));
   graphics_context_set_fill_color(ctx, GColorBlack);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 
@@ -152,15 +214,15 @@ static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 
   graphics_context_set_stroke_color(ctx, GColorWhite);
 
-  for (uint8_t i = 0; i <= 108; i+=12) {
+  for (uint8_t i = 0; i <= 108; i += 12) {
     graphics_draw_pixel(ctx, GPoint(i,8));
     graphics_draw_pixel(ctx, GPoint(i,7));
   }
 
   for (uint8_t i = 0; i <= get_internal_data()->highest_entry; i++) {
     if (!get_internal_data()->ignore[i]) {
-      uint16_t height = get_internal_data()->points[i]/500;
-      uint8_t i2 = i*2;
+      uint16_t height = get_internal_data()->points[i] / 500;
+      uint8_t i2 = i * 2;
       graphics_draw_line(ctx, GPoint(i2,8-height), GPoint(i2,8));
     }
   }
@@ -187,7 +249,8 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   // Only update the date if the day has changed
   if (tick_time->tm_mday != previous_mday) {
     strftime(date_text, sizeof(date_text), "%B %e", tick_time);
-    text_layer_set_text(text_date_layer, date_text);
+    if (!icon_state[IS_ALARM])
+      text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
     previous_mday = tick_time->tm_mday;
   }
 
@@ -228,37 +291,9 @@ void revive_clock_on_movement(uint16_t last_movement) {
  * Bluetooth connection status
  */
 static void bluetooth_state_handler(bool connected) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(bluetooth_icon.layer), !connected);
+  set_icon(connected, IS_BLUETOOTH);
   if (!connected)
-    show_comms_state(false); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
-}
-
-/*
- * Comms connection status
- */
-void show_comms_state(bool connected) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(comms_icon.layer), !connected);
-}
-
-/*
- * Ignore status
- */
-void show_ignore_state(bool ignore) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(ignore_icon.layer), !ignore);
-}
-
-/*
- * Are we in ignore mode or not
- */
-bool get_ignore_state() {
-  return !layer_get_hidden(bitmap_layer_get_layer_jf(ignore_icon.layer));
-}
-
-/*
- * Alarm status icon
- */
-void set_alarm_icon(bool show_icon) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_ring.layer), !show_icon);
+    set_icon(false, IS_COMMS); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
 }
 
 /*
@@ -267,13 +302,6 @@ void set_alarm_icon(bool show_icon) {
 void set_progress() {
   if (!get_config_data()->analogue)
     layer_mark_dirty(progress_layer);
-}
-
-/*
- * Show record
- */
-void show_record(bool recording) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(record_icon.layer), !recording);
 }
 
 /*
@@ -304,7 +332,6 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
   animation_count++;
   if (animation_count == 4) {
     light_enable_interaction();
-    text_layer_destroy(block_layer2);
     build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, 500, LOGO_HEAD_ANIMATION);
     animation_schedule((Animation*) animations[LOGO_HEAD_ANIMATION]);
   } else if (animation_count == 5) {
@@ -364,36 +391,16 @@ static void morpheuz_load(Window *window) {
 
   text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, GColorBlack, time_font, GTextAlignmentCenter);
 
-  text_date_layer = macro_text_layer_create(GRect(8, 86, 144-8, 31), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144-8, 31), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
-  smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144-8, 31), window_layer, GColorWhite, GColorBlack, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
-  layer_set_hidden(text_layer_get_layer_jf(smart_alarm_range_layer), true);
-
-  macro_bitmap_layer_create(&alarm_icon, GRect(144-26-14-10-16-19, ICON_TOPS, 12, 12), window_layer, RESOURCE_ID_ALARM_ICON, false);
-
-  macro_bitmap_layer_create(&weekend, GRect(144-26-14-10-16-19, ICON_TOPS, 12, 12), window_layer, RESOURCE_ID_WEEKEND_ICON, false);
-
-  macro_bitmap_layer_create(&alarm_ring, GRect(144-26-14-10-16-19, ICON_TOPS, 12, 12), window_layer, RESOURCE_ID_ALARM_RING_ICON, false);
-
-  icon_battery = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_ICON);
-  icon_battery_charge = gbitmap_create_with_resource(RESOURCE_ID_BATTERY_CHARGE);
+  icon_bar = layer_create(GRect(26,ICON_TOPS,ICON_BAR_WIDTH,12));
+  layer_set_update_proc(icon_bar, &icon_bar_update_callback);
+  layer_add_child(window_layer, icon_bar);
 
   BatteryChargeState initial = battery_state_service_peek();
   battery_level = initial.charge_percent;
   battery_plugged = initial.is_plugged;
-  battery_layer = layer_create(GRect(144-26,ICON_TOPS,24,12)); //24*12
-  layer_set_update_proc(battery_layer, &battery_layer_update_callback);
-  layer_add_child(window_layer, battery_layer);
-
-  macro_bitmap_layer_create(&bluetooth_icon, GRect(144-26-10, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_BLUETOOTH_ICON, bluetooth_connection_service_peek());
-
-  macro_bitmap_layer_create(&comms_icon, GRect(144-26-14-10, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_COMMS_ICON, false);
-
-  macro_bitmap_layer_create(&record_icon, GRect(144-26-14-10-16, ICON_TOPS, 10, 12), window_layer, RESOURCE_ID_ICON_RECORD, false);
-
-  macro_bitmap_layer_create(&ignore_icon, GRect(144-26-14-10-16-19-15, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_IGNORE, false);
-
-  macro_bitmap_layer_create(&activity_icon, GRect(144-26-14-10-16-19-15-15, ICON_TOPS, 9, 12), window_layer, RESOURCE_ID_ACTIVITY_ICON, false);
+  bluetooth_state_handler(bluetooth_connection_service_peek());
 
   progress_layer = layer_create(GRect(17,157,109,9));
   layer_set_update_proc(progress_layer, &progress_layer_update_callback);
@@ -401,8 +408,6 @@ static void morpheuz_load(Window *window) {
 
   block_layer = macro_text_layer_create(BLOCK_START, window_layer, GColorWhite, GColorBlack, notice_font, GTextAlignmentCenter);
   text_layer_set_text(block_layer, COPYRIGHT);
-
-  block_layer2 = macro_text_layer_create(GRect(144-26-14-10-16-19, 0, 144, 18), window_layer, GColorWhite, GColorBlack, notice_font, GTextAlignmentCenter);
 
   analogue_window_load(window);
 
@@ -422,6 +427,8 @@ static void morpheuz_load(Window *window) {
   invert_screen();
 
   init_morpheuz(window);
+
+  set_icon(get_internal_data()->transmit_sent, IS_EXPORT);
 
   light_enable_interaction();
 
@@ -451,38 +458,19 @@ static void morpheuz_unload(Window *window) {
   analogue_window_unload();
 
   layer_destroy(progress_layer);
-  layer_destroy(battery_layer);
+  layer_destroy(icon_bar);
 
   text_layer_destroy(text_time_layer);
-  text_layer_destroy(text_date_layer);
-  text_layer_destroy(smart_alarm_range_layer);
+  text_layer_destroy(text_date_smart_alarm_range_layer);
   text_layer_destroy(powernap_layer);
 
   macro_bitmap_layer_destroy(&logo_bed);
   macro_bitmap_layer_destroy(&logo_sleeper);
   macro_bitmap_layer_destroy(&logo_text);
   macro_bitmap_layer_destroy(&logo_head);
-  macro_bitmap_layer_destroy(&alarm_icon);
-  macro_bitmap_layer_destroy(&bluetooth_icon);
-  macro_bitmap_layer_destroy(&comms_icon);
-  macro_bitmap_layer_destroy(&record_icon);
-  macro_bitmap_layer_destroy(&alarm_ring);
-  macro_bitmap_layer_destroy(&ignore_icon);
-  macro_bitmap_layer_destroy(&activity_icon);
-  macro_bitmap_layer_destroy(&weekend);
-
-  gbitmap_destroy(icon_battery);
-  gbitmap_destroy(icon_battery_charge);
 
   fonts_unload_custom_font(time_font);
   fonts_unload_custom_font(notice_font);
-}
-
-/*
- * Set the weekend indicator on the display
- */
-void set_weekend_icon(bool weekend_visible) {
-  layer_set_hidden(bitmap_layer_get_layer_jf(weekend.layer), !weekend_visible);
 }
 
 /*
