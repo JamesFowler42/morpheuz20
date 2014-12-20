@@ -163,10 +163,6 @@ a {
     margin-left: 2px;
 }
 
-.textbox {
-    width: 45px;
-}
-
 table.jqplot-table-legend {
     background-color: #FF7D48 !important;
     z-index: 10;
@@ -299,4 +295,30 @@ span.red {
 
 input#save2.save {
     margin-left: -2px;
+}
+
+.row {
+    display: table-row;
+}
+
+.cell {
+    display: table-cell;
+    border-width: thin;
+    padding-right: 5px;
+}
+
+.textbox {
+    border: 1px solid #848484;
+    -webkit-border-radius: 30px;
+    -moz-border-radius: 30px;
+    border-radius: 5px;
+    outline: 0;
+    padding: 3px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    background-color: white;
+}
+
+.textbox.wide {
+    width: 200px;
 }
