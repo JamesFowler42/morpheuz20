@@ -34,7 +34,7 @@ function mConst() {
     swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&ct=morpheuz_web",
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
-    swpUrlDate: "yyyy-MM-ddThh:mm:00"
+    swpUrlDate : "yyyy-MM-ddThh:mm:00"
   };
 }
 
@@ -221,19 +221,21 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
   var deep = 0;
   var light = 0;
   var ignore = 0;
-  for (var j = ibegin; j <= iends; j++) {
-    if (splitup[j] === "") {
-      continue;
-    }
-    var data2 = parseInt(splitup[j], 10);
-    if (data2 == -1 || data2 == -2) {
-      ignore++;
-    } else if (data2 > mConst().awakeAbove) {
-      awake++;
-    } else if (data2 > mConst().lightAbove) {
-      light++;
-    } else {
-      deep++;
+  if (ibegin !== null && iends !== null) {
+    for (var j = ibegin; j <= iends; j++) {
+      if (splitup[j] === "") {
+        continue;
+      }
+      var data2 = parseInt(splitup[j], 10);
+      if (data2 == -1 || data2 == -2) {
+        ignore++;
+      } else if (data2 > mConst().awakeAbove) {
+        awake++;
+      } else if (data2 > mConst().lightAbove) {
+        light++;
+      } else {
+        deep++;
+      }
     }
   }
 
