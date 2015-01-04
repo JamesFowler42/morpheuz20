@@ -143,9 +143,9 @@ function strap_log_event(evtText, appId) {
   };
 
   // -------------------------
-  //  Strap API inclusion in appmessage
-  //  This allows Strap to process Strap-related messages
-  //  DO NOT EDIT
+  // Strap API inclusion in appmessage
+  // This allows Strap to process Strap-related messages
+  // DO NOT EDIT
   // -------------------------
   if (strap_api_can_handle_msg(e.payload)) {
     clearTimeout(strap_api_timer_send);

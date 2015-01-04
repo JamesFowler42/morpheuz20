@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,13 +37,17 @@ function mConst() {
     tohrDef : "7",
     tominDef : "15",
     pushoverAPI : "https://api.pushover.net/1/messages.json",
-    smartwatchProAPI: "http://2hk.smartwatch.pro/?source=Morpheuz&starts=",
+    smartwatchProAPI : "http://2hk.smartwatch.pro/?source=Morpheuz&starts=",
     sampleIntervalMins : 10,
     awakeAbove : 1000,
-    ctrlTransmitDone: 1, 
+    ctrlTransmitDone : 1,
+    ctrlVersionDone : 2,
+    ctrlGoneOffDone : 4,
+    ctrlDoNext : 8,
+    ctrlSetLastSent : 16,
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
-    swpUrlDate: "yyyy-MM-ddThh:mm:00",
-    timeout: 4000
+    swpUrlDate : "yyyy-MM-ddThh:mm:00",
+    timeout : 4000
   };
 }
 

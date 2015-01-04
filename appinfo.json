@@ -1,5 +1,5 @@
 {
-    "versionLabel": "2.7",
+    "versionLabel": "2.8",
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
         "keyPoint": 1,
@@ -12,7 +12,7 @@
         "keyTransmit": 8
     },
     "longName": "Morpheuz",
-    "versionCode": 27,
+    "versionCode": 28,
     "capabilities": [
         "configurable"
     ],

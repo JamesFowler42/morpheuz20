@@ -45,9 +45,14 @@
 
 </head>
 <body>
+  <div class="outer">
+  <div class="inner vpwidth">
   <form action="">
-    <div id="version">v0.5</div>
+    <div id="version" class="vpwidth">v0.5</div>
     <h2 id="title"><img src="img/morpheuz.png"/>Morpheuz Sleep Monitor</h2>
+    <p class="error verswarning" style="display:none;">You are on an old version of Morpheuz. To get all the new features please upgrade. See <a href="http://www.morpheuz.net/p/upgrade.html">here</a> for details.</p>
+    <p class="error versbeta" style="display:none;">This is a beta version of Morpheuz. Please report any issues you find.</p>
+    <p class="error versproblem" style="display:none;">Unable to determine current version of Morpheuz.</p>
     <h3 id="sleep-time"></h3>
     <div id="info-message" style="display: none">
       <p class="settingswrap">
@@ -55,9 +60,9 @@
       </p>
     </div>
     <h3 class="movement-head">Sleep Movement</h3>
-    <div id="chart1" style="width: 318px; height: 250px;"></div>
+    <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
     <h3 class="quality-head">Quality of Sleep</h3>
-    <div id="chart2" style="width: 318px; height: 250px;"></div>
+    <div id="chart2" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
     <h3>Statistics</h3>
     <table class="statstable">
       <col width="50%">
@@ -112,11 +117,11 @@
           <p>Pushover</p>
            <div class="row">
            <div class="cell"><label for="ptoken">Token:</label></div>
-           <div class="cell"><input id="ptoken" type="text" maxlength="50" class="textbox wide"/></div>
+           <div class="cell"><input id="ptoken" type="text" maxlength="30" class="textbox wide"/></div>
            </div>
           <div class="row">
           <div class="cell"><label for="puser">User:</label></div>
-          <div class="cell"><input id="puser" type="text" maxlength="50" class="textbox wide"/></div>
+          <div class="cell"><input id="puser" type="text" maxlength="30" class="textbox wide"/></div>
           </div>
           <p class="small">'token' & 'user' only saved by pressing Save.</p>
           <p class="small">Setting these values will enable automatic push messages to Pushover</p>
@@ -155,12 +160,14 @@
     </p>
     <h3 class="exporthead noset">Usage Reporting</h3>
     <div class="exportwrap noset usageindent">
-    <p>Help to improve Morpheuz allowing once a day anonymous usage statistics.</p> 
+    <p>Help to improve Morpheuz by allowing once a day anonymous usage statistics.</p> 
     <label for="usage">Allow:</label><input id="usage" type="checkbox" />
     <p class="small">Provided by <a href="http://www.straphq.com">Strap</a></p>
     <input type="button" id="save2" class="save" value="Save" />
     </div>
-    <p class="centre small">&copy; 2013-2014 James Fowler</p>
+    <p class="centre small">&copy; 2013-2015 James Fowler</p>
   </form>
+  </div>
+  </div>
 </body>
 </html>

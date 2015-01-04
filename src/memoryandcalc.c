@@ -1,7 +1,7 @@
 /*
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -37,19 +37,17 @@ static bool at_limit;
 
 static int32_t previous_to_phone = 0;
 
-static char version_context[] = "V";
-static char goneoff_context[] = "G";
-static char clear_context[] = "C";
-static char do_next_context[] = "N";
-
 static bool version_sent = false;
+static int8_t new_last_sent;
+static time_t last_request;
+static time_t last_response;
 
 static void transmit_next_data(void *data);
 
 /*
  * Send a message to javascript
  */
-static void send_to_phone(const uint32_t key, void *context, int32_t tophone) {
+static void send_to_phone(const uint32_t key, int32_t tophone) {
 
   Tuplet tuplet = TupletInteger(key, tophone);
 
@@ -57,41 +55,17 @@ static void send_to_phone(const uint32_t key, void *context, int32_t tophone) {
   app_message_outbox_begin(&iter);
 
   if (iter == NULL) {
+    APP_LOG(APP_LOG_LEVEL_DEBUG, "no outbox");
     return;
   }
-
-  app_message_set_context(context);
 
   dict_write_tuplet(iter, &tuplet);
   dict_write_end(iter);
 
   app_message_outbox_send();
 
-}
+  last_request = time(NULL);
 
-/*
- * Outgoing message failed handler
- */
-static void out_failed_handler(DictionaryIterator *failed, AppMessageResult reason, void *context) {
-  APP_LOG(APP_LOG_LEVEL_ERROR, "Send Fail %d", reason);
-  set_icon(false, IS_COMMS);
-  app_message_set_context(clear_context);
-}
-
-/*
- * Outgoing message success handler
- */
-static void out_sent_handler(DictionaryIterator *iterator, void *context) {
-  if (context == goneoff_context) {
-    internal_data.gone_off_sent = true;
-  } else if (context == version_context) {
-    version_sent = true;
-  }
-  if (context != clear_context) {
-    app_message_set_context(clear_context);
-    app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
-  }
-  set_icon(true, IS_COMMS);
 }
 
 /*
@@ -100,41 +74,57 @@ static void out_sent_handler(DictionaryIterator *iterator, void *context) {
 static void send_point(uint8_t point, uint16_t biggest, bool ignore) {
   int32_t to_phone = join_value(point, (ignore ? 5000 : biggest));
   if (to_phone == previous_to_phone) {
+    APP_LOG(APP_LOG_LEVEL_INFO, "skipping send - data the same");
     app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL); // this is what would happen if we sent
     return;
   }
   previous_to_phone = to_phone;
-  send_to_phone(KEY_POINT, do_next_context, to_phone);
-}
-
-/*
- * Send a version to javascript (called via timer)
- */
-static void send_version(void *data) {
-  send_to_phone(KEY_VERSION, version_context, VERSION);
+  send_to_phone(KEY_POINT, to_phone);
 }
 
 /*
  * Incoming message handler
  */
 static void in_received_handler(DictionaryIterator *iter, void *context) {
+
+  // Got a ctrl message
   Tuple *ctrl_tuple = dict_find(iter, KEY_CTRL);
   if (ctrl_tuple) {
-    set_icon(true, IS_COMMS);
+
     int32_t ctrl_value = ctrl_tuple->value->int32;
+
+    // If transmit is done then mark it
     if (ctrl_value & CTRL_TRANSMIT_DONE) {
       internal_data.transmit_sent = true;
       set_icon(true, IS_EXPORT);
     }
-    app_timer_register(SHORT_RETRY_MS, send_version, NULL);
-  }
-}
 
-/*
- * Send a gone off to javascript
- */
-static void send_goneoff() {
-  send_to_phone(KEY_GONEOFF, goneoff_context, internal_data.gone_off);
+    // If version is done then mark it
+    if (ctrl_value & CTRL_VERSION_DONE) {
+      version_sent = true;
+    }
+
+    // If gone off is done then mark that
+    if (ctrl_value & CTRL_GONEOFF_DONE) {
+      internal_data.gone_off_sent = true;
+    }
+
+    // Only let the last sent become it's new value after confirmation
+    // from the JS
+    if (ctrl_value & CTRL_SET_LAST_SENT) {
+      internal_data.last_sent = new_last_sent;
+    }
+
+    // If the request is to continue then do so.
+    if (ctrl_value & CTRL_DO_NEXT) {
+      app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL);
+    }
+
+    // Yes - must have comms
+    set_icon(true, IS_COMMS);
+    last_response = time(NULL);
+
+  }
 }
 
 /*
@@ -144,8 +134,6 @@ void open_comms() {
 
   // Register message handlers
   app_message_register_inbox_received(in_received_handler);
-  app_message_register_outbox_failed(out_failed_handler);
-  app_message_register_outbox_sent(out_sent_handler);
 
   // Incoming size
   Tuplet in_values[] = { TupletInteger(KEY_CTRL, 0) };
@@ -157,8 +145,8 @@ void open_comms() {
   // Open buffers
   app_message_open(inbound_size, inbound_size);
 
-  // Clear context
-  app_message_set_context(clear_context);
+  // Tell JS our version
+  send_to_phone(KEY_VERSION, VERSION);
 
 }
 
@@ -443,22 +431,24 @@ static bool smart_alarm(uint16_t point) {
   return false;
 }
 
-static void transmit_points_or_background_data() {
+static void transmit_points_or_background_data(int8_t last_sent) {
 
-  switch (internal_data.last_sent) {
+  // Otherwise service as usual
+  switch (last_sent) {
     case -3:
-      send_to_phone(KEY_FROM, do_next_context, config_data.smart ? (int32_t) config_data.from : -1);
+      send_to_phone(KEY_FROM, config_data.smart ? (int32_t) config_data.from : -1);
       break;
     case -2:
-      send_to_phone(KEY_TO, do_next_context, config_data.smart ? (int32_t) config_data.to : -1);
+      send_to_phone(KEY_TO, config_data.smart ? (int32_t) config_data.to : -1);
       break;
     case -1:
-      send_to_phone(KEY_BASE, do_next_context, internal_data.base);
+      send_to_phone(KEY_BASE, internal_data.base);
       break;
     default:
-      send_point(internal_data.last_sent, internal_data.points[internal_data.last_sent], internal_data.ignore[internal_data.last_sent]);
+      send_point(last_sent, internal_data.points[last_sent], internal_data.ignore[last_sent]);
       break;
   }
+  new_last_sent = last_sent;
 }
 
 /*
@@ -466,13 +456,25 @@ static void transmit_points_or_background_data() {
  */
 static void transmit_data() {
 
-  // Retry will occur when we get a data sample set again
-  // No need for timer here
-  if (!bluetooth_connection_service_peek())
+  // Retry will occur on the next minute, so no connection, no sweat
+  if (!bluetooth_connection_service_peek()) {
+    previous_to_phone = 0;
     return;
+  }
+
+  // No comms if the last request went unanswered (out failed handler doesn't seem to spot too much)
+  if (last_request > last_response) {
+    set_icon(false, IS_COMMS);
+  }
+
+  // If we haven't sent the version this is priority
+  if (!version_sent) {
+    send_to_phone(KEY_VERSION, VERSION);
+    return;
+  }
 
   // Send either base, from, to (if last sent is -1) or a point
-  transmit_points_or_background_data();
+  transmit_points_or_background_data(internal_data.last_sent);
 }
 
 /*
@@ -488,24 +490,20 @@ static void transmit_next_data(void *data) {
   // Have we already caught up - if so then finish with the gone off time, if present
   if (internal_data.last_sent >= internal_data.highest_entry) {
     if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
-      APP_LOG(APP_LOG_LEVEL_INFO, "send goneoff");
-      send_goneoff();
-    } else if (!version_sent) {
-      app_timer_register(SHORT_RETRY_MS, send_version, NULL);
+      send_to_phone(KEY_GONEOFF, internal_data.gone_off);
     } else if (!internal_data.transmit_sent && at_limit) {
-      send_to_phone(KEY_TRANSMIT, clear_context, 0);
+      send_to_phone(KEY_TRANSMIT, 0);
     }
     return;
   }
 
   // Transmit next load of data
   APP_LOG(APP_LOG_LEVEL_INFO, "transmit_next_data %d<%d", internal_data.last_sent, internal_data.highest_entry);
-  internal_data.last_sent++;
-  transmit_points_or_background_data();
+  transmit_points_or_background_data(internal_data.last_sent + 1);
 }
 
 /*
- * Storage of points and raising of smart alarm
+ * Storage of points, raising of smart alarm and transmission to phone
  */
 void server_processing(uint16_t biggest) {
   if (!internal_data.has_been_reset) {

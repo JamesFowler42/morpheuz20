@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -84,29 +84,49 @@ Pebble.addEventListener("ready", function(e) {
     window.localStorage.setItem("tohr", mConst().tohrDef);
     window.localStorage.setItem("tomin", mConst().tominDef);
   }
-  Pebble.sendAppMessage({
-    "keyCtrl" : "0"
-  });
-
 });
+
+/*
+ * Return a control value back ACK
+ */
+function callWatchApp(ctrlVal) {
+  function decodeKeyCtrl(ctrlVal, keyVal, name) {
+    return (ctrlVal & keyVal) ? name + " " : "";
+  }
+  console.log("ACK " + decodeKeyCtrl(ctrlVal, mConst().ctrlTransmitDone, "ctrlTransmitDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlVersionDone, "ctrlVersionDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlGoneOffDone, "ctrlGoneOffDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlDoNext, "ctrlDoNext") + decodeKeyCtrl(ctrlVal, mConst().ctrlSetLastSent, "ctrlSetLastSent"));
+  Pebble.sendAppMessage({
+    "keyCtrl" : ctrlVal
+  });
+}
 
 /*
  * Process sample from the watch
  */
 Pebble.addEventListener("appmessage", function(e) {
+
+  // Build a response for the watchapp
+  var ctrlVal = 0;
+
+  // Incoming version number
+  if (typeof e.payload.keyVersion !== "undefined") {
+    var version = parseInt(e.payload.keyVersion, 10);
+    console.log("MSG version=" + version);
+    window.localStorage.setItem("version", version);
+    ctrlVal = ctrlVal | mConst().ctrlVersionDone;
+  }
+
+  // Incoming origin timestamp - this is a reset
   if (typeof e.payload.keyBase !== "undefined") {
     var base = parseInt(e.payload.keyBase, 10);
     // Watch delivers local time in seconds...
     base = (base + (new Date().getTimezoneOffset() * 60)) * 1000;
-    console.log("appmessage base=" + base);
+    console.log("MSG base=" + base);
     resetWithPreserve();
     window.localStorage.setItem("base", base);
+    ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
-  if (typeof e.payload.keyVersion !== "undefined") {
-    var version = parseInt(e.payload.keyVersion, 10);
-    console.log("appmessage version=" + version);
-    window.localStorage.setItem("version", version);
-  }
+
+  // Incoming from value (first time for smart alarm)
   if (typeof e.payload.keyFrom !== "undefined") {
     var from = parseInt(e.payload.keyFrom, 10);
     var fromhr = mConst().fromhrDef;
@@ -122,8 +142,11 @@ Pebble.addEventListener("appmessage", function(e) {
     window.localStorage.setItem("fromhr", fromhr);
     window.localStorage.setItem("frommin", frommin);
     window.localStorage.setItem("smart", smart);
-    console.log("appmessage from=" + from + ", smart=" + smart + ", fromhr=" + fromhr + ", frommin=" + frommin);
+    console.log("MSG from=" + from + ", smart=" + smart + ", fromhr=" + fromhr + ", frommin=" + frommin);
+    ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
+
+  // Incoming to value (second time for smart alarm)
   if (typeof e.payload.keyTo !== "undefined") {
     var to = parseInt(e.payload.keyTo, 10);
     var tohr = mConst().tohrDef;
@@ -139,8 +162,11 @@ Pebble.addEventListener("appmessage", function(e) {
     window.localStorage.setItem("tohr", tohr);
     window.localStorage.setItem("tomin", tomin);
     window.localStorage.setItem("smart", smart);
-    console.log("appmessage to=" + to + ", smart=" + smart + ", tohr=" + tohr + ", tomin=" + tomin);
+    console.log("MSG to=" + to + ", smart=" + smart + ", tohr=" + tohr + ", tomin=" + tomin);
+    ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
+
+  // Incoming gone off value
   if (typeof e.payload.keyGoneoff !== "undefined") {
     var goneoffNum = parseInt(e.payload.keyGoneoff, 10);
     var goneoff = "N";
@@ -151,20 +177,34 @@ Pebble.addEventListener("appmessage", function(e) {
       var minutesStr = fixLen(String(minutes));
       goneoff = hoursStr + minutesStr;
     }
-    console.log("appmessage goneoff=" + goneoff);
+    console.log("MSG goneoff=" + goneoff);
     window.localStorage.setItem("goneOff", goneoff);
+    ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
   }
+
+  // Incoming data point
   if (typeof e.payload.keyPoint !== "undefined") {
     var point = parseInt(e.payload.keyPoint, 10);
     var top = point >> 16;
     var bottom = point & 0xFFFF;
-    console.log("appmessage point=" + top + ", biggest=" + bottom);
+    console.log("MSG point=" + top + ", biggest=" + bottom);
     storePointInfo(top, bottom);
+    ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
+
+  // Incoming transmit to automatics
   if (typeof e.payload.keyTransmit !== "undefined") {
-    console.log("appmessage transmit");
+    console.log("MSG transmit");
     transmitMethods();
+    ctrlVal = ctrlVal | mConst().ctrlTransmitDone;
   }
+
+  // Respond back to watchapp here - we need assured positive delivery - cannot trust that it has reached the phone - must make
+  // sure it has reached and been processed by the Pebble App and Javascript
+  if (ctrlVal !== 0) {
+    callWatchApp(ctrlVal);
+  }
+
 });
 
 /*
@@ -177,20 +217,15 @@ function transmitMethods() {
     console.log("transmit already done");
     return;
   }
-  
+
   // Sends
   pushoverTransmit();
   smartwatchProTransmit();
   sendAnonymousUsageData();
-  
+
   // Protect and report time
   window.localStorage.setItem("transmitDone", "done");
   window.localStorage.setItem("exptime", new Date().format(mConst().displayDateFmt));
-  
-  // Let the watchapp know it's done
-  Pebble.sendAppMessage({
-    "keyCtrl" : mConst().ctrlTransmitDone
-  });
 }
 
 /*
@@ -238,22 +273,22 @@ function buildUrl(noset) {
   var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
   var emailto = nvl(window.localStorage.getItem("emailto"), "");
   var pouser = "";
-  var postat =  "";
-  var potoken =  "";
+  var postat = "";
+  var potoken = "";
   var token = "";
   var swpdo = "";
   var swpstat = "";
   var exptime = "";
   var usage = "";
   if (noset === "N") {
-    pouser =  nvl(window.localStorage.getItem("pouser"), "") ;
-    postat =  nvl(window.localStorage.getItem("postat"), "") ;
-    potoken =  nvl(window.localStorage.getItem("potoken"), "") ;
+    pouser = nvl(window.localStorage.getItem("pouser"), "");
+    postat = nvl(window.localStorage.getItem("postat"), "");
+    potoken = nvl(window.localStorage.getItem("potoken"), "");
     token = Pebble.getAccountToken();
-    swpdo =  nvl(window.localStorage.getItem("swpdo"), "") ;
-    swpstat =  nvl(window.localStorage.getItem("swpstat"), "") ;
-    exptime =  nvl(window.localStorage.getItem("exptime"), "") ;
-    usage =  nvl(window.localStorage.getItem("usage"), "Y") ;
+    swpdo = nvl(window.localStorage.getItem("swpdo"), "");
+    swpstat = nvl(window.localStorage.getItem("swpstat"), "");
+    exptime = nvl(window.localStorage.getItem("exptime"), "");
+    usage = nvl(window.localStorage.getItem("usage"), "Y");
   }
 
   var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&noset=" + noset + "&token=" + token + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + "&usage=" + usage;

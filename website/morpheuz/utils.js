@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,10 +22,10 @@
  * THE SOFTWARE.
  */
 
- function hrsmin(value) {
-	var hours = Math.floor(value / 60);
-	var minutes = value % 60;
-	return fixLen(String(hours)) + ":" + fixLen(String(minutes));
+function hrsmin(value) {
+  var hours = Math.floor(value / 60);
+  var minutes = value % 60;
+  return fixLen(String(hours)) + ":" + fixLen(String(minutes));
 }
 
 /*
@@ -33,59 +33,112 @@
  */
 Date.prototype.format = function(format) // author: meizz
 {
-	var monName = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
-	var dayName = ["Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"];
-	var o = {
-		"M+" : this.getMonth() + 1, // month
-		"d+" : this.getDate(), // day
-		"h+" : this.getHours(), // hour
-		"i+" : this.getHours() + 1, // hour + 1
-		"m+" : this.getMinutes(), // minute
-		"s+" : this.getSeconds(), // second
-		"q+" : Math.floor((this.getMonth() + 3) / 3), // quarter
-		"S" : this.getMilliseconds()	// millisecond
-	}
+  var monName = [ "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" ];
+  var dayName = [ "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" ];
+  var o = {
+    "M+" : this.getMonth() + 1, // month
+    "d+" : this.getDate(), // day
+    "h+" : this.getHours(), // hour
+    "i+" : this.getHours() + 1, // hour + 1
+    "m+" : this.getMinutes(), // minute
+    "s+" : this.getSeconds(), // second
+    "q+" : Math.floor((this.getMonth() + 3) / 3), // quarter
+    "S" : this.getMilliseconds()
+  // millisecond
+  }
 
-	if (/(y+)/.test(format)) {
-		format = format.replace(RegExp.$1, (this.getFullYear() + "")
-				.substr(4 - RegExp.$1.length));
-	}
-	for ( var k in o) {
-		if (new RegExp("(" + k + ")").test(format)) {
-			format = format.replace(RegExp.$1, RegExp.$1.length == 1 ? o[k]
-					: ("00" + o[k]).substr(("" + o[k]).length));
-		}
-	}
-	if (/(N+)/.test(format)) {
-     format = format.replace(RegExp.$1, monName[this.getMonth()]);
-  } 
+  if (/(y+)/.test(format)) {
+    format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
+  }
+  for ( var k in o) {
+    if (new RegExp("(" + k + ")").test(format)) {
+      format = format.replace(RegExp.$1, RegExp.$1.length == 1 ? o[k] : ("00" + o[k]).substr(("" + o[k]).length));
+    }
+  }
+  if (/(N+)/.test(format)) {
+    format = format.replace(RegExp.$1, monName[this.getMonth()]);
+  }
   if (/(W+)/.test(format)) {
     format = format.replace(RegExp.$1, dayName[this.getDay()]);
   }
-	return format;
+  return format;
 }
 
 Date.prototype.addMinutes = function(minutes) {
-	var copiedDate = new Date(this.getTime());
-	return new Date(copiedDate.getTime() + minutes * 60000);
+  var copiedDate = new Date(this.getTime());
+  return new Date(copiedDate.getTime() + minutes * 60000);
 }
 
 /*
  * Fix a string to 2 characters long prefixing a zero
  */
 function fixLen(inStr) {
-	if (inStr == null || inStr.length > 1)
-		return inStr;
-	return "0" + inStr;
+  if (inStr == null || inStr.length > 1)
+    return inStr;
+  return "0" + inStr;
 }
 
 /*
  * Extract parameters from URL
  */
 function getParameterByName(name) {
-	name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
-	var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex
-			.exec(location.search);
-	return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g,
-			" "));
+  name = name.replace(/[\[]/, "\\\[").replace(/[\]]/, "\\\]");
+  var regex = new RegExp("[\\?&]" + name + "=([^&#]*)"), results = regex.exec(location.search);
+  return results == null ? "" : decodeURIComponent(results[1].replace(/\+/g, " "));
+}
+
+/*
+ * Set the on screen version warning text if the version is non-current
+ */
+function setScreenMessageBasedOnVersion(vers) {
+  $(".versproblem").show();
+  $.getJSON("currentversion.json?v=" + new Date().getTime(), function(data) {
+    if (typeof data !== "undefined" && typeof data.version !== "undefined") {
+      var currentVer = parseInt(data.version, 10);
+      var requestVer = parseInt(vers, 10);
+      $(".versproblem").hide();
+      if (currentVer > requestVer) {
+        $(".verswarning").show();
+      } else if (currentVer < requestVer) {
+        $(".versbeta").show();
+      }
+    }
+  }).error(function(args) {
+    $(".versproblem").text("Error attempting to find the current version: " + JSON.stringify(args));
+  });
+}
+
+/*
+ * Adjust for viewport
+ */
+function scaleToViewport() {
+
+  // Get the width and limit to 320px to 800px
+  var viewportWidth = $(window).width();
+  if (viewportWidth > 800) {
+    viewportWidth = 800;
+  } else if (viewportWidth < 320) {
+    viewportWidth = 320;
+  }
+  viewportWidth -= 5;
+
+  // Set any element that has requested it to the required width
+  $(".vpwidth").width(viewportWidth);
+  $(".vpheight").height(viewportWidth * 250 / 318);
+
+  // Ask the charts to replot
+  if (typeof document.plot1 !== "undefined") {
+    document.plot1.replot();
+  }
+  if (typeof document.plot2 !== "undefined") {
+    document.plot2.replot();
+  }
+}
+
+/*
+ * Setup to auto adjust for viewport
+ */
+function adjustForViewport() {
+  scaleToViewport();
+  $(window).resize(scaleToViewport);
 }

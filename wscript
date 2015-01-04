@@ -6,6 +6,21 @@
 #
 
 import os.path
+import json
+
+# Get the version from appinfo.json
+json_data=open('appinfo.json')
+
+data = json.load(json_data)
+json_data.close()
+
+versionLabel = data["versionLabel"]
+versionVal = versionLabel.replace('.', '')
+versionDef = "-DVERSION=" + versionVal
+versionTxtDef = "-DVERSION_TXT=\"" + versionLabel + "\""
+
+print(versionDef)
+print(versionTxtDef)
 
 top = '.'
 out = 'build'
@@ -19,12 +34,14 @@ def configure(ctx):
 def build(ctx):
     ctx.load('pebble_sdk')
     
+    ctx.env.CFLAGS += [versionDef]
+    ctx.env.CFLAGS += [versionTxtDef]
+    
     #ctx.env.CFLAGS += ["-fstack-usage"]
     #ctx.env.CFLAGS += ["-Os"]
 
     ctx.pbl_program(source=ctx.path.ant_glob('src/**/*.c'),
                     target='pebble-app.elf')
-                    
                    
     # Concatenate all JS files into pebble-js-app.js prior to building.
     all_js = "\n".join([node.read() for node in ctx.path.ant_glob('src/js/**/*.js', excl='src/js/build/pebble-js-app.max.js src/js/build/pebble-js-app.js')])

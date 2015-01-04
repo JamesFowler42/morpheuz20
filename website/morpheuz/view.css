@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -21,17 +21,29 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
  * THE SOFTWARE.
  */
+html {
+    -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape while allowing user zoom */
+}
+ 
 body {
-    width: 318px;
+    font-size:12px;
     font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
     margin: 1px;
+}
+
+.outer {
+    width:100%;
+}
+
+.inner {
+    margin: 0 auto;
 }
 
 h2 {
     position: relative;
     top: -7px;
     margin-top: 0px;
-    font-size: 17px;
+    font-size: 141%;
     margin-bottom: 0px;
 }
 
@@ -51,14 +63,14 @@ h2 img {
 
 h3 {
     margin-top: 7px;
-    font-size: 14px;
+    font-size: 116%;
     margin-bottom: 0px;
     padding-left: 5px;
 }
 
 h4 {
     margin-top: 6px;
-    font-size: 12px;
+    font-size: 100%;
     margin-bottom: 0px;
     padding-left: 4px;
 }
@@ -68,7 +80,7 @@ h3.closer {
 }
 
 p,ul,ol {
-    font-size: 12px;
+    font-size: 100%;
     margin-top: 5px;
     margin-bottom: 5px;
 }
@@ -83,14 +95,14 @@ p.buttons {
 }
 
 #version {
-    font-size: 6px;
+    font-size: 50%;
     width: 310px;
     text-align: right;
 }
 
 .save {
     background: url('img/save.png') no-repeat 9% 45%;
-    font-size: 12px;
+    font-size: 100%;
     padding-left: 27px;
     padding-bottom: 5px;
     padding-top: 3px;
@@ -106,7 +118,7 @@ a {
 
 #mail {
     background: url('img/email-blue.png') no-repeat 5% 30%;
-    font-size: 12px;
+    font-size: 100%;
     padding-left: 27px;
     padding-bottom: 5px;
     padding-top: 3px;
@@ -122,7 +134,7 @@ a {
 #swp {
     background: url('img/exportswp.png') no-repeat 5% 30%;
     background-color: #fff;
-    font-size: 12px;
+    font-size: 100%;
     padding-left: 80px;
     padding-bottom: 5px;
     padding-top: 3px;
@@ -201,13 +213,13 @@ table.jqplot-table-legend {
 }
 
 div.jqplot-pie-series.jqplot-data-label {
-    font-size: 12px;
+    font-size: 100%;
     border-radius: 2px;
     background-color: white;
 }
 
 .statstable {
-    font-size: 12px;
+    font-size: 100%;
     width: 320px;
     padding-top: 5px;
     color: white;
@@ -235,12 +247,12 @@ div.jqplot-pie-series.jqplot-data-label {
 }
 
 .small {
-    font-size: 10px;
+    font-size: 83%;
 }
 
 .error {
     color: red;
-    font-size: 10px;
+    font-size: 83%;
 }
 
 li.grey {
@@ -289,7 +301,7 @@ span.red {
 
 .usageindent {
     padding-left: 5px;
-    font-size: 12px;
+    font-size: 100%;
     padding-right: 5px;
 }
 
@@ -322,3 +334,4 @@ input#save2.save {
 .textbox.wide {
     width: 200px;
 }
+

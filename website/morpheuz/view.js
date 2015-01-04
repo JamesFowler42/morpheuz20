@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -30,7 +30,6 @@ function mConst() {
     awakeAbove : 1000,
     lightAbove : 120,
     sampleIntervalMins : 10,
-    vers : 25,
     swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&ct=morpheuz_web",
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
@@ -306,6 +305,9 @@ function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tom
 
 $("document").ready(function() {
 
+  // Adjust page for viewport
+  adjustForViewport();
+
   // Spot if we are on iOS or not
   document.ios = navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i);
 
@@ -387,6 +389,11 @@ $("document").ready(function() {
     $("#info-message").css("display", "block");
   }
 
+  // Show version warning
+  if (!nosetOn) {
+    setScreenMessageBasedOnVersion(vers);
+  }
+
   var splitup = graph.split("!");
   var more = new Array();
 
@@ -451,7 +458,7 @@ $("document").ready(function() {
   // Prepare the graph
   $(document).ready(function() {
 
-    var plot1 = $.jqplot("chart1", [ more ], {
+    document.plot1 = $.jqplot("chart1", [ more ], {
       grid : {
         background : "#2066C7",
         gridLineColor : "#1E75D7",
@@ -517,7 +524,7 @@ $("document").ready(function() {
       }
     });
 
-    var plot2 = jQuery.jqplot("chart2", [ data2 ], {
+    document.plot2 = jQuery.jqplot("chart2", [ data2 ], {
       grid : {
         background : "#FF7D48",
         borderColor : "#FF7D48",

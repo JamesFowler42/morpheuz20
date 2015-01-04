@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,7 +27,10 @@
  */
 function makePostAjaxCall(url, msg, resp) {
   var tout = setTimeout(function() {
-    resp({ "status": 0, "errors": ["timeout"]});
+    resp({
+      "status" : 0,
+      "errors" : [ "timeout" ]
+    });
   }, mConst().timeout);
   var req = new XMLHttpRequest();
   req.open("POST", url, true);
@@ -35,8 +38,11 @@ function makePostAjaxCall(url, msg, resp) {
   req.setRequestHeader("Content-length", msg.length);
   req.setRequestHeader("Connection", "close");
   req.timeout = mConst().timeout;
-  req.ontimeout = function () { 
-    resp({ "status": 0, "errors": ["timeout"]});
+  req.ontimeout = function() {
+    resp({
+      "status" : 0,
+      "errors" : [ "timeout" ]
+    });
     clearTimeout(tout);
   };
   req.onload = function() {
@@ -50,7 +56,10 @@ function makePostAjaxCall(url, msg, resp) {
       resp(result);
     } else if (req.readyState === 4 && (req.status === 500)) {
       clearTimeout(tout);
-      resp({ "status": 0, "errors": ["500 error"]});
+      resp({
+        "status" : 0,
+        "errors" : [ "500 error" ]
+      });
     }
   };
   req.send(msg);
@@ -61,26 +70,36 @@ function makePostAjaxCall(url, msg, resp) {
  */
 function makeGetAjaxCall(url, resp) {
   var tout = setTimeout(function() {
-    resp({ "status": 0, "errors": ["timeout"]});
+    resp({
+      "status" : 0,
+      "errors" : [ "timeout" ]
+    });
   }, mConst().timeout);
   var req = new XMLHttpRequest();
   req.open("GET", url, true);
   req.setRequestHeader("Connection", "close");
   req.timeout = mConst().timeout;
-  req.ontimeout = function () { 
-    resp({ "status": 0, "errors": ["timeout"]});
+  req.ontimeout = function() {
+    resp({
+      "status" : 0,
+      "errors" : [ "timeout" ]
+    });
     clearTimeout(tout);
   };
   req.onload = function() {
     if (req.readyState === 4 && req.status === 200) {
       clearTimeout(tout);
-      resp({ "status": 1});
+      resp({
+        "status" : 1
+      });
     } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
       clearTimeout(tout);
-      resp({ "status": 0, "errors": [req.status, nvl(req.responseText, "No Msg")]});
-    } 
+      resp({
+        "status" : 0,
+        "errors" : [ req.status, nvl(req.responseText, "No Msg") ]
+      });
+    }
   };
   req.send();
 
 }
-

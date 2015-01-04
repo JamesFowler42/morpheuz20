@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -24,9 +24,6 @@
 
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
-
-#define VERSION 27
-#define VERSION_TXT "2.7"
 
 // Uncomment for release
 #undef APP_LOG
@@ -88,7 +85,11 @@ enum MorpKey {
 };
 
 enum CtrlValues {
-  CTRL_TRANSMIT_DONE = 1
+  CTRL_TRANSMIT_DONE = 1,
+  CTRL_VERSION_DONE = 2,
+  CTRL_GONEOFF_DONE = 4,
+  CTRL_DO_NEXT = 8,
+  CTRL_SET_LAST_SENT = 16
 };
 
 typedef enum {

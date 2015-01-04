@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -92,20 +92,8 @@ void start_worker() {
   AppWorkerResult result = app_worker_launch();
   if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
     show_worker();
-  } APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
-}
-
-/**
- * Close background process
- */
-static void stop_worker() {
-  bool running = app_worker_is_running();
-
-  // Toggle running state
-  if (running) {
-    AppWorkerResult result = app_worker_kill();
-    APP_LOG(APP_LOG_LEVEL_ERROR, "wkill %d", result);
   }
+  APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
 }
 
 /*
@@ -442,8 +430,6 @@ static void morpheuz_load(Window *window) {
 static void morpheuz_unload(Window *window) {
 
   hide_notice_layer(NULL);
-
-  stop_worker();
 
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
