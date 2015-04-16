@@ -129,6 +129,19 @@
             Last result: <span id="presult"></span>
           </p>
         </li>
+        <li id="lipushover" class="grey">
+          <p>LIFX</p>
+           <div class="row">
+           <div class="cell"><label for="lifxToken">Token:</label></div>
+           <div class="cell"><input id="lifxToken" type="text" maxlength="100" class="textbox wide"/></div>
+           </div>
+          <div class="row">
+          <div class="cell"><label for="lifxTime">Fade-in Time:</label></div>
+          <div class="cell"><input id="lifxTime" type="number" maxlength="4" class="textbox wide"/></div>
+          </div>
+          <p class="small">LIFX values will only saved by pressing Save.</p>
+          <p class="small">Get your LIFX token by logging into your profile at <a href="cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.</p>
+        </li>
         <li class="grey noset ios">
           <p class="paddedbottom">Manual Healthkit export via Smartwatch Pro</p> <a id="swp" href="swpro2hk://">Export</a>
           <p class="small" id="swpnodata">The recorded data is not yet complete enough for export.</p>
