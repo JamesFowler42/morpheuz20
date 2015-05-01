@@ -30,7 +30,7 @@ function mConst() {
     awakeAbove : 1000,
     lightAbove : 120,
     sampleIntervalMins : 10,
-    swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&ct=morpheuz_web",
+    swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&pt=409665&ct=morpheuz_web",
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00"
