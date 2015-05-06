@@ -34,6 +34,18 @@
 #define F_DONE 5
 #define MAX_SETTINGS_FIELDS 6
 
+#ifdef PBL_COLOR
+  #define DONE_LEFT 65
+  #define DONE_TOP 130
+  #define SA_LEFT 83
+  #define SA_TOP 27
+#else
+  #define DONE_LEFT 77
+  #define DONE_TOP 118
+  #define SA_LEFT 94
+  #define SA_TOP 1
+#endif
+
 // Position and size info
 #define SETTING_TITLE_LEFT 5
 #define SETTING_FROM_TOP 50
@@ -62,12 +74,13 @@ static char value_text[5][MAX_SETTINGS_FIELDS];
 
 static int8_t current_field;
 
+
 /*
  * Highlight or unhighlight a field
  */
 static void highlight_field(int8_t id, bool hilight) {
-  text_layer_set_background_color(fields[id], hilight ? GColorBlack : GColorWhite);
-  text_layer_set_text_color(fields[id], hilight ? GColorWhite : GColorBlack);
+  text_layer_set_background_color(fields[id], hilight ? HIGHLIGHT_BG_COLOR : NON_HIGHLIGHT_BG_COLOR);
+  text_layer_set_text_color(fields[id], hilight ? HIGHLIGHT_FG_COLOR : NON_HIGHLIGHT_FG_COLOR);
   if (hilight) {
     action_bar_layer_set_icon(button_layer, BUTTON_ID_UP, id == F_DONE ? tick_button_res : up_button_res);
     action_bar_layer_set_icon(button_layer, BUTTON_ID_DOWN, id == F_DONE ? tick_button_res : down_button_res);
@@ -210,6 +223,8 @@ static void set_values() {
 static void create_settings_window(void) {
   setting_window = window_create();
   Layer *window_layer = window_get_root_layer(setting_window);
+  
+  window_set_background_color(setting_window, SETTING_BACKGROUND_COLOR);
 
   // Get the resources we need
   up_button_res = gbitmap_create_with_resource(RESOURCE_ID_PICK_UP);
@@ -222,50 +237,55 @@ static void create_settings_window(void) {
   // button_layer
   button_layer = action_bar_layer_create();
   action_bar_layer_add_to_window(button_layer, setting_window);
-  action_bar_layer_set_background_color(button_layer, GColorBlack);
+  action_bar_layer_set_background_color(button_layer, ACTION_BAR_BACKGROUND_COLOR);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_UP, up_button_res);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_SELECT, next_button_res);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_DOWN, down_button_res);
+  #ifdef PBL_COLOR 
+    action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_UP, ActionBarLayerIconPressAnimationMoveUp);
+    action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_SELECT, ActionBarLayerIconPressAnimationMoveRight);
+    action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_DOWN, ActionBarLayerIconPressAnimationMoveDown);
+  #endif
   layer_add_child(window_layer, (Layer *) button_layer);
   action_bar_layer_set_click_config_provider(button_layer, setting_click_config_provider);
-
+  
   // title_layer
-  title_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 6, 90, SETTING_SMALL_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, small_font, GTextAlignmentLeft);
+  title_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 6, 90, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
   text_layer_set_text(title_layer, SMART_ALARM);
 
   // from_layer
-  from_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 30, 55, SETTING_SMALL_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, small_font, GTextAlignmentLeft);
+  from_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 30, 55, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
   text_layer_set_text(from_layer, EARLIEST);
 
   // fields[FROM_HOUR]
-  fields[F_FROM_HOUR] = macro_text_layer_create(GRect(20, SETTING_FROM_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
+  fields[F_FROM_HOUR] = macro_text_layer_create(GRect(20, SETTING_FROM_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
   // from_colon_layer
-  from_colon_layer = macro_text_layer_create(GRect(43, SETTING_FROM_TOP, 13, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
+  from_colon_layer = macro_text_layer_create(GRect(43, SETTING_FROM_TOP, 13, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
   text_layer_set_text(from_colon_layer, COLON);
 
   // fields[FROM_MINUTE]
-  fields[F_FROM_MINUTE] = macro_text_layer_create(GRect(52, SETTING_FROM_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
+  fields[F_FROM_MINUTE] = macro_text_layer_create(GRect(52, SETTING_FROM_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
   // to_layer
-  to_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 81, 48, SETTING_SMALL_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, small_font, GTextAlignmentLeft);
+  to_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 81, 48, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
   text_layer_set_text(to_layer, LATEST);
 
   // fields[TO_HOUR]
-  fields[F_TO_HOUR] = macro_text_layer_create(GRect(20, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
+  fields[F_TO_HOUR] = macro_text_layer_create(GRect(20, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
   // to_color_layer
-  to_color_layer = macro_text_layer_create(GRect(43, SETTING_TO_TOP, 13, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
+  to_color_layer = macro_text_layer_create(GRect(43, SETTING_TO_TOP, 13, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
   text_layer_set_text(to_color_layer, COLON);
 
   // fields[TO_MINUTE]
-  fields[F_TO_MINUTE] = macro_text_layer_create(GRect(52, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
-
+  fields[F_TO_MINUTE] = macro_text_layer_create(GRect(52, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
+  
   // fields[SMART_ALARM]
-  fields[F_SMART_ALARM] = macro_text_layer_create(GRect(94, 1, 25, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
-
+  fields[F_SMART_ALARM] = macro_text_layer_create(GRect(SA_LEFT, SA_TOP, 25, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
+  
   // fields[DONE]
-  fields[F_DONE] = macro_text_layer_create(GRect(77, 118, 45, SETTING_BIG_FONT_HEIGHT), window_layer, GColorBlack, GColorWhite, large_font, GTextAlignmentCenter);
+  fields[F_DONE] = macro_text_layer_create(GRect(DONE_LEFT, DONE_TOP, 45, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
   current_field = F_SMART_ALARM;
 

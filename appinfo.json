@@ -1,184 +1,25 @@
 {
-    "versionLabel": "2.8",
-    "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
     "appKeys": {
-        "keyPoint": 1,
+        "keyBase": 5,
         "keyCtrl": 2,
         "keyFrom": 3,
-        "keyTo": 4,
-        "keyBase": 5,
-        "keyVersion": 6,
         "keyGoneoff": 7,
-        "keyTransmit": 8
+        "keyPoint": 1,
+        "keyTo": 4,
+        "keyTransmit": 8,
+        "keyVersion": 6
     },
-    "longName": "Morpheuz",
-    "versionCode": 28,
     "capabilities": [
         "configurable"
     ],
-    "shortName": "Morpheuz",
     "companyName": "James Fowler",
-    "watchapp": {
-        "watchface": false
-    },
+    "longName": "Morpheuz",
+    "projectType": "native",
     "resources": {
         "media": [
             {
-                "characterRegex": "[0-9:]",
-                "type": "font",
-                "name": "FONT_DIGITAL_38",
-                "file": "fonts/axaxax-bd-1.ttf"
-            },
-            {
-                "characterRegex": "[a-zA-Z0-9:.\\-!() \\xA9]",
-                "type": "font",
-                "name": "FONT_DIGITAL_16",
-                "file": "fonts/axaxax-bd-1.ttf"
-            },
-            {
-                "type": "png",
-                "name": "ALARM_ICON",
-                "file": "images/alarm-icon.png"
-            },
-            {
-                "type": "png",
-                "name": "ALARM_RING_ICON",
-                "file": "images/alarm-ring-icon.png"
-            },
-            {
-                "menuIcon": true,
-                "type": "png",
-                "name": "IMAGE_ICON",
-                "file": "images/icon.png"
-            },
-            {
-                "type": "png",
-                "name": "BATTERY_CHARGE",
-                "file": "images/battery_charge.png"
-            },
-            {
-                "type": "png",
-                "name": "BATTERY_ICON",
-                "file": "images/battery_icon.png"
-            },
-            {
-                "type": "png",
-                "name": "BLUETOOTH_ICON",
-                "file": "images/bluetooth.png"
-            },
-            {
-                "type": "png",
-                "name": "COMMS_ICON",
-                "file": "images/comms.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_LOGO_BED",
-                "file": "images/logo-bed.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_LOGO_SLEEPER",
-                "file": "images/logo-sleeper.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_LOGO_HEAD",
-                "file": "images/logo-head.png"
-            },
-            {
-                "type": "png",
-                "name": "IMAGE_LOGO_TEXT",
-                "file": "images/logo-text.png"
-            },
-            {
-                "type": "png",
-                "name": "ICON_RECORD",
-                "file": "images/record.png"
-            },
-            {
-                "type": "png",
-                "name": "KEYBOARD_BG",
-                "file": "images/keyboard-black.png"
-            },
-            {
-                "type": "png",
-                "name": "KEYBOARD_BG_WHITE",
-                "file": "images/keyboard-white.png"
-            },
-            {
-                "type": "png",
-                "name": "IGNORE",
-                "file": "images/ignore.png"
-            },
-            {
-                "type": "png",
-                "name": "ACTIVITY_ICON",
-                "file": "images/activity.png"
-            },
-            {
-                "type": "png",
-                "name": "SMALL_LOGO",
-                "file": "images/small-logo.png"
-            },
-            {
-                "type": "png",
-                "name": "WEEKEND_ICON",
-                "file": "images/weekend.png"
-            },
-            {
-                "type": "png",
-                "name": "MENU_NO",
-                "file": "images/menu_no.png"
-            },
-            {
-                "type": "png",
-                "name": "MENU_YES",
-                "file": "images/menu_yes.png"
-            },
-            {
-                "type": "raw",
-                "name": "NOTICE_DATA_WILL_BE_RESENT_SHORTLY",
-                "file": "text/data-will-be-resent-shortly.txt"
-            },
-            {
-                "type": "raw",
-                "name": "NOTICE_END_OF_RECORDING",
-                "file": "text/end-of-recording.txt"
-            },
-            {
-                "type": "raw",
-                "name": "NOTICE_NEED_SMART_ALARM",
-                "file": "text/need-smart-alarm.txt"
-            },
-            {
-                "type": "raw",
-                "name": "NOTICE_RESET_TO_START_USING",
-                "file": "text/reset-to-start-using.txt"
-            },
-            {
-                "type": "raw",
-                "name": "NOTICE_TIMER_RESET_ALARM",
-                "file": "text/timer-reset-alarm.txt"
-            },
-            {
-                "type": "raw",
-                "name": "NOTICE_TIMER_RESET_NOALARM",
-                "file": "text/timer-reset-noalarm.txt"
-            },
-            {
-                "file": "images/tick.png",
-                "name": "PICK_TICK",
-                "type": "png"
-            },
-            {
-                "file": "images/up.png",
-                "name": "PICK_UP",
-                "type": "png"
-            },
-            {
-                "file": "images/down.png",
-                "name": "PICK_DOWN",
+                "file": "images/export.png",
+                "name": "EXPORT",
                 "type": "png"
             },
             {
@@ -187,10 +28,175 @@
                 "type": "png"
             },
             {
-                "file": "images/export.png",
-                "name": "EXPORT",
+                "file": "images/down.png",
+                "name": "PICK_DOWN",
                 "type": "png"
+            },
+            {
+                "file": "images/up.png",
+                "name": "PICK_UP",
+                "type": "png"
+            },
+            {
+                "file": "images/tick.png",
+                "name": "PICK_TICK",
+                "type": "png"
+            },
+            {
+                "file": "data/timer-reset-noalarm.txt",
+                "name": "NOTICE_TIMER_RESET_NOALARM",
+                "type": "raw"
+            },
+            {
+                "file": "data/timer-reset-alarm.txt",
+                "name": "NOTICE_TIMER_RESET_ALARM",
+                "type": "raw"
+            },
+            {
+                "file": "data/reset-to-start-using.txt",
+                "name": "NOTICE_RESET_TO_START_USING",
+                "type": "raw"
+            },
+            {
+                "file": "data/need-smart-alarm.txt",
+                "name": "NOTICE_NEED_SMART_ALARM",
+                "type": "raw"
+            },
+            {
+                "file": "data/end-of-recording.txt",
+                "name": "NOTICE_END_OF_RECORDING",
+                "type": "raw"
+            },
+            {
+                "file": "data/data-will-be-resent-shortly.txt",
+                "name": "NOTICE_DATA_WILL_BE_RESENT_SHORTLY",
+                "type": "raw"
+            },
+            {
+                "file": "images/menu_yes.png",
+                "name": "MENU_YES",
+                "type": "png"
+            },
+            {
+                "file": "images/menu_no.png",
+                "name": "MENU_NO",
+                "type": "png"
+            },
+            {
+                "file": "images/weekend.png",
+                "name": "WEEKEND_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/small-logo.png",
+                "name": "SMALL_LOGO",
+                "type": "png"
+            },
+            {
+                "file": "images/activity.png",
+                "name": "ACTIVITY_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/ignore.png",
+                "name": "IGNORE",
+                "type": "png"
+            },
+            {
+                "file": "images/keyboard-white.png",
+                "name": "KEYBOARD_BG_WHITE",
+                "type": "png"
+            },
+            {
+                "file": "images/keyboard-black.png",
+                "name": "KEYBOARD_BG",
+                "type": "png"
+            },
+            {
+                "file": "images/record.png",
+                "name": "ICON_RECORD",
+                "type": "png"
+            },
+            {
+                "file": "images/logo-text.png",
+                "name": "IMAGE_LOGO_TEXT",
+                "type": "png"
+            },
+            {
+                "file": "images/logo-head.png",
+                "name": "IMAGE_LOGO_HEAD",
+                "type": "png"
+            },
+            {
+                "file": "images/logo-sleeper.png",
+                "name": "IMAGE_LOGO_SLEEPER",
+                "type": "png"
+            },
+            {
+                "file": "images/logo-bed.png",
+                "name": "IMAGE_LOGO_BED",
+                "type": "png"
+            },
+            {
+                "file": "images/comms.png",
+                "name": "COMMS_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/bluetooth.png",
+                "name": "BLUETOOTH_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/battery_icon.png",
+                "name": "BATTERY_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/battery_charge.png",
+                "name": "BATTERY_CHARGE",
+                "type": "png"
+            },
+            {
+                "file": "images/icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/alarm-ring-icon.png",
+                "name": "ALARM_RING_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/alarm-icon.png",
+                "name": "ALARM_ICON",
+                "type": "png"
+            },
+            {
+                "characterRegex": "[a-zA-Z0-9:.\\-!() \\xA9]",
+                "file": "fonts/axaxax-bd-1.ttf",
+                "name": "FONT_DIGITAL_16",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[0-9:]",
+                "file": "fonts/axaxax-bd-1.ttf",
+                "name": "FONT_DIGITAL_38",
+                "type": "font"
             }
         ]
+    },
+    "sdkVersion": "3",
+    "shortName": "Morpheuz",
+    "targetPlatforms": [
+        "aplite",
+        "basalt"
+    ],
+    "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
+    "versionCode": 29,
+    "versionLabel": "2.9",
+    "watchapp": {
+        "watchface": false
     }
 }

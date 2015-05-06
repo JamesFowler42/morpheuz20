@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define ANALOGUE_START GRect(0, 169, 144, 144)
 #define ANALOGUE_FINISH GRect(0, 24, 144, 144)
+#define ANALOGUE_START GRect(0, 169, 144, 144)
 
 #define TEXT_12 "12"
 #define TEXT_3 "3"

@@ -28,6 +28,7 @@
 #include "analogue.h"
 
 static uint16_t biggest_movement_in_one_minute = 0;
+static bool accel_handler_called = false;
 
 /*
  * Set the on-screen status text
@@ -50,10 +51,13 @@ static void validate_weekend() {
   }
 }
 
+
+
 /*
  * Do something with samples every minute
  */
 uint16_t every_minute_processing() {
+  set_failure_text(accel_handler_called ? EMPTY : NO_ACCEL_CALLBACK);
   uint16_t last_biggest = biggest_movement_in_one_minute;
   validate_weekend();
   power_nap_check(biggest_movement_in_one_minute);
@@ -99,6 +103,9 @@ static void do_axis(int16_t val, uint16_t *biggest, uint32_t avg) {
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
+  // Remember this
+  accel_handler_called = true;
+  
   // Average the data
   uint32_t avg_x = 0;
   uint32_t avg_y = 0;

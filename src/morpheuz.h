@@ -25,6 +25,9 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
+#define VERSION 29
+#define VERSION_TXT "2.9"
+  
 // Uncomment for release
 #undef APP_LOG
 #define APP_LOG(level, fmt, args...)
@@ -48,22 +51,52 @@
 #define MENU_ACTION_MS 500
 #define WEEKEND_PERIOD (12*60*60)
 
-#define BED_START GRect(-144-8, 17, 127, 70)
 #define BED_FINISH GRect(8, 17, 127, 70)
-#define SLEEPER_START GRect(25+144, 24, 110, 29)
 #define SLEEPER_FINISH GRect(25, 24, 110, 29)
-#define HEAD_START GRect(25, -24, 19, 16)
 #define HEAD_FINISH GRect(25, 24, 19, 16)
-#define TEXT_START GRect(26, 25, 92, 15)
 #define TEXT_FINISH GRect(26, 72, 92, 15)
-#define BLOCK_START GRect(0,91,144,78)
 #define BLOCK_FINISH GRect(0,169,144,78)
 #define MOON_FINISH GRect(6, 5, 58, 46)
-#define MOON_START GRect(144+6, 72, 58, 46)
 #define ICON_TOPS 1
 #define ICON_PAD 5
 #define ICON_PAD_BATTERY 4
 #define ICON_BAR_WIDTH 118
+#define BED_START GRect(-144-8, 17, 127, 70)
+#define SLEEPER_START GRect(25+144, 24, 110, 29)
+#define HEAD_START GRect(25, -24, 19, 16)
+#define TEXT_START GRect(26, 25, 92, 15)
+#define BLOCK_START GRect(0,91,144,78)
+#define MOON_START GRect(144+6, 72, 58, 46)  
+
+#ifdef PBL_COLOR 
+  #define BACKGROUND_COLOR GColorDukeBlue  
+  #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
+  #define ACTION_BAR_BACKGROUND_COLOR GColorWhite
+  #define HIGHLIGHT_BG_COLOR GColorBlueMoon
+  #define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR  
+  #define HIGHLIGHT_FG_COLOR GColorWhite
+  #define NON_HIGHLIGHT_FG_COLOR GColorWhite 
+  #define FROM_TIME_COLOR GColorGreen
+  #define TO_TIME_COLOR GColorRed
+  #define START_TIME_COLOR GColorYellow
+  #define PROGRESS_COLOR GColorLightGray
+  #define ANALOGUE_COLOR GColorWhite
+  #define FAILURE_COLOR GColorRed
+#else
+  #define BACKGROUND_COLOR GColorBlack  
+  #define SETTING_BACKGROUND_COLOR GColorWhite
+  #define ACTION_BAR_BACKGROUND_COLOR GColorBlack
+  #define HIGHLIGHT_BG_COLOR GColorBlack
+  #define NON_HIGHLIGHT_BG_COLOR GColorWhite  
+  #define HIGHLIGHT_FG_COLOR GColorWhite
+  #define NON_HIGHLIGHT_FG_COLOR GColorBlack  
+  #define FROM_TIME_COLOR GColorWhite
+  #define TO_TIME_COLOR GColorWhite
+  #define START_TIME_COLOR GColorWhite
+  #define PROGRESS_COLOR GColorWhite
+  #define ANALOGUE_COLOR GColorWhite
+  #define FAILURE_COLOR GColorWhite
+#endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
 #define bitmap_layer_get_layer_jf(x) ((Layer *)(x))
@@ -218,5 +251,6 @@ void open_comms();
 void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
+void set_failure_text(char *failure);
 
 #endif /* MORPHEUZ_H_ */

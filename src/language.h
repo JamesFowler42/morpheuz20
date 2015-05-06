@@ -67,5 +67,8 @@
 #define COPYRIGHT "\n© 2015\nJames Fowler"
 
 #define MORPHEUZ "Morpheuz"
+  
+#define EMPTY ""
+#define NO_ACCEL_CALLBACK "!"
 
 #endif /* LANGUAGE_H_ */

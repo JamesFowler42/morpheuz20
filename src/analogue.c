@@ -88,12 +88,16 @@ static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int st
  */
 static void bg_update_proc(Layer *layer, GContext *ctx) {
 
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, BACKGROUND_COLOR);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, ANALOGUE_COLOR);
 
-  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_color(ctx, ANALOGUE_COLOR);
+  
+  #ifdef PBL_COLOR
+    graphics_context_set_compositing_mode(ctx, GCompOpSet);
+  #endif
 
   // Hours and minute marks
   draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7);
@@ -109,19 +113,25 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   GBitmap *bitmap = gbitmap_create_with_resource(RESOURCE_ID_SMALL_LOGO);
   graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(144/2-25, 144/2-15-31+10, 50, 31));
   gbitmap_destroy(bitmap);
+  
+
 
   // Start and first and last times for smart alarm
   if (show_smart_points) {
+    graphics_context_set_stroke_color(ctx, FROM_TIME_COLOR);
     draw_marks(layer, ctx, OUTER_STOP, OUTER, from_time, from_time + 1, 1, 7);
+    graphics_context_set_stroke_color(ctx, TO_TIME_COLOR);
     draw_marks(layer, ctx, OUTER_STOP, OUTER, to_time, to_time + 1, 1, 7);
   }
 
   // Show reset point
   if (start_time != -1) {
+    graphics_context_set_stroke_color(ctx, START_TIME_COLOR);
     draw_marks(layer, ctx, OUTER_STOP, OUTER, start_time, start_time + 1, 1, 7);
 
     // Progress line
     if (progress_1 != -1) {
+      graphics_context_set_stroke_color(ctx, PROGRESS_COLOR);
       draw_marks(layer, ctx, PROGRESS_STOP, PROGRESS, start_time, progress_1, 1, 1);
       if (progress_2 != -1) {
         draw_marks(layer, ctx, PROGRESS_STOP, PROGRESS, 0, progress_2, 1, 1);
@@ -239,14 +249,17 @@ void analogue_window_load(Window *window) {
 
   layer_set_update_proc(hands_layer, hands_update_proc);
   layer_add_child(analgue_layer, hands_layer);
+  
 }
 
 /*
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-  animation_unschedule(animation);
-  animation_destroy(animation);
+  #ifndef PBL_COLOR
+    animation_unschedule(animation);
+    animation_destroy(animation);
+  #endif
   if (is_visible) {
     bed_visible(false);
   }

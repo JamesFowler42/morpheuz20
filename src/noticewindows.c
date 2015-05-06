@@ -62,8 +62,10 @@ void hide_notice_layer(void *data) {
  * End of notice window animation
  */
 static void moon_animation_stopped(Animation *animation, bool finished, void *data) {
-  animation_unschedule(animation);
-  animation_destroy(animation);
+  #ifndef PBL_COLOR
+    animation_unschedule(animation);
+    animation_destroy(animation);
+  #endif
 }
 
 static void load_resource_into_buffer(uint32_t resource_id) {
@@ -92,13 +94,15 @@ void show_notice(uint32_t resource_id) {
   // Bring up notice
   notice_showing = true;
   notice_window = window_create();
-  window_set_fullscreen(notice_window, true);
+  #ifndef PBL_COLOR
+    window_set_fullscreen(notice_window, true);
+  #endif
   window_stack_push(notice_window, true /* Animated */);
 
   bool invert = get_config_data()->invert;
   GColor fcolor = invert ? GColorBlack : GColorWhite;
 
-  window_set_background_color(notice_window, invert ? GColorWhite : GColorBlack);
+  window_set_background_color(notice_window, invert ? GColorWhite : BACKGROUND_COLOR);
 
   Layer *window_layer = window_get_root_layer(notice_window);
 
