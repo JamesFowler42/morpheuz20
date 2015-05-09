@@ -176,7 +176,6 @@ typedef struct {
   bool has_been_reset;
   bool gone_off_sent;
   bool transmit_sent;
-  int32_t tm_gmtoff;
 } InternalData;
 
 typedef struct {
@@ -253,9 +252,5 @@ void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
 void set_failure_text(char *failure);
-
-#ifdef PBL_COLOR 
-  time_t time_local(time_t *timein);
-#endif
 
 #endif /* MORPHEUZ_H_ */

@@ -59,6 +59,19 @@ function resetWithPreserve() {
 }
 
 /*
+ * Which platform
+ */
+function isBasalt() {
+  if (Pebble.getActiveWatchInfo) {
+    watchinfo= Pebble.getActiveWatchInfo();
+    platform=watchinfo.platform;
+    return (platform === "basalt");
+  } else {
+    return false;
+  }
+}
+
+/*
  * Store data returned from the watch
  */
 function storePointInfo(point, biggest) {
@@ -118,9 +131,15 @@ Pebble.addEventListener("appmessage", function(e) {
   // Incoming origin timestamp - this is a reset
   if (typeof e.payload.keyBase !== "undefined") {
     var base = parseInt(e.payload.keyBase, 10);
+    console.log("MSG base (watch)=" + base);
     // Watch delivers local time in seconds...
-    base = (base + (new Date().getTimezoneOffset() * 60)) * 1000;
-    console.log("MSG base=" + base);
+    var offset = 0;
+    if (!isBasalt()) {
+      offset = new Date().getTimezoneOffset() * 60;
+    }
+    console.log("offset = " + offset);
+    base = (base + offset) * 1000;
+    console.log("MSG base (js)=" + base);
     resetWithPreserve();
     window.localStorage.setItem("base", base);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
