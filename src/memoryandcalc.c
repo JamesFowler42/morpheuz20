@@ -276,6 +276,12 @@ void reset_sleep_period() {
   clear_internal_data();
   time_t now = time(NULL);
   internal_data.base = now;
+  #ifdef PBL_COLOR  
+    struct tm *local = localtime(&now);
+    internal_data.tm_gmtoff = local->tm_gmtoff;
+  #else
+    internal_data.tm_gmtoff = 0;
+  #endif
   internal_data.last_sent = LAST_SENT_INIT;
   internal_data.has_been_reset = true;
   set_icon(false, IS_RECORD);
@@ -442,7 +448,7 @@ static void transmit_points_or_background_data(int8_t last_sent) {
       send_to_phone(KEY_TO, config_data.smart ? (int32_t) config_data.to : -1);
       break;
     case -1:
-      send_to_phone(KEY_BASE, internal_data.base);
+      send_to_phone(KEY_BASE, internal_data.base + internal_data.tm_gmtoff);
       break;
     default:
       send_point(last_sent, internal_data.points[last_sent], internal_data.ignore[last_sent]);

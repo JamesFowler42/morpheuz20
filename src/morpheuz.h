@@ -25,8 +25,8 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 29
-#define VERSION_TXT "2.9"
+#define VERSION 30
+#define VERSION_TXT "3.0"
   
 // Uncomment for release
 #undef APP_LOG
@@ -176,6 +176,7 @@ typedef struct {
   bool has_been_reset;
   bool gone_off_sent;
   bool transmit_sent;
+  int32_t tm_gmtoff;
 } InternalData;
 
 typedef struct {
@@ -252,5 +253,9 @@ void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
 void set_failure_text(char *failure);
+
+#ifdef PBL_COLOR 
+  time_t time_local(time_t *timein);
+#endif
 
 #endif /* MORPHEUZ_H_ */
