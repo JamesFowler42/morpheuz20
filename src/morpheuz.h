@@ -77,33 +77,35 @@
 #define MOON_START GRect(144+6, 72, 58, 46)  
 
 #ifdef PBL_COLOR 
-#define BACKGROUND_COLOR GColorDukeBlue
-#define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
-#define ACTION_BAR_BACKGROUND_COLOR GColorWhite
-#define HIGHLIGHT_BG_COLOR GColorBlueMoon
-#define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR
-#define HIGHLIGHT_FG_COLOR GColorWhite
-#define NON_HIGHLIGHT_FG_COLOR GColorWhite
-#define FROM_TIME_COLOR GColorGreen
-#define TO_TIME_COLOR GColorRed
-#define START_TIME_COLOR GColorYellow
-#define PROGRESS_COLOR GColorLightGray
-#define ANALOGUE_COLOR GColorWhite
-#define FAILURE_COLOR GColorRed
+  #define BACKGROUND_COLOR GColorDukeBlue
+  #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
+  #define ACTION_BAR_BACKGROUND_COLOR GColorWhite
+  #define HIGHLIGHT_BG_COLOR GColorBlueMoon
+  #define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR
+  #define HIGHLIGHT_FG_COLOR GColorWhite
+  #define NON_HIGHLIGHT_FG_COLOR GColorWhite
+  #define FROM_TIME_COLOR GColorGreen
+  #define TO_TIME_COLOR GColorRed
+  #define START_TIME_COLOR GColorYellow
+  #define PROGRESS_COLOR GColorLightGray
+  #define ANALOGUE_COLOR GColorWhite
+  #define FAILURE_COLOR GColorRed
+  #define BATTERY_BAR_COLOR GColorYellow
 #else
-#define BACKGROUND_COLOR GColorBlack
-#define SETTING_BACKGROUND_COLOR GColorWhite
-#define ACTION_BAR_BACKGROUND_COLOR GColorBlack
-#define HIGHLIGHT_BG_COLOR GColorBlack
-#define NON_HIGHLIGHT_BG_COLOR GColorWhite
-#define HIGHLIGHT_FG_COLOR GColorWhite
-#define NON_HIGHLIGHT_FG_COLOR GColorBlack
-#define FROM_TIME_COLOR GColorWhite
-#define TO_TIME_COLOR GColorWhite
-#define START_TIME_COLOR GColorWhite
-#define PROGRESS_COLOR GColorWhite
-#define ANALOGUE_COLOR GColorWhite
-#define FAILURE_COLOR GColorWhite
+  #define BACKGROUND_COLOR GColorBlack
+  #define SETTING_BACKGROUND_COLOR GColorWhite
+  #define ACTION_BAR_BACKGROUND_COLOR GColorBlack
+  #define HIGHLIGHT_BG_COLOR GColorBlack
+  #define NON_HIGHLIGHT_BG_COLOR GColorWhite
+  #define HIGHLIGHT_FG_COLOR GColorWhite
+  #define NON_HIGHLIGHT_FG_COLOR GColorBlack
+  #define FROM_TIME_COLOR GColorWhite
+  #define TO_TIME_COLOR GColorWhite
+  #define START_TIME_COLOR GColorWhite
+  #define PROGRESS_COLOR GColorWhite
+  #define ANALOGUE_COLOR GColorWhite
+  #define FAILURE_COLOR GColorWhite
+  #define BATTERY_BAR_COLOR GColorWhite
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation

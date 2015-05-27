@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn */
 
 /*
  * Reset log
@@ -45,6 +45,8 @@ function resetWithPreserve() {
   var usage = window.localStorage.getItem("usage");
   var autoReset = window.localStorage.getItem("autoReset");
   var quote = window.localStorage.getItem("quote");
+  var lifxToken = window.localStorage.getItem("lifx-token");
+  var lifxTime = window.localStorage.getItem("lifx-time");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -62,6 +64,8 @@ function resetWithPreserve() {
   window.localStorage.setItem("usage", nvl(usage, "Y"));
   window.localStorage.setItem("autoReset", nvl(autoReset, "0"));
   window.localStorage.setItem("quote", nvl(quote, ""));
+  window.localStorage.setItem("lifx-token", nvl(lifxToken, ""));
+  window.localStorage.setItem("lifx-time", nvl(lifxTime, ""));
 }
 
 /*
@@ -204,11 +208,11 @@ Pebble.addEventListener("appmessage", function(e) {
       var minutesStr = fixLen(String(minutes));
       goneoff = hoursStr + minutesStr;
     }
-    turnLifxLightsOn();
     console.log("MSG goneoff=" + goneoff);
     window.localStorage.setItem("goneOff", goneoff);
     ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
     addSmartAlarmPin();
+    turnLifxLightsOn();
   }
 
   // Incoming data point
@@ -319,6 +323,8 @@ function buildUrl(noset) {
   var swpstat = "";
   var exptime = "";
   var usage = "";
+  var lifxToken = "";
+  var lifxTime = "";
   if (noset === "N") {
     pouser = nvl(window.localStorage.getItem("pouser"), "");
     postat = nvl(window.localStorage.getItem("postat"), "");

@@ -22,8 +22,8 @@
  * THE SOFTWARE.
  */
 
-/*global mConst, clearTimeout, nvl */
-/*exported makePostAjaxCall, makeGetAjaxCall */
+/*global mConst, clearTimeout, nvl, window, btoa, FormData */
+/*exported makePostAjaxCall, makeGetAjaxCall, turnLifxLightsOn */
 
 /*
  * Standard Post Ajax call routine
@@ -113,7 +113,11 @@ function makeGetAjaxCall(url, resp) {
  */
 function turnLifxLightsOn() {
   if (window.localStorage.getItem("lifx-token") && window.localStorage.getItem("lifx-time")) {
-    var token = window.localStorage.getItem("lifxtoken"), fadeInTime = window.localStorage.getItem("lifxtime"), url = "https://api.lifx.com/v1beta1/lights/all/power", method = "PUT", data = new FormData();
+    var token = window.localStorage.getItem("lifxtoken");
+    var fadeInTime = window.localStorage.getItem("lifxtime");
+    var url = "https://api.lifx.com/v1beta1/lights/all/power";
+    var method = "PUT";
+    var data = new FormData();
 
     data.append('state', 'on');
     data.append('duration', fadeInTime);
@@ -127,6 +131,6 @@ function turnLifxLightsOn() {
 
     req.onload = function() {
       //response
-    }
+    };
   }
 }

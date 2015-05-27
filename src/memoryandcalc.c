@@ -468,7 +468,7 @@ static void transmit_data() {
 
   // Retry will occur on the next minute, so no connection, no sweat
   if (!bluetooth_connection_service_peek()) {
-    previous_to_phone = 0;
+    previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
     return;
   }
 
@@ -501,7 +501,7 @@ static void transmit_next_data(void *data) {
   if (internal_data.last_sent >= internal_data.highest_entry) {
     if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
       send_to_phone(KEY_GONEOFF, internal_data.gone_off);
-    } else if (!internal_data.transmit_sent && at_limit) {
+    } else if (!internal_data.transmit_sent && at_limit && internal_data.has_been_reset) {
       send_to_phone(KEY_TRANSMIT, 0);
     }
     return;

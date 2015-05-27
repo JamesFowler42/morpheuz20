@@ -81,7 +81,18 @@ static MenuDef menu_def[] = { {MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm}
   { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend},
   { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz}};
 #else
-static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm }, { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm }, { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment }, { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period }, { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm }, { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode }, { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle }, { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap }, { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert }, { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue }, { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend }, { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz } };
+static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm }, 
+  { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm }, 
+  { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment }, 
+  { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period }, 
+  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm }, 
+  { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode }, 
+  { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle }, 
+  { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap }, 
+  { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert }, 
+  { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue }, 
+  { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend }, 
+  { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz } };
 #endif
 
 /*

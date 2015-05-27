@@ -385,6 +385,13 @@ $("document").ready(function() {
     $("#liswp").addClass("red");
     $("#swpstat").addClass("red");
   }
+  
+  // Set the status bullets for LIFX
+  if (lifxToken === "") {
+    $("#lilifx").addClass("blue");
+  } else {
+    $("#lilifx").addClass("green");
+  }
 
   $("#version").text(parseInt(vers, 10) / 10);
   $("#sleep-time").text(new Date(base).format(mConst().displayDateFmt));

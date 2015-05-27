@@ -44,7 +44,9 @@ static BitmapLayerComp logo_sleeper;
 static BitmapLayerComp logo_text;
 static BitmapLayerComp logo_head;
 
-#ifndef PBL_COLOR
+#ifdef PBL_COLOR
+static TextLayer *text_time_shadow_layer;
+#else
 static InverterLayer *full_inverse_layer;
 #endif
 
@@ -133,7 +135,7 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *runn
   if (!battery_plugged) {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
     graphics_context_set_stroke_color(ctx, BACKGROUND_COLOR);
-    graphics_context_set_fill_color(ctx, GColorWhite);
+    graphics_context_set_fill_color(ctx, BATTERY_BAR_COLOR);
     graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, battery_level / 9, 4), 0, GCornerNone);
   } else {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
@@ -239,6 +241,9 @@ static void update_clock() {
   if (time_text[4] == ' ')
     time_text[4] = '\0';
   text_layer_set_text(text_time_layer, time_text);
+  #ifdef PBL_COLOR
+     text_layer_set_text(text_time_shadow_layer, time_text); 
+  #endif
   analogue_minute_tick();
   last_clock_update = time(NULL);
 }
@@ -395,8 +400,12 @@ static void morpheuz_load(Window *window) {
 
   version_text = macro_text_layer_create(GRect(26, 43, 92, 30), window_layer, GColorWhite, GColorClear, notice_font, GTextAlignmentCenter);
   text_layer_set_text(version_text, VERSION_TXT);
+  
+  #ifdef PBL_COLOR
+      text_time_shadow_layer = macro_text_layer_create(GRect(4, 113, 144, 42), window_layer, GColorOxfordBlue, BACKGROUND_COLOR, time_font, GTextAlignmentCenter);
+  #endif
 
-  text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, BACKGROUND_COLOR, time_font, GTextAlignmentCenter);
+  text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, GColorClear, time_font, GTextAlignmentCenter);
 
   text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144 - 8, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
@@ -476,6 +485,10 @@ static void morpheuz_unload(Window *window) {
   text_layer_destroy(text_date_smart_alarm_range_layer);
   text_layer_destroy(powernap_layer);
   text_layer_destroy(failure_text);
+  
+  #ifdef PBL_COLOR
+    text_layer_destroy(text_time_shadow_layer);
+  #endif
 
   macro_bitmap_layer_destroy(&logo_bed);
   macro_bitmap_layer_destroy(&logo_sleeper);
