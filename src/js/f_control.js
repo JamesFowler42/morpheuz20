@@ -204,6 +204,7 @@ Pebble.addEventListener("appmessage", function(e) {
       var minutesStr = fixLen(String(minutes));
       goneoff = hoursStr + minutesStr;
     }
+    turnLifxLightsOn();
     console.log("MSG goneoff=" + goneoff);
     window.localStorage.setItem("goneOff", goneoff);
     ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
@@ -279,6 +280,8 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("potoken", dataElems[10]);
     window.localStorage.setItem("swpdo", dataElems[12]);
     window.localStorage.setItem("usage", dataElems[13]);
+    window.localStorage.setItem("lifx-token", dataElems[14]);
+    window.localStorage.setItem("lifx-time", dataElems[15]);
   }
 });
 
@@ -324,10 +327,12 @@ function buildUrl(noset) {
     swpdo = nvl(window.localStorage.getItem("swpdo"), "");
     swpstat = nvl(window.localStorage.getItem("swpstat"), "");
     exptime = nvl(window.localStorage.getItem("exptime"), "");
+    lifxToken = nvl(window.localStorage.getItem("lifxtoken"), "");
+    lifxTime = nvl(window.localStorage.getItem("lifxtime"), "");
     usage = nvl(window.localStorage.getItem("usage"), "Y");
   }
 
-  var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&noset=" + noset + "&token=" + token + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + "&usage=" + usage;
+  var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&noset=" + noset + "&token=" + token + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + "&usage=" + usage + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime;
   console.log("url=" + url + " (len=" + url.length + ")");
   return url;
 }

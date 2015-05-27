@@ -336,6 +336,8 @@ $("document").ready(function() {
   var pouser = decodeURIComponent(getParameterByName("pouser"));
   var postat = decodeURIComponent(getParameterByName("postat"));
   var swpdo = decodeURIComponent(getParameterByName("swpdo"));
+  var lifxToken = decodeURIComponent(getParameterByName("lifxtoken"));
+  var lifxTime = decodeURIComponent(getParameterByName("lifxtime"));
   var swpstat = decodeURIComponent(getParameterByName("swpstat"));
   var noset = getParameterByName("noset");
   var token = getParameterByName("token");
@@ -352,6 +354,8 @@ $("document").ready(function() {
   $("#emailto").val(emailto);
   $("#ptoken").val(potoken);
   $("#puser").val(pouser);
+  $("#lifxToken").val(lifxToken);
+  $("#lifxTime").val(lifxTime);
   $("#swpdo").prop("checked", swpdo === "Y");
   $("#presult").text(postat);
   $("#swpstat").text(swpstat);
@@ -594,7 +598,9 @@ $("document").ready(function() {
     var pouser = encodeURIComponent($("#puser").val());
     var swpdo = $("#swpdo").is(':checked') ? "Y" : "N";
     var usage = $("#usage").is(':checked') ? "Y" : "N";
-    window.location.href = "pebblejs://close#reset" + "!" + unused + "!" + blank + "!" + blank + "!" + blank + "!" + blank + "!" + unused + "!" + emailpart + "!" + pouser + "!" + blank + "!" + potoken + "!" + unused + "!" + swpdo + "!" + usage;
+    var lifxToken = encodeURIComponent($("#lifxToken").val());
+    var lifxTime = encodeURIComponent($("#lifxTime").val());
+    window.location.href = "pebblejs://close#reset" + "!" + unused + "!" + blank + "!" + blank + "!" + blank + "!" + blank + "!" + unused + "!" + emailpart + "!" + pouser + "!" + blank + "!" + potoken + "!" + unused + "!" + swpdo + "!" + usage + "!" + lifxToken + "!" + lifxTime;
   });
 
 });
