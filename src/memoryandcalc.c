@@ -35,7 +35,7 @@ static bool no_record_warning = true;
 static uint8_t last_progress_highest_entry = 254;
 static bool at_limit;
 
-static int32_t previous_to_phone = 0;
+static int32_t previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
 
 static bool version_sent = false;
 static int8_t new_last_sent;
@@ -112,6 +112,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     // Only let the last sent become it's new value after confirmation
     // from the JS
     if (ctrl_value & CTRL_SET_LAST_SENT) {
+      APP_LOG(APP_LOG_LEVEL_INFO, "in_received_handler - CTRL_SET_LAST_SENT to %d", new_last_sent);
       internal_data.last_sent = new_last_sent;
     }
 
@@ -131,6 +132,8 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
  * Calcuate buffer sizes and open comms
  */
 void open_comms() {
+
+  APP_LOG(APP_LOG_LEVEL_DEBUG, "internal_data %d, config_data %d", sizeof(internal_data), sizeof(config_data));
 
   // Register message handlers
   app_message_register_inbox_received(in_received_handler);
@@ -273,6 +276,7 @@ void trigger_config_save() {
  * Perform reset - either from watch or phone
  */
 void reset_sleep_period() {
+  previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
   clear_internal_data();
   time_t now = time(NULL);
   internal_data.base = now;
@@ -307,6 +311,7 @@ void resend_all_data(bool invoked_by_change_of_time) {
   internal_data.gone_off_sent = false;
   internal_data.transmit_sent = false;
   set_icon(false, IS_EXPORT);
+  previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
 }
 
 /*
@@ -433,8 +438,13 @@ static bool smart_alarm(uint16_t point) {
 
 static void transmit_points_or_background_data(int8_t last_sent) {
 
+  APP_LOG(APP_LOG_LEVEL_INFO, "transmit_points_or_background_data %d", last_sent);
+
   // Otherwise service as usual
   switch (last_sent) {
+    case -4:
+      send_to_phone(KEY_AUTO_RESET, config_data.auto_reset ? 1 : 0);
+      break;
     case -3:
       send_to_phone(KEY_FROM, config_data.smart ? (int32_t) config_data.from : -1);
       break;

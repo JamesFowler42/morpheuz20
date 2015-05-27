@@ -95,8 +95,7 @@ void start_worker() {
   AppWorkerResult result = app_worker_launch();
   if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
     show_worker();
-  }
-  APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
+  }APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
 }
 
 /*
@@ -125,11 +124,11 @@ static void paint_icon(GContext *ctx, int *running_horizontal, int width, uint32
  */
 static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *running_horizontal) {
 
-  #ifdef PBL_COLOR
-    graphics_context_set_compositing_mode(ctx, GCompOpSet);
-  #else
-      graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-  #endif
+#ifdef PBL_COLOR
+  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+#else
+  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+#endif
 
   if (!battery_plugged) {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
@@ -150,13 +149,13 @@ static void icon_bar_update_callback(Layer *layer, GContext *ctx) {
 
   graphics_context_set_fill_color(ctx, BACKGROUND_COLOR);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
-  
+
   graphics_context_set_fill_color(ctx, GColorWhite);
   graphics_context_set_stroke_color(ctx, GColorBlack);
-  
-  #ifdef PBL_COLOR
-    graphics_context_set_compositing_mode(ctx, GCompOpSet);
-  #endif
+
+#ifdef PBL_COLOR
+  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+#endif
 
   // Don't draw if we're currently doing
   if (!is_animation_complete())
@@ -217,16 +216,16 @@ static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 
   graphics_context_set_stroke_color(ctx, GColorWhite);
 
-  for (uint8_t i = 0; i <= 108; i += 12) {
-    graphics_draw_pixel(ctx, GPoint(i,8));
-    graphics_draw_pixel(ctx, GPoint(i,7));
+  for (uint8_t i = 0; i <= 120; i += 12) {
+    graphics_draw_pixel(ctx, GPoint(i, 8));
+    graphics_draw_pixel(ctx, GPoint(i, 7));
   }
 
   for (uint8_t i = 0; i <= get_internal_data()->highest_entry; i++) {
     if (!get_internal_data()->ignore[i]) {
       uint16_t height = get_internal_data()->points[i] / 500;
       uint8_t i2 = i * 2;
-      graphics_draw_line(ctx, GPoint(i2,8-height), GPoint(i2,8));
+      graphics_draw_line(ctx, GPoint(i2, 8 - height), GPoint(i2, 8));
     }
   }
 }
@@ -319,7 +318,7 @@ void set_progress() {
  */
 void post_init_hook(void *data) {
   wakeup_init();
-  animation_count=6; // Make it 6 so we consider is_animation_complete() will return true
+  animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
 }
 
 static void animation_stopped(Animation *animation, bool finished, void *data);
@@ -338,10 +337,10 @@ static void build_an_animate(Layer *layer, GRect *start, GRect *finish, uint32_t
  * End of initial animation sequence - occurs 4 then 5 times
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-  #ifndef PBL_COLOR
-    animation_unschedule(animation);
-    animation_destroy(animation);
-  #endif
+#ifndef PBL_COLOR
+  animation_unschedule(animation);
+  animation_destroy(animation);
+#endif
   animation_count++;
   if (animation_count == 4) {
     light_enable_interaction();
@@ -384,7 +383,7 @@ static void morpheuz_load(Window *window) {
 
   Layer *window_layer = window_get_root_layer(window);
 
-  powernap_layer = macro_text_layer_create(GRect(5, -3 ,20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
+  powernap_layer = macro_text_layer_create(GRect(5, -3, 20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
 
   macro_bitmap_layer_create(&logo_bed, BED_START, window_layer, RESOURCE_ID_IMAGE_LOGO_BED, true);
 
@@ -399,11 +398,11 @@ static void morpheuz_load(Window *window) {
 
   text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, BACKGROUND_COLOR, time_font, GTextAlignmentCenter);
 
-  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144-8, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144 - 8, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
   failure_text = macro_text_layer_create(GRect(1, 86, 8, 31), window_layer, FAILURE_COLOR, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentLeft);
-  
-  icon_bar = layer_create(GRect(26,ICON_TOPS,ICON_BAR_WIDTH,12));
+
+  icon_bar = layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12));
   layer_set_update_proc(icon_bar, &icon_bar_update_callback);
   layer_add_child(window_layer, icon_bar);
 
@@ -412,7 +411,7 @@ static void morpheuz_load(Window *window) {
   battery_plugged = initial.is_plugged;
   bluetooth_state_handler(bluetooth_connection_service_peek());
 
-  progress_layer = layer_create(GRect(17,157,109,9));
+  progress_layer = layer_create(GRect(11, 157, 121, 9));
   layer_set_update_proc(progress_layer, &progress_layer_update_callback);
   layer_add_child(window_layer, progress_layer);
 
@@ -421,11 +420,11 @@ static void morpheuz_load(Window *window) {
 
   analogue_window_load(window);
 
-  #ifndef PBL_COLOR
-    full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
-    layer_add_child(window_layer, inverter_layer_get_layer_jf(full_inverse_layer));
-    layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), true);
-  #endif
+#ifndef PBL_COLOR
+  full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
+  layer_add_child(window_layer, inverter_layer_get_layer_jf(full_inverse_layer));
+  layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), true);
+#endif
 
   read_internal_data();
   read_config_data();
@@ -436,9 +435,9 @@ static void morpheuz_load(Window *window) {
 
   bluetooth_connection_service_subscribe(bluetooth_state_handler);
 
-  #ifndef PBL_COLOR
-    invert_screen();
-  #endif
+#ifndef PBL_COLOR
+  invert_screen();
+#endif
 
   init_morpheuz(window);
 
@@ -464,9 +463,9 @@ static void morpheuz_unload(Window *window) {
   save_config_data(NULL);
   save_internal_data();
 
-  #ifndef PBL_COLOR
-    inverter_layer_destroy(full_inverse_layer);
-  #endif
+#ifndef PBL_COLOR
+  inverter_layer_destroy(full_inverse_layer);
+#endif
 
   analogue_window_unload();
 
@@ -496,12 +495,12 @@ void analogue_powernap_text(char *text) {
 }
 
 #ifndef PBL_COLOR
-  /*
-   * Invert screen
-   */
-  void invert_screen() {
-    layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), !get_config_data()->invert);
-  }
+/*
+ * Invert screen
+ */
+void invert_screen() {
+  layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), !get_config_data()->invert);
+}
 #endif
 
 /**
@@ -517,9 +516,9 @@ void bed_visible(bool value) {
  */
 static void handle_init() {
   window = window_create();
-  #ifndef PBL_COLOR
-    window_set_fullscreen(window, true);
-  #endif
+#ifndef PBL_COLOR
+  window_set_fullscreen(window, true);
+#endif
   window_set_window_handlers(window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, });
   window_stack_push(window, true /* Animated */);
 }

@@ -22,12 +22,14 @@
  * THE SOFTWARE.
  */
 
+/*exported mConst, mLang */
+
 /*
  * Constants
  */
 function mConst() {
   return {
-    limit : 54,
+    limit : 60,
     divisor : 600000,
     url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
     versionDef : "22",
@@ -47,7 +49,10 @@ function mConst() {
     ctrlSetLastSent : 16,
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
-    timeout : 4000
+    timeout : 4000,
+    usageUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/usage/",
+    usageSx : ".html",
+    quotesUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/quotes.json"
   };
 }
 
@@ -56,6 +61,11 @@ function mLang() {
     ok : "OK",
     sending : "Sending",
     disabled : "Disabled",
-    cnc : "Could not calculate"
-  }
+    cnc : "Could not calculate",
+    sa : "Smart Alarm",
+    startM : "Start Morpheuz",
+    bedTime : "Bed time",
+    bedNow : "Bed Now",
+    cancelBed : "Cancel bed time"
+  };
 }

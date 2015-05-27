@@ -22,6 +22,9 @@
  * THE SOFTWARE.
  */
 
+/*global window, nvl, mLang, mConst, makeGetAjaxCall */
+/*exported smartwatchProConfigured, smartwatchProTransmit, calculateStats */
+
 /*
  * Is Smartwatch Pro configured?
  */
@@ -72,14 +75,14 @@ function smartwatchProTransmit() {
 function calculateStats() {
   var base = parseInt(window.localStorage.getItem("base"), 10);
   var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
-  var splitup = new Array();
-  for (var i = 0; i < mConst().limit; i++) {
-    var entry = "P" + i;
+  var splitup = [];
+  for (var j = 0; j < mConst().limit; j++) {
+    var entry = "P" + j;
     var valueStr = window.localStorage.getItem(entry);
     if (valueStr === null) {
-      splitup[i] = "-1";
+      splitup[j] = "-1";
     } else {
-      splitup[i] = valueStr;
+      splitup[j] = valueStr;
     }
   }
 

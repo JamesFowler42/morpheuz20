@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global XMLHttpRequest, window, console*/
+/*exported nvl, fixLen, getUserAgent */
 
 /*
  * Some date functions
@@ -41,7 +41,7 @@ Date.prototype.format = function(format) // author: meizz
     "q+" : Math.floor((this.getMonth() + 3) / 3), // quarter
     "S" : this.getMilliseconds()
   // millisecond
-  }
+  };
 
   if (/(y+)/.test(format)) {
     format = format.replace(RegExp.$1, (this.getFullYear() + "").substr(4 - RegExp.$1.length));
@@ -58,7 +58,7 @@ Date.prototype.format = function(format) // author: meizz
     format = format.replace(RegExp.$1, dayName[this.getDay()]);
   }
   return format;
-}
+};
 
 /*
  * Add minutes to date
@@ -66,7 +66,7 @@ Date.prototype.format = function(format) // author: meizz
 Date.prototype.addMinutes = function(minutes) {
   var copiedDate = new Date(this.getTime());
   return new Date(copiedDate.getTime() + minutes * 60000);
-}
+};
 
 /*
  * Protection against nulls

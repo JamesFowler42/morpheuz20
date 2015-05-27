@@ -25,14 +25,16 @@
 #ifndef MORPHEUZ_H_
 #define MORPHEUZ_H_
 
-#define VERSION 30
-#define VERSION_TXT "3.0"
-  
+#include "pebble.h"
+
+#define VERSION 31
+#define VERSION_TXT "3.1"
+
 // Uncomment for release
 #undef APP_LOG
 #define APP_LOG(level, fmt, args...)
 
-#define LAST_SENT_INIT -3
+#define LAST_SENT_INIT -4
 
 #define FUDGE 4
 
@@ -42,6 +44,12 @@
 #define TO_MIN_DEF 15
 
 #define ALARM_PATTERN_MAX_REPEAT 5
+
+#define TIMELINE_LAUNCH_USE 0
+#define TIMELINE_LAUNCH_SLEEP_NOW 1
+#define TIMELINE_LAUNCH_CLEAR_AUTOSLEEP 2
+
+#define DUMMY_PREVIOUS_TO_PHONE 0xFFFFFFFF
 
 #define POWER_NAP_MINUTES 27
 #define POWER_NAP_SETTLE 2
@@ -69,33 +77,33 @@
 #define MOON_START GRect(144+6, 72, 58, 46)  
 
 #ifdef PBL_COLOR 
-  #define BACKGROUND_COLOR GColorDukeBlue  
-  #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
-  #define ACTION_BAR_BACKGROUND_COLOR GColorWhite
-  #define HIGHLIGHT_BG_COLOR GColorBlueMoon
-  #define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR  
-  #define HIGHLIGHT_FG_COLOR GColorWhite
-  #define NON_HIGHLIGHT_FG_COLOR GColorWhite 
-  #define FROM_TIME_COLOR GColorGreen
-  #define TO_TIME_COLOR GColorRed
-  #define START_TIME_COLOR GColorYellow
-  #define PROGRESS_COLOR GColorLightGray
-  #define ANALOGUE_COLOR GColorWhite
-  #define FAILURE_COLOR GColorRed
+#define BACKGROUND_COLOR GColorDukeBlue
+#define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
+#define ACTION_BAR_BACKGROUND_COLOR GColorWhite
+#define HIGHLIGHT_BG_COLOR GColorBlueMoon
+#define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR
+#define HIGHLIGHT_FG_COLOR GColorWhite
+#define NON_HIGHLIGHT_FG_COLOR GColorWhite
+#define FROM_TIME_COLOR GColorGreen
+#define TO_TIME_COLOR GColorRed
+#define START_TIME_COLOR GColorYellow
+#define PROGRESS_COLOR GColorLightGray
+#define ANALOGUE_COLOR GColorWhite
+#define FAILURE_COLOR GColorRed
 #else
-  #define BACKGROUND_COLOR GColorBlack  
-  #define SETTING_BACKGROUND_COLOR GColorWhite
-  #define ACTION_BAR_BACKGROUND_COLOR GColorBlack
-  #define HIGHLIGHT_BG_COLOR GColorBlack
-  #define NON_HIGHLIGHT_BG_COLOR GColorWhite  
-  #define HIGHLIGHT_FG_COLOR GColorWhite
-  #define NON_HIGHLIGHT_FG_COLOR GColorBlack  
-  #define FROM_TIME_COLOR GColorWhite
-  #define TO_TIME_COLOR GColorWhite
-  #define START_TIME_COLOR GColorWhite
-  #define PROGRESS_COLOR GColorWhite
-  #define ANALOGUE_COLOR GColorWhite
-  #define FAILURE_COLOR GColorWhite
+#define BACKGROUND_COLOR GColorBlack
+#define SETTING_BACKGROUND_COLOR GColorWhite
+#define ACTION_BAR_BACKGROUND_COLOR GColorBlack
+#define HIGHLIGHT_BG_COLOR GColorBlack
+#define NON_HIGHLIGHT_BG_COLOR GColorWhite
+#define HIGHLIGHT_FG_COLOR GColorWhite
+#define NON_HIGHLIGHT_FG_COLOR GColorBlack
+#define FROM_TIME_COLOR GColorWhite
+#define TO_TIME_COLOR GColorWhite
+#define START_TIME_COLOR GColorWhite
+#define PROGRESS_COLOR GColorWhite
+#define ANALOGUE_COLOR GColorWhite
+#define FAILURE_COLOR GColorWhite
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
@@ -114,7 +122,8 @@ enum MorpKey {
   KEY_BASE = 5,
   KEY_VERSION = 6,
   KEY_GONEOFF = 7,
-  KEY_TRANSMIT = 8
+  KEY_TRANSMIT = 8,
+  KEY_AUTO_RESET = 9
 };
 
 enum CtrlValues {
@@ -147,8 +156,9 @@ typedef enum {
 #define LONG_RETRY_MS 60000
 #define NOTICE_DISPLAY_MS 7000
 #define FIVE_MINUTES_MS (5*60*1000)
+#define TEN_SECONDS_MS (10*1000)
 
-#define LIMIT 54
+#define LIMIT 60
 #define DIVISOR 600
 
 #define LOGO_BED_ANIMATION 0
@@ -161,7 +171,7 @@ typedef enum {
 #define BUFFER_SIZE 40
 
 #define TWENTY_FOUR_HOURS_IN_SECONDS (24*60*60)
-#define TEN_HOURS_IN_SECONDS (10*60*60)
+#define ELEVEN_HOURS_IN_SECONDS (11*60*60)
 #define WAKEUP_AUTO_RESTART 1
 #define WAKEUP_FOR_TRANSMIT 2
 #define ONE_MINUTE 60

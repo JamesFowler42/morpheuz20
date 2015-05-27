@@ -22,6 +22,9 @@
  * THE SOFTWARE.
  */
 
+/*global window, nvl, mLang, mConst, buildUrl, makePostAjaxCall */
+/*exported pushoverConfigured, pushoverTransmit */
+
 /*
  * Is Pushover configured?
  */

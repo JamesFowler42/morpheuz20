@@ -35,15 +35,15 @@
 #define MAX_SETTINGS_FIELDS 6
 
 #ifdef PBL_COLOR
-  #define DONE_LEFT 65
-  #define DONE_TOP 130
-  #define SA_LEFT 83
-  #define SA_TOP 27
+#define DONE_LEFT 65
+#define DONE_TOP 130
+#define SA_LEFT 83
+#define SA_TOP 27
 #else
-  #define DONE_LEFT 77
-  #define DONE_TOP 118
-  #define SA_LEFT 94
-  #define SA_TOP 1
+#define DONE_LEFT 77
+#define DONE_TOP 118
+#define SA_LEFT 94
+#define SA_TOP 1
 #endif
 
 // Position and size info
@@ -73,7 +73,6 @@ static int values[MAX_SETTINGS_FIELDS];
 static char value_text[5][MAX_SETTINGS_FIELDS];
 
 static int8_t current_field;
-
 
 /*
  * Highlight or unhighlight a field
@@ -223,7 +222,7 @@ static void set_values() {
 static void create_settings_window(void) {
   setting_window = window_create();
   Layer *window_layer = window_get_root_layer(setting_window);
-  
+
   window_set_background_color(setting_window, SETTING_BACKGROUND_COLOR);
 
   // Get the resources we need
@@ -241,14 +240,14 @@ static void create_settings_window(void) {
   action_bar_layer_set_icon(button_layer, BUTTON_ID_UP, up_button_res);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_SELECT, next_button_res);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_DOWN, down_button_res);
-  #ifdef PBL_COLOR 
-    action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_UP, ActionBarLayerIconPressAnimationMoveUp);
-    action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_SELECT, ActionBarLayerIconPressAnimationMoveRight);
-    action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_DOWN, ActionBarLayerIconPressAnimationMoveDown);
-  #endif
+#ifdef PBL_COLOR 
+  action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_UP, ActionBarLayerIconPressAnimationMoveUp);
+  action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_SELECT, ActionBarLayerIconPressAnimationMoveRight);
+  action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_DOWN, ActionBarLayerIconPressAnimationMoveDown);
+#endif
   layer_add_child(window_layer, (Layer *) button_layer);
   action_bar_layer_set_click_config_provider(button_layer, setting_click_config_provider);
-  
+
   // title_layer
   title_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 6, 90, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
   text_layer_set_text(title_layer, SMART_ALARM);
@@ -280,10 +279,10 @@ static void create_settings_window(void) {
 
   // fields[TO_MINUTE]
   fields[F_TO_MINUTE] = macro_text_layer_create(GRect(52, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-  
+
   // fields[SMART_ALARM]
   fields[F_SMART_ALARM] = macro_text_layer_create(GRect(SA_LEFT, SA_TOP, 25, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-  
+
   // fields[DONE]
   fields[F_DONE] = macro_text_layer_create(GRect(DONE_LEFT, DONE_TOP, 45, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 

@@ -94,27 +94,25 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, ANALOGUE_COLOR);
 
   graphics_context_set_stroke_color(ctx, ANALOGUE_COLOR);
-  
-  #ifdef PBL_COLOR
-    graphics_context_set_compositing_mode(ctx, GCompOpSet);
-  #endif
+
+#ifdef PBL_COLOR
+  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+#endif
 
   // Hours and minute marks
   draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7);
   draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, 24, 1);
 
   // Hour text
-  graphics_draw_text(ctx, TEXT_12, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144/2-14, 21, 20, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  graphics_draw_text(ctx, TEXT_3, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144-34, 144/2-9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  graphics_draw_text(ctx, TEXT_6, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144/2-6, 144-39, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  graphics_draw_text(ctx, TEXT_9, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(21, 144/2-9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_12, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144 / 2 - 14, 21, 20, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_3, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144 - 34, 144 / 2 - 9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_6, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144 / 2 - 6, 144 - 39, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
+  graphics_draw_text(ctx, TEXT_9, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(21, 144 / 2 - 9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
 
   // Small logo
   GBitmap *bitmap = gbitmap_create_with_resource(RESOURCE_ID_SMALL_LOGO);
-  graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(144/2-25, 144/2-15-31+10, 50, 31));
+  graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(144 / 2 - 25, 144 / 2 - 15 - 31 + 10, 50, 31));
   gbitmap_destroy(bitmap);
-  
-
 
   // Start and first and last times for smart alarm
   if (show_smart_points) {
@@ -241,25 +239,25 @@ void analogue_window_load(Window *window) {
   minute_arrow = gpath_create(&MINUTE_HAND_POINTS);
   hour_arrow = gpath_create(&HOUR_HAND_POINTS);
 
-  hands_layer = layer_create(GRect(0,0,144,144));
+  hands_layer = layer_create(GRect(0, 0, 144, 144));
 
-  GPoint center = grect_center_point(&GRect(0,0,144,144));
+  GPoint center = grect_center_point(&GRect(0, 0, 144, 144));
   gpath_move_to(minute_arrow, center);
   gpath_move_to(hour_arrow, center);
 
   layer_set_update_proc(hands_layer, hands_update_proc);
   layer_add_child(analgue_layer, hands_layer);
-  
+
 }
 
 /*
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-  #ifndef PBL_COLOR
-    animation_unschedule(animation);
-    animation_destroy(animation);
-  #endif
+#ifndef PBL_COLOR
+  animation_unschedule(animation);
+  animation_destroy(animation);
+#endif
   if (is_visible) {
     bed_visible(false);
   }

@@ -22,6 +22,8 @@
  * THE SOFTWARE.
  */
 
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay */
+
 /*
  * Reset log
  */
@@ -41,6 +43,8 @@ function resetWithPreserve() {
   var swpstat = window.localStorage.getItem("swpstat");
   var exptime = window.localStorage.getItem("exptime");
   var usage = window.localStorage.getItem("usage");
+  var autoReset = window.localStorage.getItem("autoReset");
+  var quote = window.localStorage.getItem("quote");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -56,6 +60,8 @@ function resetWithPreserve() {
   window.localStorage.setItem("swpstat", nvl(swpstat, ""));
   window.localStorage.setItem("exptime", nvl(exptime, ""));
   window.localStorage.setItem("usage", nvl(usage, "Y"));
+  window.localStorage.setItem("autoReset", nvl(autoReset, "0"));
+  window.localStorage.setItem("quote", nvl(quote, ""));
 }
 
 /*
@@ -63,8 +69,8 @@ function resetWithPreserve() {
  */
 function isBasalt() {
   if (Pebble.getActiveWatchInfo) {
-    watchinfo= Pebble.getActiveWatchInfo();
-    platform=watchinfo.platform;
+    var watchinfo = Pebble.getActiveWatchInfo();
+    var platform = watchinfo.platform;
     return (platform === "basalt");
   } else {
     return false;
@@ -97,6 +103,7 @@ Pebble.addEventListener("ready", function(e) {
     window.localStorage.setItem("tohr", mConst().tohrDef);
     window.localStorage.setItem("tomin", mConst().tominDef);
   }
+  getQuoteOfTheDay();
 });
 
 /*
@@ -125,7 +132,7 @@ Pebble.addEventListener("appmessage", function(e) {
     var version = parseInt(e.payload.keyVersion, 10);
     console.log("MSG version=" + version);
     window.localStorage.setItem("version", version);
-    ctrlVal = ctrlVal | mConst().ctrlVersionDone;
+    ctrlVal = ctrlVal | mConst().ctrlVersionDone | mConst().ctrlDoNext;
   }
 
   // Incoming origin timestamp - this is a reset
@@ -143,6 +150,7 @@ Pebble.addEventListener("appmessage", function(e) {
     resetWithPreserve();
     window.localStorage.setItem("base", base);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
+    addBedTimePin(base);
   }
 
   // Incoming from value (first time for smart alarm)
@@ -199,6 +207,7 @@ Pebble.addEventListener("appmessage", function(e) {
     console.log("MSG goneoff=" + goneoff);
     window.localStorage.setItem("goneOff", goneoff);
     ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
+    addSmartAlarmPin();
   }
 
   // Incoming data point
@@ -216,6 +225,14 @@ Pebble.addEventListener("appmessage", function(e) {
     console.log("MSG transmit");
     transmitMethods();
     ctrlVal = ctrlVal | mConst().ctrlTransmitDone;
+  }
+
+  // Incoming transmit to automatics
+  if (typeof e.payload.keyAutoReset !== "undefined") {
+    var autoReset = parseInt(e.payload.keyAutoReset, 10);
+    console.log("MSG keyAutoReset=" + autoReset);
+    window.localStorage.setItem("autoReset", autoReset);
+    ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
 
   // Respond back to watchapp here - we need assured positive delivery - cannot trust that it has reached the phone - must make

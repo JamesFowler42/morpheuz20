@@ -51,8 +51,6 @@ static void validate_weekend() {
   }
 }
 
-
-
 /*
  * Do something with samples every minute
  */
@@ -105,7 +103,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
   // Remember this
   accel_handler_called = true;
-  
+
   // Average the data
   uint32_t avg_x = 0;
   uint32_t avg_y = 0;

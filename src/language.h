@@ -30,7 +30,7 @@
 
 #define MENU_IGNORE "Ignore"
 #define MENU_IGNORE_DES  "...next 10 mins"
-#define MENU_RESET "Reset"
+#define MENU_RESET "Bed time"
 #define MENU_RESET_DES "Start new sleep cycle"
 #define MENU_POWER_NAP "Power nap"
 #define MENU_POWER_NAP_DES "Refreshment"
@@ -48,11 +48,11 @@
 #define MENU_SNOOZE_DES "... or press down"
 #define MENU_CANCEL "Cancel Alarm"
 #define MENU_CANCEL_DES "... or press up"
-#define MENU_AUTO_RESET "Auto reset"
+#define MENU_AUTO_RESET "Auto bed time"
 #define MENU_AUTO_RESET_DES_OFF "... same time again"
 #define MENU_AUTO_RESET_DES_ON "... at %d:%02d"
 #define MENU_SMART_ALARM "Smart Alarm"
-#define MENU_SMART_ALARM_DES "Wake up right"
+#define MENU_SMART_ALARM_DES "Kind wake-up"
 
 #define ON "On"
 #define OFF "Off"
@@ -67,7 +67,7 @@
 #define COPYRIGHT "\n© 2015\nJames Fowler"
 
 #define MORPHEUZ "Morpheuz"
-  
+
 #define EMPTY ""
 #define NO_ACCEL_CALLBACK "!"
 

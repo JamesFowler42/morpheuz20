@@ -22,6 +22,9 @@
  * THE SOFTWARE.
  */
 
+/*global mConst, clearTimeout, nvl */
+/*exported makePostAjaxCall, makeGetAjaxCall */
+
 /*
  * Standard Post Ajax call routine
  */
@@ -52,8 +55,8 @@ function makePostAjaxCall(url, msg, resp) {
       resp(result);
     } else if (req.readyState === 4 && (req.status >= 400 && req.status < 500)) {
       clearTimeout(tout);
-      var result = JSON.parse(req.responseText);
-      resp(result);
+      var result2 = JSON.parse(req.responseText);
+      resp(result2);
     } else if (req.readyState === 4 && (req.status === 500)) {
       clearTimeout(tout);
       resp({
@@ -90,7 +93,8 @@ function makeGetAjaxCall(url, resp) {
     if (req.readyState === 4 && req.status === 200) {
       clearTimeout(tout);
       resp({
-        "status" : 1
+        "status" : 1,
+        "data" : req.responseText
       });
     } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
       clearTimeout(tout);

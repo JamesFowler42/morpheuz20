@@ -44,9 +44,9 @@ TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GC
  */
 void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible) {
   comp->layer = bitmap_layer_create(frame);
-  #ifdef PBL_COLOR
-    bitmap_layer_set_compositing_mode(comp->layer, GCompOpSet);
-  #endif
+#ifdef PBL_COLOR
+  bitmap_layer_set_compositing_mode(comp->layer, GCompOpSet);
+#endif
   layer_add_child(parent, bitmap_layer_get_layer_jf(comp->layer));
   comp->bitmap = gbitmap_create_with_resource(resource_id);
   bitmap_layer_set_bitmap(comp->layer, comp->bitmap);
@@ -92,5 +92,4 @@ int32_t dirty_checksum(void *data, uint8_t data_size) {
 uint8_t twenty_four_to_twelve(uint8_t hour) {
   return (hour <= 12 || clock_is_24h_style()) ? hour : hour - 12;
 }
-
 

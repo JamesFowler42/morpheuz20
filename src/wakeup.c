@@ -73,7 +73,7 @@ void set_next_wakeup() {
   }
 
   // Wakeup for transmit
-  time_t revive_timestamp = (time_t) get_internal_data()->base + TEN_HOURS_IN_SECONDS;
+  time_t revive_timestamp = (time_t) get_internal_data()->base + ELEVEN_HOURS_IN_SECONDS;
   if (revive_timestamp > now) {
     build_wakeup_entry(revive_timestamp, WAKEUP_FOR_TRANSMIT);
   }
@@ -110,9 +110,27 @@ void wakeup_init() {
     } else if (cookie == WAKEUP_FOR_TRANSMIT) {
       app_timer_register(FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
     }
+#ifdef PBL_COLOR
+  } else if (launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {
+    switch (launch_get_args()) {
+      case TIMELINE_LAUNCH_USE:
+      start_worker();
+      break;
+      case TIMELINE_LAUNCH_SLEEP_NOW:
+      start_worker();
+      reset_sleep_period();
+      break;
+      case TIMELINE_LAUNCH_CLEAR_AUTOSLEEP:
+      get_config_data()->auto_reset = false;
+      set_next_wakeup();
+      app_timer_register(TEN_SECONDS_MS, close_morpheuz_timer, NULL);
+      break;
+    }
+#endif
   } else {
     start_worker();
   }
+
 }
 
 /*
@@ -121,4 +139,5 @@ void wakeup_init() {
 void wakeup_toggle() {
   get_config_data()->auto_reset = get_internal_data()->has_been_reset ? !get_config_data()->auto_reset : false;
   set_next_wakeup();
+  resend_all_data(true); // Force resend - we've fiddled with the wakeup
 }
