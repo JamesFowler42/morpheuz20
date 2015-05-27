@@ -2,7 +2,7 @@
 <project name="morpheuz" basedir="." default="all">
 
 	<property name="ver" value="31"/>
-	<property name="inc" value="2"/>
+	<property name="inc" value="3"/>
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
@@ -29,6 +29,10 @@
 			<param name="in.file" value="currentversion.json" />
 			<param name="out.file" value="currentversion.json" />
 		</antcall>
+		<antcall target="copyquote" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="quotes.json" />
+			<param name="out.file" value="quotes.json" />
+		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.min.css" />
 		</antcall>
@@ -43,6 +47,9 @@
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="currentversion.json" />
+		</antcall>
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="quotes.json" />
 		</antcall>
 		<antcall target="copyimages" inheritrefs="true" inheritall="true" />
 	</target>
@@ -80,7 +87,12 @@
 		<echo message="Editing ${builddir}/${out.file}"/>
 		<replace file="${builddir}/${out.file}" token="@@@" value="${ver}"/>
 	</target>
-
+	
+	<target name="copyquote" description="copyquote">
+		<echo message="Copying ${srcdir}/${in.file} to ${builddir}/${out.file}"/>
+		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" />
+	</target>
+	
 	<target name="copyimages" description="copyimages">
 		<echo message="Copying images from ${srcdir}${img} to ${test.dir}${img}"/>
 		<copy todir="${test.dir}${img}" overwrite="true" force="true">

@@ -108,17 +108,12 @@ function makeGetAjaxCall(url, resp) {
 
 }
 
-
 /*
-  If LIFX values are set, this function will turn on all the lights with a custom fade-in time
-*/
-function turnLifxLightsOn(){
-  if(window.localStorage.getItem("lifx-token") && window.localStorage.getItem("lifx-time")){
-    var token = window.localStorage.getItem("lifxtoken"),
-    fadeInTime = window.localStorage.getItem("lifxtime"),
-    url = "https://api.lifx.com/v1beta1/lights/all/power",
-    method = "PUT",
-    data = new FormData();
+ If LIFX values are set, this function will turn on all the lights with a custom fade-in time
+ */
+function turnLifxLightsOn() {
+  if (window.localStorage.getItem("lifx-token") && window.localStorage.getItem("lifx-time")) {
+    var token = window.localStorage.getItem("lifxtoken"), fadeInTime = window.localStorage.getItem("lifxtime"), url = "https://api.lifx.com/v1beta1/lights/all/power", method = "PUT", data = new FormData();
 
     data.append('state', 'on');
     data.append('duration', fadeInTime);
@@ -127,7 +122,7 @@ function turnLifxLightsOn(){
     req.open(method, url, true);
     req.setRequestHeader("Authorization", "Basic " + btoa(token + ":" + ""));
     req.withCredentials = "true";
-   
+
     req.send(data);
 
     req.onload = function() {
