@@ -315,30 +315,30 @@ function buildUrl(noset) {
   var smart = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
   var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
   var emailto = nvl(window.localStorage.getItem("emailto"), "");
-  var pouser = "";
-  var postat = "";
-  var potoken = "";
-  var token = "";
-  var swpdo = "";
-  var swpstat = "";
-  var exptime = "";
-  var usage = "";
-  var lifxToken = "";
-  var lifxTime = "";
-  if (noset === "N") {
-    pouser = nvl(window.localStorage.getItem("pouser"), "");
-    postat = nvl(window.localStorage.getItem("postat"), "");
-    potoken = nvl(window.localStorage.getItem("potoken"), "");
-    token = Pebble.getAccountToken();
-    swpdo = nvl(window.localStorage.getItem("swpdo"), "");
-    swpstat = nvl(window.localStorage.getItem("swpstat"), "");
-    exptime = nvl(window.localStorage.getItem("exptime"), "");
-    lifxToken = nvl(window.localStorage.getItem("lifxtoken"), "");
-    lifxTime = nvl(window.localStorage.getItem("lifxtime"), "");
-    usage = nvl(window.localStorage.getItem("usage"), "Y");
-  }
 
-  var url = mConst().url + version + ".html?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&noset=" + noset + "&token=" + token + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + "&usage=" + usage + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime;
+  var extra = "";
+  if (noset === "N") {
+    var pouser = nvl(window.localStorage.getItem("pouser"), "");
+    var postat = nvl(window.localStorage.getItem("postat"), "");
+    var potoken = nvl(window.localStorage.getItem("potoken"), "");
+    var token = Pebble.getAccountToken();
+    var swpdo = nvl(window.localStorage.getItem("swpdo"), "");
+    var swpstat = nvl(window.localStorage.getItem("swpstat"), "");
+    var exptime = nvl(window.localStorage.getItem("exptime"), "");
+    var lifxToken = nvl(window.localStorage.getItem("lifxtoken"), "");
+    var lifxTime = nvl(window.localStorage.getItem("lifxtime"), "");
+    var usage = nvl(window.localStorage.getItem("usage"), "Y");
+    extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
+           "&potoken=" + encodeURIComponent(potoken) + "&token=" + token + 
+           "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
+           "&usage=" + usage + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime;
+  }
+  
+  var url = mConst().url + version + ".html" + 
+           "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
+           "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + 
+           "&noset=" + noset + extra;
+  
   console.log("url=" + url + " (len=" + url.length + ")");
   return url;
 }

@@ -55,7 +55,7 @@ static void send_to_phone(const uint32_t key, int32_t tophone) {
   app_message_outbox_begin(&iter);
 
   if (iter == NULL) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "no outbox");
+    LOG_WARN("no outbox");
     return;
   }
 
@@ -74,7 +74,7 @@ static void send_to_phone(const uint32_t key, int32_t tophone) {
 static void send_point(uint8_t point, uint16_t biggest, bool ignore) {
   int32_t to_phone = join_value(point, (ignore ? 5000 : biggest));
   if (to_phone == previous_to_phone) {
-    APP_LOG(APP_LOG_LEVEL_INFO, "skipping send - data the same");
+    LOG_DEBUG("skipping send - data the same");
     app_timer_register(SHORT_RETRY_MS, transmit_next_data, NULL); // this is what would happen if we sent
     return;
   }
@@ -112,7 +112,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     // Only let the last sent become it's new value after confirmation
     // from the JS
     if (ctrl_value & CTRL_SET_LAST_SENT) {
-      APP_LOG(APP_LOG_LEVEL_INFO, "in_received_handler - CTRL_SET_LAST_SENT to %d", new_last_sent);
+      LOG_DEBUG("in_received_handler - CTRL_SET_LAST_SENT to %d", new_last_sent);
       internal_data.last_sent = new_last_sent;
     }
 
@@ -133,7 +133,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
  */
 void open_comms() {
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "internal_data %d, config_data %d", sizeof(internal_data), sizeof(config_data));
+  LOG_DEBUG("internal_data %d, config_data %d", sizeof(internal_data), sizeof(config_data));
 
   // Register message handlers
   app_message_register_inbox_received(in_received_handler);
@@ -143,7 +143,7 @@ void open_comms() {
 
   uint32_t inbound_size = dict_calc_buffer_size_from_tuplets(in_values, ARRAY_LENGTH(in_values)) + FUDGE;
 
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "I(%ld) O(%ld)", inbound_size, inbound_size);
+  LOG_DEBUG("I(%ld) O(%ld)", inbound_size, inbound_size);
 
   // Open buffers
   app_message_open(inbound_size, inbound_size);
@@ -159,15 +159,15 @@ void open_comms() {
 void save_internal_data() {
   int32_t checksum = dirty_checksum(&internal_data, sizeof(internal_data));
   if (checksum != internal_data_checksum) {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data (%d)", sizeof(internal_data));
+    LOG_DEBUG("save_internal_data (%d)", sizeof(internal_data));
     int written = persist_write_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
     if (written != sizeof(internal_data)) {
-      APP_LOG(APP_LOG_LEVEL_ERROR, "save_internal_data error (%d)", written);
+      LOG_ERROR("save_internal_data error (%d)", written);
     } else {
       internal_data_checksum = checksum;
     }
   } else {
-    APP_LOG(APP_LOG_LEVEL_DEBUG, "save_internal_data no change");
+    LOG_DEBUG("save_internal_data no change");
   }
 }
 
@@ -224,10 +224,10 @@ InternalData *get_internal_data() {
  * Save the config data structure
  */
 void save_config_data(void *data) {
-  APP_LOG(APP_LOG_LEVEL_DEBUG, "save_config_data (%d)", sizeof(config_data));
+  LOG_DEBUG("save_config_data (%d)", sizeof(config_data));
   int written = persist_write_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
   if (written != sizeof(config_data)) {
-    APP_LOG(APP_LOG_LEVEL_ERROR, "save_config_data error (%d)", written);
+    LOG_ERROR("save_config_data error (%d)", written);
   }
   save_config_requested = false;
 }
@@ -438,7 +438,7 @@ static bool smart_alarm(uint16_t point) {
 
 static void transmit_points_or_background_data(int8_t last_sent) {
 
-  APP_LOG(APP_LOG_LEVEL_INFO, "transmit_points_or_background_data %d", last_sent);
+  LOG_DEBUG("transmit_points_or_background_data %d", last_sent);
 
   // Otherwise service as usual
   switch (last_sent) {
@@ -508,7 +508,7 @@ static void transmit_next_data(void *data) {
   }
 
   // Transmit next load of data
-  APP_LOG(APP_LOG_LEVEL_INFO, "transmit_next_data %d<%d", internal_data.last_sent, internal_data.highest_entry);
+  LOG_DEBUG("transmit_next_data %d<%d", internal_data.last_sent, internal_data.highest_entry);
   transmit_points_or_background_data(internal_data.last_sent + 1);
 }
 

@@ -254,7 +254,7 @@ void analogue_window_load(Window *window) {
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-#ifndef PBL_COLOR
+#ifndef PBL_PLATFORM_BASALT
   animation_unschedule(animation);
   animation_destroy(animation);
 #endif

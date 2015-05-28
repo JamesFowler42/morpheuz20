@@ -62,7 +62,7 @@ void hide_notice_layer(void *data) {
  * End of notice window animation
  */
 static void moon_animation_stopped(Animation *animation, bool finished, void *data) {
-#ifndef PBL_COLOR
+#ifndef PBL_PLATFORM_BASALT
   animation_unschedule(animation);
   animation_destroy(animation);
 #endif

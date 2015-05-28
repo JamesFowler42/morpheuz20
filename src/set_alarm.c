@@ -240,7 +240,7 @@ static void create_settings_window(void) {
   action_bar_layer_set_icon(button_layer, BUTTON_ID_UP, up_button_res);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_SELECT, next_button_res);
   action_bar_layer_set_icon(button_layer, BUTTON_ID_DOWN, down_button_res);
-#ifdef PBL_COLOR 
+#ifdef PBL_PLATFORM_BASALT 
   action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_UP, ActionBarLayerIconPressAnimationMoveUp);
   action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_SELECT, ActionBarLayerIconPressAnimationMoveRight);
   action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_DOWN, ActionBarLayerIconPressAnimationMoveDown);

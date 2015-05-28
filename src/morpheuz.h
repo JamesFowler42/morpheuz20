@@ -30,9 +30,19 @@
 #define VERSION 31
 #define VERSION_TXT "3.1"
 
-// Uncomment for release
-#undef APP_LOG
-#define APP_LOG(level, fmt, args...)
+// Comment out for production build
+//#define TESTING_BUILD
+
+#define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)
+#ifdef TESTING_BUILD
+  #define LOG_WARN(fmt, args...) app_log(APP_LOG_LEVEL_WARNING, "", 0, fmt, ## args)
+  #define LOG_INFO(fmt, args...) app_log(APP_LOG_LEVEL_INFO, "", 0, fmt, ## args)
+  #define LOG_DEBUG(fmt, args...) app_log(APP_LOG_LEVEL_DEBUG, "", 0, fmt, ## args)
+#else
+  #define LOG_WARN(fmt, args...) 
+  #define LOG_INFO(fmt, args...) 
+  #define LOG_DEBUG(fmt, args...) 
+#endif
 
 #define LAST_SENT_INIT -4
 

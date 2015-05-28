@@ -114,7 +114,8 @@ void start_worker() {
   AppWorkerResult result = app_worker_launch();
   if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
     show_worker();
-  }APP_LOG(APP_LOG_LEVEL_ERROR, "wlaunch %d", result);
+  }
+  LOG_DEBUG("wlaunch %d", result);
 }
 
 /*
@@ -362,7 +363,7 @@ static void build_an_animate(Layer *layer, GRect *start, GRect *finish, uint32_t
  * End of initial animation sequence - occurs 4 then 5 times
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-#ifndef PBL_COLOR
+#ifndef PBL_PLATFORM_BASALT
   animation_unschedule(animation);
   animation_destroy(animation);
 #endif
@@ -549,7 +550,7 @@ void bed_visible(bool value) {
  */
 static void handle_init() {
   window = window_create();
-#ifndef PBL_COLOR
+#ifndef PBL_PLATFORM_BASALT
   window_set_fullscreen(window, true);
 #endif
   window_set_window_handlers(window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, });

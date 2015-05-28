@@ -40,6 +40,11 @@ static void build_wakeup_entry(time_t timestamp, int32_t cookie) {
       timestamp += ONE_MINUTE;
     count++;
   }
+  if (id < 0) {
+    LOG_ERROR("Wakeup for cookie=%ld rejected with %ld", cookie, id);
+  } else {
+    LOG_DEBUG("Wakeup for cookie=%ld ok", cookie);
+  }
 }
 
 /*
@@ -110,7 +115,7 @@ void wakeup_init() {
     } else if (cookie == WAKEUP_FOR_TRANSMIT) {
       app_timer_register(FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
     }
-#ifdef PBL_COLOR
+#ifdef PBL_PLATFORM_BASALT
   } else if (launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {
     switch (launch_get_args()) {
       case TIMELINE_LAUNCH_USE:
