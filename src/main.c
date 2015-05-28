@@ -67,6 +67,23 @@ char date_text[16] = "";
 static bool icon_state[MAX_ICON_STATE];
 
 /*
+ * Bar chart color based on height of bar. Would normally do this with a constant array, but GColorXXXX aren't constants apparently.
+ */
+#ifdef PBL_COLOR
+static GColor bar_color(uint16_t height) {
+  if (height == 0) return GColorBlue; 
+  if (height == 1) return GColorBlueMoon;
+  if (height == 2) return GColorPictonBlue;
+  if (height == 3) return GColorVividCerulean;
+  if (height == 4) return GColorMalachite;
+  if (height == 5) return GColorBrightGreen;
+  if (height == 6) return GColorSpringBud;
+  if (height == 7) return GColorYellow;
+  return GColorPastelYellow;
+}
+#endif
+  
+/*
  * Set the icon state for any icon
  */
 void set_icon(bool enabled, IconState icon) {
@@ -214,9 +231,9 @@ static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, BACKGROUND_COLOR);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
 
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, BAR_CHART_MARKS);
 
-  graphics_context_set_stroke_color(ctx, GColorWhite);
+  graphics_context_set_stroke_color(ctx, BAR_CHART_MARKS);
 
   for (uint8_t i = 0; i <= 120; i += 12) {
     graphics_draw_pixel(ctx, GPoint(i, 8));
@@ -227,6 +244,9 @@ static void progress_layer_update_callback(Layer *layer, GContext *ctx) {
     if (!get_internal_data()->ignore[i]) {
       uint16_t height = get_internal_data()->points[i] / 500;
       uint8_t i2 = i * 2;
+      #ifdef PBL_COLOR
+          graphics_context_set_stroke_color(ctx, bar_color(height));
+      #endif
       graphics_draw_line(ctx, GPoint(i2, 8 - height), GPoint(i2, 8));
     }
   }

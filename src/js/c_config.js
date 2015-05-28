@@ -66,6 +66,8 @@ function mLang() {
     startM : "Start Morpheuz",
     bedTime : "Bed time",
     bedNow : "Bed Now",
-    cancelBed : "Cancel bed time"
+    cancelBed : "Cancel bed time",
+    earliest: "Earliest: ",
+    latest: "Latest: "
   };
 }

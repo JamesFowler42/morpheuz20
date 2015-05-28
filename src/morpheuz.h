@@ -91,6 +91,7 @@
   #define ANALOGUE_COLOR GColorWhite
   #define FAILURE_COLOR GColorRed
   #define BATTERY_BAR_COLOR GColorYellow
+  #define BAR_CHART_MARKS GColorLightGray
 #else
   #define BACKGROUND_COLOR GColorBlack
   #define SETTING_BACKGROUND_COLOR GColorWhite
@@ -106,6 +107,7 @@
   #define ANALOGUE_COLOR GColorWhite
   #define FAILURE_COLOR GColorWhite
   #define BATTERY_BAR_COLOR GColorWhite
+  #define BAR_CHART_MARKS GColorWhite
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation

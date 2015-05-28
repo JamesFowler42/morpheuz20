@@ -26,6 +26,14 @@
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin */
 
 /*
+ * Ensure that we only insert one pin per day for each type and they move if we reset
+ * using the base date as a unique identifier.
+ */
+function getPinId(base, type) {
+  return "morpheuz-" + type + "-" + base.format("yyyyMMdd");
+}
+
+/*
  * Add a smart alarm pin when wakeup occurs
  */
 function addSmartAlarmPin() {
@@ -42,16 +50,28 @@ function addSmartAlarmPin() {
   var alarmTime = stats.tends;
 
   var quote = window.localStorage.getItem("quote");
+  
+  var baseStr = window.localStorage.getItem("base");
+  var base = new Date(parseInt(baseStr,10));
+  
+  var fromhr = window.localStorage.getItem("fromhr");
+  var tohr = window.localStorage.getItem("tohr");
+  var frommin = window.localStorage.getItem("frommin");
+  var tomin = window.localStorage.getItem("tomin");
+  
+  var body = mLang().earliest + fromhr + ":" + frommin + "\n" + 
+             mLang().latest + tohr + ":" + tomin + "\n\n" + 
+             quote;
 
   var pin = {
-    "id" : "morpheuz-" + Math.round((Math.random() * 100000)),
+    "id" : getPinId(base,"sa"),
     "time" : alarmTime.toISOString(),
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().sa,
       "tinyIcon" : "system://images/ALARM_CLOCK",
       "backgroundColor" : "#00AAFF",
-      "body" : quote
+      "body" : body
     },
     "actions" : [ {
       "title" : mLang().startM,
@@ -81,13 +101,13 @@ function addBedTimePin(base) {
     return;
   }
 
-  var bedTime = new Date(base);
-  bedTime = bedTime.addMinutes(24 * 60);
+  var baseDt = new Date(base);
+  var bedTime = baseDt.addMinutes(24 * 60);
 
   var quote = window.localStorage.getItem("quote");
 
   var pin = {
-    "id" : "morpheuz-" + Math.round((Math.random() * 100000)),
+    "id" : getPinId(baseDt,"bt"),
     "time" : bedTime.toISOString(),
     "layout" : {
       "type" : "genericPin",
