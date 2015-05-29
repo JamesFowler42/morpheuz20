@@ -35,16 +35,15 @@ static void build_wakeup_entry(time_t timestamp, int32_t cookie) {
   WakeupId id = E_RANGE;
   uint8_t count = 0;
   while (id == E_RANGE && count < 10) {
-    id = wakeup_schedule(timestamp, cookie, false);
+    id = wakeup_schedule(timestamp, cookie, true);
     if (id == E_RANGE)
       timestamp += ONE_MINUTE;
     count++;
   }
   if (id < 0) {
     LOG_ERROR("Wakeup for cookie=%ld rejected with %ld", cookie, id);
-  } else {
-    LOG_DEBUG("Wakeup for cookie=%ld ok", cookie);
-  }
+    mark_failure(FAIL_WAKEUP, true);
+  } 
 }
 
 /*

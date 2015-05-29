@@ -68,7 +68,4 @@
 
 #define MORPHEUZ "Morpheuz"
 
-#define EMPTY ""
-#define NO_ACCEL_CALLBACK "!"
-
 #endif /* LANGUAGE_H_ */

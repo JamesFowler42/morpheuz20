@@ -160,6 +160,17 @@ typedef enum {
   IS_EXPORT
 } IconState;
 
+// Failure recording
+typedef enum {
+  FAIL_ACCEL = 1,
+  FAIL_WAKEUP = 2, 
+  FAIL_TEXT_LONG = 3,
+  FAIL_TEXT_MISSING = 4
+} FailureNote;
+
+#define NO_FAILURE "E....."
+#define OK_MARK '.'
+
 #define MAX_ICON_STATE 9
 
 #define PERSIST_MEMORY_KEY 12121
@@ -182,8 +193,8 @@ typedef enum {
 #define BLOCK_ANIMATION 4
 #define MAX_ANIMATIONS 5
 
-#define BUFFER_SIZE 40
-
+#define BUFFER_SIZE 50
+  
 #define TWENTY_FOUR_HOURS_IN_SECONDS (24*60*60)
 #define ELEVEN_HOURS_IN_SECONDS (11*60*60)
 #define WAKEUP_AUTO_RESTART 1
@@ -275,6 +286,6 @@ void open_comms();
 void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
-void set_failure_text(char *failure);
+void mark_failure(FailureNote fn, bool setUnset);
 
 #endif /* MORPHEUZ_H_ */

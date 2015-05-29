@@ -46,6 +46,7 @@ static char menu_text[15];
 static int16_t selected_row;
 
 extern char date_text[16];
+static char failure_text[] = NO_FAILURE;
 
 #ifndef PBL_COLOR
 static void menu_invert();
@@ -96,6 +97,13 @@ static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm
 #endif
 
 /*
+ * Record failures
+ */
+void mark_failure(FailureNote fn, bool setUnset) {
+    failure_text[fn] = setUnset ? '0' + fn : OK_MARK;
+}
+
+/*
  * A callback is used to specify the amount of sections of menu items
  * With this, you can dynamically add and remove sections
  */
@@ -122,7 +130,11 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
  * Here we draw what each header is
  */
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-  menu_cell_basic_header_draw(ctx, cell_layer, date_text);
+  if (strncmp(failure_text, NO_FAILURE, sizeof(failure_text)) == 0) {
+    menu_cell_basic_header_draw(ctx, cell_layer, date_text);
+  } else {
+    menu_cell_basic_header_draw(ctx, cell_layer, failure_text);
+  }
 }
 
 /*

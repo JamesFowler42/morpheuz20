@@ -70,7 +70,15 @@ static void moon_animation_stopped(Animation *animation, bool finished, void *da
 
 static void load_resource_into_buffer(uint32_t resource_id) {
   ResHandle rh = resource_get_handle(resource_id);
-  resource_load(rh, (uint8_t *) buffer, BUFFER_SIZE);
+  size_t size = resource_size(rh);
+  if (size > (BUFFER_SIZE - 1)) {
+    size = (BUFFER_SIZE - 1);
+    mark_failure(FAIL_TEXT_LONG, true);
+  } else if (size == 0) {
+    mark_failure(FAIL_TEXT_MISSING, true);
+  }
+  memset(buffer, '\0', BUFFER_SIZE);
+  resource_load(rh, (uint8_t *) buffer, size);
   text_layer_set_text(notice_text, buffer);
 }
 
@@ -94,7 +102,7 @@ void show_notice(uint32_t resource_id) {
   // Bring up notice
   notice_showing = true;
   notice_window = window_create();
-#ifndef PBL_COLOR
+#ifndef PBL_PLATFORM_BASALT
   window_set_fullscreen(notice_window, true);
 #endif
   window_stack_push(notice_window, true /* Animated */);

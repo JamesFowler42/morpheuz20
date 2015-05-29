@@ -37,7 +37,6 @@ static TextLayer *text_time_layer;
 static TextLayer *version_text;
 static TextLayer *block_layer;
 static TextLayer *powernap_layer;
-static TextLayer *failure_text;
 
 static BitmapLayerComp logo_bed;
 static BitmapLayerComp logo_sleeper;
@@ -270,13 +269,6 @@ static void update_clock() {
 }
 
 /*
- * Set failure text
- */
-void set_failure_text(char *failure) {
-  text_layer_set_text(failure_text, failure);
-}
-
-/*
  * Process clockface
  */
 static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
@@ -430,8 +422,6 @@ static void morpheuz_load(Window *window) {
 
   text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144 - 8, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
-  failure_text = macro_text_layer_create(GRect(1, 86, 8, 31), window_layer, FAILURE_COLOR, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentLeft);
-
   icon_bar = layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12));
   layer_set_update_proc(icon_bar, &icon_bar_update_callback);
   layer_add_child(window_layer, icon_bar);
@@ -476,6 +466,7 @@ static void morpheuz_load(Window *window) {
   light_enable_interaction();
 
   app_timer_register(3000, start_animate, NULL);
+
 }
 
 /*
@@ -505,7 +496,6 @@ static void morpheuz_unload(Window *window) {
   text_layer_destroy(text_time_layer);
   text_layer_destroy(text_date_smart_alarm_range_layer);
   text_layer_destroy(powernap_layer);
-  text_layer_destroy(failure_text);
   
   #ifdef PBL_COLOR
     text_layer_destroy(text_time_shadow_layer);

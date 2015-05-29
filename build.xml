@@ -90,7 +90,7 @@
 	
 	<target name="copyquote" description="copyquote">
 		<echo message="Copying ${srcdir}/${in.file} to ${builddir}/${out.file}"/>
-		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" />
+		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" outputencoding="US-ASCII"/>
 	</target>
 	
 	<target name="copyimages" description="copyimages">
