@@ -73,9 +73,9 @@ static void load_resource_into_buffer(uint32_t resource_id) {
   size_t size = resource_size(rh);
   if (size > (BUFFER_SIZE - 1)) {
     size = (BUFFER_SIZE - 1);
-    mark_failure(FAIL_TEXT_LONG, true);
+    mark_failure(FAIL_TEXT_LONG);
   } else if (size == 0) {
-    mark_failure(FAIL_TEXT_MISSING, true);
+    mark_failure(FAIL_TEXT_MISSING);
   }
   memset(buffer, '\0', BUFFER_SIZE);
   resource_load(rh, (uint8_t *) buffer, size);

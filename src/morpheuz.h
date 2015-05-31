@@ -30,15 +30,20 @@
 #define VERSION 31
 #define VERSION_TXT "3.1"
 
-// Comment out for production build
+// Comment out for production build - leaves errors on BASALT and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
 
-#define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)
 #ifdef TESTING_BUILD
+  #define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)
   #define LOG_WARN(fmt, args...) app_log(APP_LOG_LEVEL_WARNING, "", 0, fmt, ## args)
   #define LOG_INFO(fmt, args...) app_log(APP_LOG_LEVEL_INFO, "", 0, fmt, ## args)
   #define LOG_DEBUG(fmt, args...) app_log(APP_LOG_LEVEL_DEBUG, "", 0, fmt, ## args)
 #else
+  #ifdef PBL_PLATFORM_BASALT 
+    #define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)
+  #else
+    #define LOG_ERROR(fmt, args...)
+  #endif
   #define LOG_WARN(fmt, args...) 
   #define LOG_INFO(fmt, args...) 
   #define LOG_DEBUG(fmt, args...) 
@@ -102,6 +107,10 @@
   #define FAILURE_COLOR GColorRed
   #define BATTERY_BAR_COLOR GColorYellow
   #define BAR_CHART_MARKS GColorLightGray
+  #define ANIMATE_MAIN_DURATION 500
+  #define ANIMATE_HEAD_DURATION 250
+  #define ANIMATE_ANALOGUE_DURATION 375
+  #define PRE_ANIMATE_DELAY 1500
 #else
   #define BACKGROUND_COLOR GColorBlack
   #define SETTING_BACKGROUND_COLOR GColorWhite
@@ -118,6 +127,10 @@
   #define FAILURE_COLOR GColorWhite
   #define BATTERY_BAR_COLOR GColorWhite
   #define BAR_CHART_MARKS GColorWhite
+  #define ANIMATE_MAIN_DURATION 1000
+  #define ANIMATE_HEAD_DURATION 500
+  #define ANIMATE_ANALOGUE_DURATION 750
+  #define PRE_ANIMATE_DELAY 3000
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
@@ -169,7 +182,6 @@ typedef enum {
 } FailureNote;
 
 #define NO_FAILURE "E....."
-#define OK_MARK '.'
 
 #define MAX_ICON_STATE 9
 
@@ -182,6 +194,7 @@ typedef enum {
 #define NOTICE_DISPLAY_MS 7000
 #define FIVE_MINUTES_MS (5*60*1000)
 #define TEN_SECONDS_MS (10*1000)
+#define COMPLETE_OUTSTANDING_MS (15*1000)
 
 #define LIMIT 60
 #define DIVISOR 600
@@ -286,6 +299,6 @@ void open_comms();
 void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
-void mark_failure(FailureNote fn, bool setUnset);
+void mark_failure(FailureNote fn);
 
 #endif /* MORPHEUZ_H_ */

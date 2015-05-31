@@ -362,7 +362,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
   animation_count++;
   if (animation_count == 4) {
     light_enable_interaction();
-    build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, 500, LOGO_HEAD_ANIMATION);
+    build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, ANIMATE_HEAD_DURATION, LOGO_HEAD_ANIMATION);
   } else if (animation_count == 5) {
     analogue_visible(get_config_data()->analogue, true);
   }
@@ -381,10 +381,10 @@ bool is_animation_complete() {
 static void start_animate(void *data) {
   light_enable_interaction();
 
-  build_an_animate(bitmap_layer_get_layer_jf(logo_bed.layer), &BED_START, &BED_FINISH, 1000, LOGO_BED_ANIMATION);
-  build_an_animate(bitmap_layer_get_layer_jf(logo_sleeper.layer), &SLEEPER_START, &SLEEPER_FINISH, 1000, LOGO_SLEEPER_ANIMATION);
-  build_an_animate(bitmap_layer_get_layer_jf(logo_text.layer), &TEXT_START, &TEXT_FINISH, 1000, LOGO_TEXT_ANIMATION);
-  build_an_animate(text_layer_get_layer_jf(block_layer), &BLOCK_START, &BLOCK_FINISH, 1000, BLOCK_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_bed.layer), &BED_START, &BED_FINISH, ANIMATE_MAIN_DURATION, LOGO_BED_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_sleeper.layer), &SLEEPER_START, &SLEEPER_FINISH, ANIMATE_MAIN_DURATION, LOGO_SLEEPER_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_text.layer), &TEXT_START, &TEXT_FINISH, ANIMATE_MAIN_DURATION, LOGO_TEXT_ANIMATION);
+  build_an_animate(text_layer_get_layer_jf(block_layer), &BLOCK_START, &BLOCK_FINISH, ANIMATE_MAIN_DURATION, BLOCK_ANIMATION);
   text_layer_destroy(version_text);
   text_layer_set_text(block_layer, "");
 }
@@ -465,7 +465,7 @@ static void morpheuz_load(Window *window) {
 
   light_enable_interaction();
 
-  app_timer_register(3000, start_animate, NULL);
+  app_timer_register(PRE_ANIMATE_DELAY, start_animate, NULL);
 
 }
 

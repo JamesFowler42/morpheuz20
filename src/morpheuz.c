@@ -55,7 +55,8 @@ static void validate_weekend() {
  * Do something with samples every minute
  */
 uint16_t every_minute_processing() {
-  mark_failure(FAIL_ACCEL, !accel_handler_called);
+  if (!accel_handler_called)
+    mark_failure(FAIL_ACCEL);
   uint16_t last_biggest = biggest_movement_in_one_minute;
   validate_weekend();
   power_nap_check(biggest_movement_in_one_minute);

@@ -33,16 +33,19 @@ static bool save_config_requested = false;
 static int32_t internal_data_checksum;
 static bool no_record_warning = true;
 static uint8_t last_progress_highest_entry = 254;
-static bool at_limit;
 
 static int32_t previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
 
 static bool version_sent = false;
+static bool complete_outstanding = false;
 static int8_t new_last_sent;
 static time_t last_request;
 static time_t last_response;
 
 static void transmit_next_data(void *data);
+static void reset_sleep_period_action(void *data);
+static bool at_limit(int32_t offset);
+static int32_t calc_offset();
 
 /*
  * Send a message to javascript
@@ -97,6 +100,9 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     if (ctrl_value & CTRL_TRANSMIT_DONE) {
       internal_data.transmit_sent = true;
       set_icon(true, IS_EXPORT);
+      if (complete_outstanding) {
+        app_timer_register(COMPLETE_OUTSTANDING_MS, reset_sleep_period_action, NULL);
+      }
     }
 
     // If version is done then mark it
@@ -273,9 +279,10 @@ void trigger_config_save() {
 }
 
 /*
- * Perform reset - either from watch or phone
+ * Perform the actual reset action
  */
-void reset_sleep_period() {
+static void reset_sleep_period_action(void *data) {
+  complete_outstanding = false;
   previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
   clear_internal_data();
   time_t now = time(NULL);
@@ -294,9 +301,24 @@ void reset_sleep_period() {
   } else {
     show_notice(RESOURCE_ID_NOTICE_TIMER_RESET_NOALARM);
     vibes_short_pulse();
-  }
-
+  } 
 }
+
+/*
+ * Perform reset - before bed action
+ */
+void reset_sleep_period() {
+  
+  // If we haven't transmitted data, we've actually been reset, we're at the limit and this hasn't been requested once before (allows a force reset)
+  // Then show a notice, wait for completion and then we complete do the reset
+  if (!internal_data.transmit_sent && internal_data.has_been_reset && !complete_outstanding && at_limit(calc_offset())) {
+    show_notice(RESOURCE_ID_NOTICE_OUTSTANDING);
+    complete_outstanding = true;
+    return;
+  }
+  
+  reset_sleep_period_action(NULL);
+} 
 
 /*
  * Force data resend
@@ -324,13 +346,20 @@ static int32_t calc_offset() {
 }
 
 /*
+ * Are we at the limit for recording
+ */
+static bool at_limit(int32_t offset) {
+  return (offset >= LIMIT || offset < 0);
+}
+
+/*
  * Set ignore on current time segment
  */
 void set_ignore_on_current_time_segment() {
-
+  
   int32_t offset = calc_offset();
-
-  if (offset >= LIMIT || offset < 0) {
+  
+  if (at_limit(offset)) {
     set_icon(false, IS_IGNORE);
     return;
   }
@@ -347,18 +376,16 @@ static void store_point_info(uint16_t point) {
 
   int32_t offset = calc_offset();
 
-  if (offset >= LIMIT || offset < 0) {
+  if (at_limit(offset)) {
     set_icon(false, IS_RECORD);
     set_icon(false, IS_IGNORE);
     if (no_record_warning) {
       show_notice(RESOURCE_ID_NOTICE_END_OF_RECORDING);
       no_record_warning = false;
     }
-    at_limit = true;
     return;
   }
 
-  at_limit = false;
   set_icon(true, IS_RECORD);
   set_icon(internal_data.ignore[offset], IS_IGNORE);
 
@@ -501,7 +528,7 @@ static void transmit_next_data(void *data) {
   if (internal_data.last_sent >= internal_data.highest_entry) {
     if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
       send_to_phone(KEY_GONEOFF, internal_data.gone_off);
-    } else if (!internal_data.transmit_sent && at_limit && internal_data.has_been_reset) {
+    } else if (!internal_data.transmit_sent  && internal_data.has_been_reset && at_limit(calc_offset())) {
       send_to_phone(KEY_TRANSMIT, 0);
     }
     return;

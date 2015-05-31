@@ -271,7 +271,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
  */
 static void start_animation(GRect *start, GRect *finish) {
   analogue_animation = property_animation_create_layer_frame(analgue_layer, start, finish);
-  animation_set_duration((Animation*) analogue_animation, 750);
+  animation_set_duration((Animation*) analogue_animation, ANIMATE_ANALOGUE_DURATION);
   animation_set_handlers((Animation*) analogue_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
   animation_schedule((Animation*) analogue_animation);
 }

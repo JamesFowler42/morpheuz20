@@ -19,6 +19,11 @@
     "resources": {
         "media": [
             {
+                "file": "data/outstanding-data.txt",
+                "name": "NOTICE_OUTSTANDING",
+                "type": "raw"
+            },
+            {
                 "characterRegex": "[a-zA-Z0-9:.\\-!() \\xA9']",
                 "file": "fonts/axaxax-bd-1.ttf",
                 "name": "FONT_DIGITAL_16",

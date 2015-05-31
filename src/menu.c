@@ -99,8 +99,8 @@ static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm
 /*
  * Record failures
  */
-void mark_failure(FailureNote fn, bool setUnset) {
-    failure_text[fn] = setUnset ? '0' + fn : OK_MARK;
+void mark_failure(FailureNote fn) {
+    failure_text[fn] = '0' + fn;
 }
 
 /*
