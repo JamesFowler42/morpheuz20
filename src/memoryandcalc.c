@@ -370,7 +370,7 @@ void set_ignore_on_current_time_segment() {
 }
 
 /*
- * Store data returned from the watch
+ * Store data returned from the accelerometer
  */
 static void store_point_info(uint16_t point) {
 
@@ -379,7 +379,7 @@ static void store_point_info(uint16_t point) {
   if (at_limit(offset)) {
     set_icon(false, IS_RECORD);
     set_icon(false, IS_IGNORE);
-    if (no_record_warning) {
+    if (no_record_warning && !complete_outstanding) {
       show_notice(RESOURCE_ID_NOTICE_END_OF_RECORDING);
       no_record_warning = false;
     }
