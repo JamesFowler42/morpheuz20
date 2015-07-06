@@ -47,6 +47,8 @@ static void reset_sleep_period_action(void *data);
 static bool at_limit(int32_t offset);
 static int32_t calc_offset();
 
+extern AppTimer *auto_shutdown_timer; 
+
 /*
  * Send a message to javascript
  */
@@ -100,8 +102,14 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     if (ctrl_value & CTRL_TRANSMIT_DONE) {
       internal_data.transmit_sent = true;
       set_icon(true, IS_EXPORT);
+      // If we're waiting for previous nights data to be sent, it now has been, reset and go
       if (complete_outstanding) {
         app_timer_register(COMPLETE_OUTSTANDING_MS, reset_sleep_period_action, NULL);
+      }
+      // If Morpheuz has woken to send data, then once the data is sent, speed up the shutdown
+      // Normally around for 5 minutes but no need for that once data has been sent
+      if (auto_shutdown_timer != NULL) {
+        app_timer_reschedule(auto_shutdown_timer, TEN_SECONDS_MS);
       }
     }
 

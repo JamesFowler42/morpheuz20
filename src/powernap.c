@@ -100,14 +100,24 @@ void toggle_power_nap() {
 static void back_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Stop accidental closure of Morpheuz by defining this
   // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
+  // Only if we're recording or running powernap
+  if (get_icon(IS_RECORD) || is_doing_powernap()) {
+    revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
+  } else {
+    close_morpheuz();  
+  }
 }
 
 /*
  * Single click handler on down button
  */
 static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  snooze_alarm();
+  // Make the snooze and the cancel buttons the same way around as the default alarm app
+  #ifdef PBL_COLOR
+    cancel_alarm();
+  #else
+    snooze_alarm();
+  #endif
   // Bring clock up to date if a button is pressed
   revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }
@@ -130,7 +140,12 @@ bool is_doing_powernap() {
  * Single click handler on up button
  */
 static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  cancel_alarm();
+  // Make the snooze and the cancel buttons the same way around as the default alarm app
+  #ifdef PBL_COLOR
+    snooze_alarm();
+  #else
+    cancel_alarm();
+  #endif
   // Bring clock up to date if a button is pressed
   revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }

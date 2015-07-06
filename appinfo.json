@@ -19,6 +19,16 @@
     "resources": {
         "media": [
             {
+                "file": "images/save.png",
+                "name": "SAVE_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/recall.png",
+                "name": "RECALL_ICON",
+                "type": "png"
+            },
+            {
                 "file": "data/outstanding-data.txt",
                 "name": "NOTICE_OUTSTANDING",
                 "type": "raw"
@@ -200,7 +210,7 @@
         "basalt"
     ],
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
-    "versionLabel": "3.1",
+    "versionLabel": "3.2",
     "watchapp": {
         "watchface": false
     }

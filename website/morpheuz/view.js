@@ -33,7 +33,12 @@ function mConst() {
     swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&pt=409665&ct=morpheuz_web",
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
-    swpUrlDate : "yyyy-MM-ddThh:mm:00"
+    swpUrlDate : "yyyy-MM-ddThh:mm:00",
+    emailHeader: "<h2>CSV Sleep data</h2><br/>",
+    emailFooter1: "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
+    emailFooter2: "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
+    emailAddressMandatory: "valid email address is required",
+    sendingEmail: "Sending..."
   };
 }
 
@@ -264,36 +269,31 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
 }
 
 /*
- * Prepare the data for the copy links
+ * Prepare the data for the mail links
  */
 function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff) {
 
   var timePoint = new Date(base);
-  var body = "&body=";
-  var copyBody = "";
+  var body = "<pre>";
 
   for (var i = 0; i < splitup.length; i++) {
     if (splitup[i] === "") {
       continue;
     }
-    body = body + timePoint.format("hh:mm") + "," + splitup[i] + "%0D%0A";
-    copyBody = copyBody + timePoint.format("hh:mm") + "," + splitup[i] + "\r\n";
+    body = body + timePoint.format("hh:mm") + "," + splitup[i] + "<br/>";
     timePoint = timePoint.addMinutes(mConst().sampleIntervalMins);
   }
 
   // Add smart alarm info into CSV data
   if (smartOn) {
-    body = body + fromhr + ":" + frommin + ",START%0D%0A" + tohr + ":" + tomin + ",END%0D%0A";
-    copyBody = copyBody + fromhr + ":" + frommin + ",START\r\n" + tohr + ":" + tomin + ",END\r\n";
+    body = body + fromhr + ":" + frommin + ",START<br/>" + tohr + ":" + tomin + ",END<br/>";
     if (goneoff != "N") {
       var goneoffstr = goneoff.substr(0, 2) + ":" + goneoff.substr(2, 2);
-      body = body + goneoffstr + ",ALARM%0D%0A";
-      copyBody = copyBody + goneoffstr + ",ALARM\r\n";
+      body = body + goneoffstr + ",ALARM<br/>";
     }
   }
   return {
-    "body" : body,
-    "copyBody" : copyBody
+    "body" : body + "</pre>",
   };
 }
 
@@ -464,7 +464,7 @@ $("document").ready(function() {
   });
 
   // Build the pie chart data
-  var data2 = [ [ "Awake?", out.awake ], [ "Light", out.light ], [ "Deep", out.deep ], [ "Ignore", out.ignore ] ];
+  var data2 = [ [ "Restless", out.awake ], [ "Light", out.light ], [ "Deep", out.deep ], [ "Ignore", out.ignore ] ];
 
   // Prepare the graph
   $(document).ready(function() {
@@ -560,42 +560,6 @@ $("document").ready(function() {
 
   });
 
-  // Generate data to copy and email
-  var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
-
-  var mailto = "?subject=Morpheuz-" + new Date(base).format("yyyy-MM-dd") + ".csv" + cpy.body;
-
-  $("#mailtemp").val(mailto);
-  $("#mail").prop("href", "mailto:" + emailto + mailto);
-  $("#copy").val(cpy.copyBody);
-
-  if (!nosetOn) {
-    $("#mail").click(function() {
-      setTimeout(function() {
-        window.location.href = "pebblejs://close";
-      }, 250);
-    });
-  }
-
-  $("#copy").focus(function() {
-    var $this = $(this);
-    $this.select();
-
-    // Work around Chrome's little problem
-    $this.mouseup(function() {
-      // Prevent further mouseup intervention
-      $this.unbind("mouseup");
-      return false;
-    });
-  });
-
-  // Change the mailto
-  $("#emailto").change(function() {
-    var mailtemp = $("#mailtemp").val();
-    var emailto = $("#emailto").val();
-    $("#mail").prop("href", "mailto:" + emailto + mailtemp);
-  });
-
   // Handle the Save and reset option
   $(".save").click(function() {
     var unused = "N";
@@ -609,5 +573,51 @@ $("document").ready(function() {
     var lifxTime = encodeURIComponent($("#lifxTime").val());
     window.location.href = "pebblejs://close#reset" + "!" + unused + "!" + blank + "!" + blank + "!" + blank + "!" + blank + "!" + unused + "!" + emailpart + "!" + pouser + "!" + blank + "!" + potoken + "!" + unused + "!" + swpdo + "!" + usage + "!" + lifxToken + "!" + lifxTime;
   });
+  
+  //Send an email containing CSV data
+  $("#mail").removeAttr("disabled");
+  $("#mail").click(function() {
+    
+    // Get email address
+    var emailto = $("#emailto").val();
+    
+    // Ensure address supplied
+    if (emailto === "" || !validateEmail(emailto)) {
+      $("#emailSendResult").text(mConst().emailAddressMandatory);
+      $("#emailSendResult").addClass("red");
+      return;
+    }
+    
+    // Extract data
+    var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
+   
+    // Build email json
+    var email = { 
+        "from": "Morpheuz <noreply@morpheuz.co.uk>", 
+        "to": emailto,
+        "subject": "Morpheuz-" + new Date(base).format("yyyy-MM-dd"),
+        "message": mConst().emailHeader + cpy.body + mConst().emailFooter1 + mConst().emailFooter2 
+        };
+    
+    // Disable button and put out sending text
+    $("#mail").attr("disabled", "disabled");
+    $("#emailSendResult").removeClass("red").removeClass("green");
+    $("#emailSendResult").text(mConst().sendingEmail);
+    
+    // Send to server and await response
+    sendMailViaServer(email, function(stat, resp) {
+      if (stat === 1) {
+        $("#emailSendResult").addClass("green");
+      } else {
+        $("#emailSendResult").addClass("red");
+      }
+      $("#emailSendResult").text(resp);
+      $("#mail").removeAttr("disabled");
+      
+    })
+    
+  });
 
 });
+
+

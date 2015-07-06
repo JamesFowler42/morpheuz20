@@ -83,6 +83,25 @@ static void load_resource_into_buffer(uint32_t resource_id) {
 }
 
 /*
+ * Click a button on a notice and it goes away
+ */
+static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
+    if (notice_showing) {
+      app_timer_reschedule(notice_timer, SHORT_RETRY_MS);
+    }
+}
+
+/*
+ * Button config
+ */
+void notice_click_config_provider(Window *window) {
+  window_single_click_subscribe(BUTTON_ID_BACK, single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, single_click_handler);
+}
+
+/*
  * Show the notice window
  */
 void show_notice(uint32_t resource_id) {
@@ -122,7 +141,7 @@ void show_notice(uint32_t resource_id) {
   notice_text = macro_text_layer_create(GRect(4, 68, 136, 100), window_layer, fcolor, GColorClear, notice_font, GTextAlignmentLeft);
   load_resource_into_buffer(resource_id);
 
-  window_set_click_config_provider(notice_window, (ClickConfigProvider) click_config_provider);
+  window_set_click_config_provider(notice_window, (ClickConfigProvider) notice_click_config_provider);
 
   moon_animation = property_animation_create_layer_frame(bitmap_layer_get_layer_jf(notice_moon.layer), &MOON_START, &MOON_FINISH);
   animation_set_duration((Animation*) moon_animation, 750);

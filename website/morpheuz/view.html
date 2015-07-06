@@ -1,5 +1,9 @@
 <!DOCTYPE html>
 <html>
+<head>
+<title>Morpheuz Sleep Monitor</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <!-- 
 /* 
  * Morpheuz Sleep Monitor
@@ -25,9 +29,6 @@
  * THE SOFTWARE.
  */
 -->
-<head>
-<title>Morpheuz Sleep Monitor</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
 <script type="text/javascript" src="jqplot/jquery.min.js"></script>
 <script type="text/javascript" src="jqplot/jquery.jqplot.min.js"></script>
 <link rel="stylesheet" type="text/css" href="jqplot/jquery.jqplot.css" />
@@ -46,141 +47,159 @@
 </head>
 <body>
   <div class="outer">
-  <div class="inner vpwidth">
-  <form action="">
-    <div id="version" class="vpwidth">v0.5</div>
-    <h2 id="title"><img src="img/morpheuz.png"/>Morpheuz Sleep Monitor</h2>
-    <p class="error verswarning" style="display:none;">You are on an old version of Morpheuz. To get all the new features please upgrade. See <a href="http://www.morpheuz.net/p/upgrade.html">here</a> for details.</p>
-    <p class="error versbeta" style="display:none;">This is a beta version of Morpheuz. Please report any issues you find.</p>
-    <p class="error versproblem" style="display:none;">Unable to determine current version of Morpheuz.</p>
-    <h3 id="sleep-time"></h3>
-    <div id="info-message" style="display: none">
-      <p class="settingswrap">
-        Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a>.
-      </p>
-    </div>
-    <h3 class="movement-head">Sleep Movement</h3>
-    <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
-    <h3 class="quality-head">Quality of Sleep</h3>
-    <div id="chart2" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
-    <h3>Statistics</h3>
-    <table class="statstable">
-      <col width="50%">
-      <col width="50%">
-      <tr class="stat">
-        <td>Total</td>
-        <td id="ttotal">-</td>
-      </tr>
-      <tr class="stat">
-        <td>Awake?</td>
-        <td id="tawake">-</td>
-      </tr>
-      <tr class="stat">
-        <td>Light</td>
-        <td id="tlight">-</td>
-      </tr>
-      <tr class="stat">
-        <td>Deep</td>
-        <td id="tdeep">-</td>
-      </tr>
-      <tr class="stat">
-        <td>Ignore</td>
-        <td id="tignore">-</td>
-      </tr>
-    </table>
-    <h4>Sleep Analysis Data Point</h4>
-    <table class="statstable">
-      <col width="50%">
-      <col width="50%">
-      <tr class="stat">
-        <td>Starts</td>
-        <td id="tstarts">-</td>
-      </tr>
-      <tr class="stat">
-        <td>Ends</td>
-        <td id="tends">-</td>
-      </tr>
-    </table>
-    <h3 class="exporthead">Export</h3>
-    <div class="exportwrap">
-      <ol>
-        <li class="grey">
-          <p>CSV Data</p> <textarea id="copy" rows="3" cols="30" class="textbox"></textarea>
-          <p class="small">Select all &amp; copy the CSV data in this text area</p>
-        </li>
-        <li class="grey">
-          <p>E-Mail</p> <label for="emailto">To:</label><input id="emailto" type="email" maxlength="254" class="textbox"/><a id="mail" href="mailto:">Export</a> <input id="mailtemp" type="hidden" />
-          <p class="small android">Whether this link works or not depends upon your phone, the version of the OS it is running and mail apps installed.</p>
-          <p class="small noset">'To' only saved by pressing Save.</p>
-        </li>
-        <li id="lipushover" class="noset">
-          <p>Pushover</p>
-           <div class="row">
-           <div class="cell"><label for="ptoken">Token:</label></div>
-           <div class="cell"><input id="ptoken" type="text" maxlength="30" class="textbox wide"/></div>
-           </div>
-          <div class="row">
-          <div class="cell"><label for="puser">User:</label></div>
-          <div class="cell"><input id="puser" type="text" maxlength="30" class="textbox wide"/></div>
-          </div>
-          <p class="small">'token' & 'user' only saved by pressing Save.</p>
-          <p class="small">Setting these values will enable automatic push messages to Pushover</p>
-          <p class="small">
-            Last result: <span id="presult"></span>
+    <div class="inner vpwidth">
+      <form action="">
+        <div id="version" class="vpwidth">v0.5</div>
+        <h2 id="title">
+          <img src="img/morpheuz.png" />Morpheuz Sleep Monitor
+        </h2>
+        <p class="error verswarning" style="display: none;">
+          You are on an old version of Morpheuz. To get all the new features please upgrade. See <a href="http://www.morpheuz.net/p/upgrade.html">here</a> for details.
+        </p>
+        <p class="error versbeta" style="display: none;">This is a beta version of Morpheuz. Please report any issues you find.</p>
+        <p class="error versproblem" style="display: none;">Unable to determine current version of Morpheuz.</p>
+        <h3 id="sleep-time"></h3>
+        <div id="info-message" style="display: none">
+          <p class="settingswrap">
+            Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a>.
           </p>
-        </li>
-        <li id="lilifx" class="noset">
-          <p>LIFX</p>
-           <div class="row">
-           <div class="cell"><label for="lifxToken">Token:</label></div>
-           <div class="cell"><input id="lifxToken" type="text" maxlength="100" class="textbox wide"/></div>
-           </div>
-          <div class="row">
-          <div class="cell"><label for="lifxTime">Fade-in Time:</label></div>
-          <div class="cell"><input id="lifxTime" type="number" maxlength="4" class="textbox wide"/></div>
-          </div>
-          <p class="small">LIFX values will only saved by pressing Save.</p>
-          <p class="small">Get your LIFX token by logging into your profile at <a href="cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.</p>
-        </li>
-        <li class="grey noset ios">
-          <p class="paddedbottom">Manual Healthkit export via Smartwatch Pro</p> <a id="swp" href="swpro2hk://">Export</a>
-          <p class="small" id="swpnodata">The recorded data is not yet complete enough for export.</p>
-          <p class="small padded">
-            Needs iOS8 (or above) with <a id="swplink">Smartwatch Pro</a> installed
-          </p>
-        </li>
-        <li id="liswp" class="noset ios">
-          <p>Automatic Healthkit export via Smartwatch Pro</p> <label for="swpdo">Automatic:</label><input id="swpdo" type="checkbox" />
-          <p class="small">One manual export is required before activating automatic mode</p>
-          <p class="small">
-            Last result: <span id="swpstat"></span>
-          </p>
-        </li>
-      </ol>
-      <p class="small noset indent">
+        </div>
+        <h3 class="movement-head">Sleep Movement</h3>
+        <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
+        <h3 class="quality-head">Quality of Sleep</h3>
+        <div id="chart2" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
+        <h3>Statistics</h3>
+        <table class="statstable">
+          <col width="50%">
+          <col width="50%">
+          <tr class="stat">
+            <td>Total</td>
+            <td id="ttotal">-</td>
+          </tr>
+          <tr class="stat">
+            <td>Restless</td>
+            <td id="tawake">-</td>
+          </tr>
+          <tr class="stat">
+            <td>Light</td>
+            <td id="tlight">-</td>
+          </tr>
+          <tr class="stat">
+            <td>Deep</td>
+            <td id="tdeep">-</td>
+          </tr>
+          <tr class="stat">
+            <td>Ignore</td>
+            <td id="tignore">-</td>
+          </tr>
+        </table>
+        <h4>Sleep Analysis Data Point</h4>
+        <table class="statstable">
+          <col width="50%">
+          <col width="50%">
+          <tr class="stat">
+            <td>Starts</td>
+            <td id="tstarts">-</td>
+          </tr>
+          <tr class="stat">
+            <td>Ends</td>
+            <td id="tends">-</td>
+          </tr>
+        </table>
+        <h3 class="exporthead">Export</h3>
+        <div class="exportwrap">
+          <ol>
+            <li class="grey">
+              <p>E-Mail CSV Data</p> <label for="emailto">To:</label><input id="emailto" type="email" maxlength="254" class="textbox" /><input type="button" id="mail" value="Export" />
+              <p class="small" id="emailSendResult"></p>
+              <p class="small noset">'To' only saved by pressing Save.</p>
+            </li>
+            <li id="lipushover" class="noset">
+              <p>Pushover - Daily Chart Export</p>
+              <div class="row">
+                <div class="cell">
+                  <label for="ptoken">Token:</label>
+                </div>
+                <div class="cell">
+                  <input id="ptoken" type="text" maxlength="30" class="textbox wide" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="cell">
+                  <label for="puser">User:</label>
+                </div>
+                <div class="cell">
+                  <input id="puser" type="text" maxlength="30" class="textbox wide" />
+                </div>
+              </div>
+              <p class="small">'token' & 'user' only saved by pressing Save.</p>
+              <p class="small">Setting these values will enable automatic push messages to Pushover</p>
+              <p class="small">
+                Last result: <span id="presult"></span>
+              </p>
+            </li>
+            <li class="grey noset ios">
+              <p class="paddedbottom">Manual Healthkit export via Smartwatch Pro</p> <a id="swp" href="swpro2hk://">Export</a>
+              <p class="small" id="swpnodata">The recorded data is not yet complete enough for export.</p>
+              <p class="small padded">
+                Needs iOS8 (or above) with <a id="swplink">Smartwatch Pro</a> installed
+              </p>
+            </li>
+            <li id="liswp" class="noset ios">
+              <p>Automatic Healthkit export via Smartwatch Pro</p> <label for="swpdo">Automatic:</label><input id="swpdo" type="checkbox" />
+              <p class="small">One manual export is required before activating automatic mode</p>
+              <p class="small">
+                Last result: <span id="swpstat"></span>
+              </p>
+            </li>
+            <li id="lilifx" class="noset">
+              <p>LIFX Smart Bulb</p>
+              <div class="row">
+                <div class="cell">
+                  <label for="lifxToken">Token:</label>
+                </div>
+                <div class="cell">
+                  <input id="lifxToken" type="text" maxlength="100" class="textbox wide" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="cell">
+                  <label for="lifxTime">Fade-in Time:</label>
+                </div>
+                <div class="cell">
+                  <input id="lifxTime" type="number" maxlength="4" class="textbox wide" />
+                </div>
+              </div>
+              <p class="small">LIFX values will only saved by pressing Save.</p>
+              <p class="small">
+                Get your LIFX token by logging into your profile at <a href="http://cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.
+              </p>
+            </li>
+          </ol>
+          <p class="small noset indent">
             Last auto export done: <span id="exptime"></span>
-      </p>
-      <input class="noset save" type="button" id="save" value="Save" />
+          </p>
+          <input class="noset save" type="button" id="save" value="Save" />
 
+        </div>
+        <h3>See also</h3>
+        <p>
+        <ul>
+          <li><a href="http://www.morpheuz.net/p/instructions.html" target="_blank">Instructions @ www.morpheuz.net</a></li>
+          <li><a class="ios" href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class="android">morpheuzsleepmonitor on Facebook</span></li>
+          <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
+        </ul>
+        </p>
+        <h3 class="exporthead noset">Usage Reporting</h3>
+        <div class="exportwrap noset usageindent">
+          <p>Help to improve Morpheuz by allowing once a day anonymous usage statistics.</p>
+          <label for="usage">Allow:</label><input id="usage" type="checkbox" />
+          <p class="small">No personal data is sent or saved.</p>
+          <input type="button" id="save2" class="save" value="Save" />
+        </div>
+        <p class="centre small">&copy; 2013-2015 James Fowler</p>
+      </form>
     </div>
-    <h3>See also</h3>
-    <p>
-    <ul>
-      <li><a href="http://www.morpheuz.net/p/instructions.html" target="_blank">Instructions @ www.morpheuz.net</a></li>
-      <li><a class="ios" href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class="android">morpheuzsleepmonitor on Facebook</span></li>
-      <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
-    </ul>
-    </p>
-    <h3 class="exporthead noset">Usage Reporting</h3>
-    <div class="exportwrap noset usageindent">
-    <p>Help to improve Morpheuz by allowing once a day anonymous usage statistics.</p> 
-    <label for="usage">Allow:</label><input id="usage" type="checkbox" />
-    <p class="small">No personal data is sent or saved.</p>
-    <input type="button" id="save2" class="save" value="Save" />
-    </div>
-    <p class="centre small">&copy; 2013-2015 James Fowler</p>
-  </form>
-  </div>
   </div>
 </body>
 </html>

@@ -54,6 +54,7 @@ static void menu_invert();
 
 static void menu_analogue();
 static void menu_resend();
+static void hide_menu();
 
 // Invoke a menu item
 typedef void (*MorphMenuAction)(void);
@@ -66,15 +67,18 @@ typedef struct {
   MorphMenuAction action;
 } MenuDef;
 
-#define OPT_WAKEUP 6
+
 
 // Define the menu
 #ifdef PBL_COLOR
+  #define OPT_WAKEUP 7
+  #define OPT_PRESETS 5
 static MenuDef menu_def[] = { {MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm},
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm},
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment},
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period},
   { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm},
+  { MENU_PRESET, MENU_PRESET_DES, NULL, show_preset_menu},
   { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode},
   { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle},
   { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap},
@@ -82,6 +86,7 @@ static MenuDef menu_def[] = { {MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm}
   { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend},
   { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz}};
 #else
+    #define OPT_WAKEUP 6
 static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm }, 
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm }, 
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment }, 
@@ -130,11 +135,12 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
  * Here we draw what each header is
  */
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
-  if (strncmp(failure_text, NO_FAILURE, sizeof(failure_text)) == 0) {
-    menu_cell_basic_header_draw(ctx, cell_layer, date_text);
-  } else {
-    menu_cell_basic_header_draw(ctx, cell_layer, failure_text);
+  graphics_context_set_text_color(ctx, MENU_HEAD_COLOR);
+  char *text = date_text;
+  if (strncmp(failure_text, NO_FAILURE, sizeof(failure_text)) != 0) {
+    text = failure_text;
   }
+  graphics_draw_text(ctx, text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GRect(0, -2, 144, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
 }
 
 /*
@@ -197,10 +203,16 @@ static void menu_resend() {
 /*
  * Here we capture when a user selects a menu item
  */
-void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
   selected_row = alarm_on ? cell_index->row : cell_index->row + 2;
-  hide_menu();
+  #ifndef PBL_COLOR
+    hide_menu();
+  #else
+    if (selected_row != OPT_PRESETS) {
+      hide_menu();
+    }
+  #endif
   app_timer_register(MENU_ACTION_MS, do_menu_action, NULL);
 }
 
@@ -221,12 +233,18 @@ void window_load(Window *window) {
   menu_layer_set_click_config_onto_window(menu_layer, window);
 
   layer_add_child(window_layer, menu_layer_get_layer_jf(menu_layer));
+
+  #ifdef PBL_COLOR
+    menu_layer_set_normal_colors(menu_layer, MENU_BACKGROUND_COLOR, MENU_TEXT_COLOR);
+    menu_layer_set_highlight_colors(menu_layer, MENU_HIGHLIGHT_BACKGROUND_COLOR, MENU_TEXT_COLOR);
+  #endif  
+
 }
 
 /*
  * Unload the menu window
  */
-void window_unload(Window *window) {
+static void window_unload(Window *window) {
   menu_layer_destroy(menu_layer);
   gbitmap_destroy(menu_icons[0]);
   gbitmap_destroy(menu_icons[1]);
@@ -254,7 +272,7 @@ void show_menu() {
 /*
  * Hide the menu (destroy)
  */
-void hide_menu() {
+static void hide_menu() {
   window_stack_remove(window, true);
   window_destroy(window);
 }

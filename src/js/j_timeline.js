@@ -139,6 +139,9 @@ function addBedTimePin(base) {
  * Get some interesting body text
  */
 function getQuoteOfTheDay() {
+  if (!isBasalt()) {
+    return;
+  }
   makeGetAjaxCall(mConst().quotesUrl + "?v=" + new Date().getTime(), function(resp) {
     if (resp && resp.status === 1) {
       var obj = JSON.parse(resp.data);

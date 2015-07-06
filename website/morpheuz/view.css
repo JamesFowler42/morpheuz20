@@ -287,6 +287,14 @@ span.red {
     color: red;
 }
 
+p.small.green {
+    color: green;
+}
+
+p.small.red {
+    color: red;
+}
+
 .padded {
     padding-top: 5px;
 }

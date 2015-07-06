@@ -45,14 +45,22 @@
 #define MENU_QUIT "Quit"
 #define MENU_QUIT_DES "...or a long press on back"
 #define MENU_SNOOZE "Snooze Alarm"
-#define MENU_SNOOZE_DES "... or press down"
 #define MENU_CANCEL "Cancel Alarm"
-#define MENU_CANCEL_DES "... or press up"
 #define MENU_AUTO_RESET "Auto bed time"
 #define MENU_AUTO_RESET_DES_OFF "... same time again"
 #define MENU_AUTO_RESET_DES_ON "... at %d:%02d"
 #define MENU_SMART_ALARM "Smart Alarm"
-#define MENU_SMART_ALARM_DES "Kind wake-up"
+#define MENU_SMART_ALARM_DES "Gentle wake-up"
+#define MENU_PRESET "Presets"
+#define MENU_PRESET_DES "Smart Alarm memory"
+  
+#ifdef PBL_COLOR
+  #define MENU_SNOOZE_DES  "... or press up"
+  #define MENU_CANCEL_DES "... or press down"
+#else
+  #define MENU_SNOOZE_DES "... or press down"
+  #define MENU_CANCEL_DES "... or press up"
+#endif
 
 #define ON "On"
 #define OFF "Off"
@@ -67,5 +75,12 @@
 #define COPYRIGHT "\n© 2015\nJames Fowler"
 
 #define MORPHEUZ "Morpheuz"
+
+#define PRESET_RECALL_1 "Recall One"
+#define PRESET_RECALL_2 "Recall Two"
+#define PRESET_RECALL_3 "Recall Three"
+#define PRESET_STORE_1 "Store One"
+#define PRESET_STORE_2 "Store Two"
+#define PRESET_STORE_3 "Store Three"
 
 #endif /* LANGUAGE_H_ */

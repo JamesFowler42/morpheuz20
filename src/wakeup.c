@@ -26,6 +26,8 @@
 #include "morpheuz.h"
 #include "language.h"
 #include "analogue.h"
+  
+AppTimer *auto_shutdown_timer = NULL; 
 
 /*
  * Build a wakeup entry
@@ -112,7 +114,7 @@ void wakeup_init() {
       start_worker();
       reset_sleep_period();
     } else if (cookie == WAKEUP_FOR_TRANSMIT) {
-      app_timer_register(FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
+      auto_shutdown_timer = app_timer_register(get_internal_data()->transmit_sent ? TEN_SECONDS_MS : FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
     }
 #ifdef PBL_PLATFORM_BASALT
   } else if (launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {

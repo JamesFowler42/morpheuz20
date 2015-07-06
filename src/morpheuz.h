@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 31
-#define VERSION_TXT "3.1"
+#define VERSION 32
+#define VERSION_TXT "3.2"
 
 // Comment out for production build - leaves errors on BASALT and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -106,11 +106,16 @@
   #define ANALOGUE_COLOR GColorWhite
   #define FAILURE_COLOR GColorRed
   #define BATTERY_BAR_COLOR GColorYellow
+  #define BATTERY_BAR_COLOR_CRITICAL GColorRed
   #define BAR_CHART_MARKS GColorLightGray
   #define ANIMATE_MAIN_DURATION 500
   #define ANIMATE_HEAD_DURATION 250
   #define ANIMATE_ANALOGUE_DURATION 375
   #define PRE_ANIMATE_DELAY 1500
+  #define MENU_TEXT_COLOR GColorWhite
+  #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorOxfordBlue
+  #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
+  #define MENU_HEAD_COLOR GColorWhite
 #else
   #define BACKGROUND_COLOR GColorBlack
   #define SETTING_BACKGROUND_COLOR GColorWhite
@@ -126,11 +131,13 @@
   #define ANALOGUE_COLOR GColorWhite
   #define FAILURE_COLOR GColorWhite
   #define BATTERY_BAR_COLOR GColorWhite
+  #define BATTERY_BAR_COLOR_CRITICAL GColorWhite
   #define BAR_CHART_MARKS GColorWhite
   #define ANIMATE_MAIN_DURATION 1000
   #define ANIMATE_HEAD_DURATION 500
   #define ANIMATE_ANALOGUE_DURATION 750
   #define PRE_ANIMATE_DELAY 3000
+  #define MENU_HEAD_COLOR GColorBlack
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
@@ -187,6 +194,7 @@ typedef enum {
 
 #define PERSIST_MEMORY_KEY 12121
 #define PERSIST_CONFIG_KEY 12122
+#define PERSIST_PRESET_KEY 12123
 #define PERSIST_MEMORY_MS (5*60*1000)
 #define PERSIST_CONFIG_MS 30000
 #define SHORT_RETRY_MS 200
@@ -281,7 +289,6 @@ void resend_all_data(bool silent);
 void bed_visible(bool value);
 bool is_animation_complete();
 void show_menu();
-void hide_menu();
 void toggle_power_nap();
 void close_morpheuz();
 bool is_notice_showing();
@@ -300,5 +307,6 @@ void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
 void mark_failure(FailureNote fn);
+void show_preset_menu();
 
 #endif /* MORPHEUZ_H_ */

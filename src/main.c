@@ -152,7 +152,7 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *runn
   if (!battery_plugged) {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
     graphics_context_set_stroke_color(ctx, BACKGROUND_COLOR);
-    graphics_context_set_fill_color(ctx, BATTERY_BAR_COLOR);
+    graphics_context_set_fill_color(ctx, battery_level <= 10 ? BATTERY_BAR_COLOR_CRITICAL : BATTERY_BAR_COLOR);
     graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, battery_level / 9, 4), 0, GCornerNone);
   } else {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
