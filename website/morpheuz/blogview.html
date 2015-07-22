@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<!-- 
+/* 
+ * Morpheuz Sleep Monitor
+ *
+ * Copyright (c) 2013-2015 James Fowler
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+-->
+<head>
+<title>Morpheuz Sleep Monitor</title>
+<link rel="stylesheet" type="text/css" href="blogview.css" />
+<script type="text/javascript" src="jqplot/jquery.min.js"></script>
+</head>
+<body>
+	<form action="">
+		<h3 class="settings">Data</h3>
+		<p>
+			<label for="data">Data from Morpheuz email/copy area:</label>
+			<textarea id="data" rows="7" placeholder="CSV data"></textarea>
+		</p>
+		<p class="buttons">
+			<button id="plot" type="button">Plot</button>
+			<button id="clear" type="button">Clear</button>
+		</p>
+		<p id="error" class="error"></p>
+		<iframe id="output" style="display: none; width: 555px" frameborder="0">
+		</iframe>
+	</form>
+	<script type="text/javascript" src='blogview.js'></script>
+</body>
+</html>
