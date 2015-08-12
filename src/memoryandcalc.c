@@ -95,7 +95,7 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
   // Got a ctrl message
   Tuple *ctrl_tuple = dict_find(iter, KEY_CTRL);
   if (ctrl_tuple) {
-
+    
     int32_t ctrl_value = ctrl_tuple->value->int32;
 
     // If transmit is done then mark it
@@ -116,6 +116,8 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     // If version is done then mark it
     if (ctrl_value & CTRL_VERSION_DONE) {
       version_sent = true;
+      config_data.lazarus = ctrl_value & CTRL_LAZARUS;
+      trigger_config_save();
     }
 
     // If gone off is done then mark that
@@ -139,7 +141,22 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     set_icon(true, IS_COMMS);
     last_response = time(NULL);
 
+  } 
+}
+
+/*
+ * Send the version on initialisation
+ */
+static void send_version(void *data) {
+  if (!version_sent) {
+     if (bluetooth_connection_service_peek()) {
+       app_timer_register(VERSION_SEND_INTERVAL_MS, send_version, NULL);
+       send_to_phone(KEY_VERSION, VERSION);
+     } else {
+       app_timer_register(VERSION_SEND_SLOW_INTERVAL_MS, send_version, NULL);
+     }
   }
+
 }
 
 /*
@@ -162,9 +179,8 @@ void open_comms() {
   // Open buffers
   app_message_open(inbound_size, inbound_size);
 
-  // Tell JS our version
-  send_to_phone(KEY_VERSION, VERSION);
-
+  // Tell JS our version and keep trying until a reply happens
+  app_timer_register(VERSION_SEND_INTERVAL_MS, send_version, NULL);
 }
 
 /*
@@ -257,6 +273,7 @@ static void clear_config_data() {
   config_data.tomin = TO_MIN_DEF;
   config_data.from = to_mins(FROM_HR_DEF,FROM_MIN_DEF);
   config_data.to = to_mins(TO_HR_DEF,TO_MIN_DEF);
+  config_data.lazarus = true;
 }
 
 /*
@@ -502,7 +519,8 @@ static void transmit_points_or_background_data(int8_t last_sent) {
 static void transmit_data() {
 
   // Retry will occur on the next minute, so no connection, no sweat
-  if (!bluetooth_connection_service_peek()) {
+  // Also don't bother if initial state or we haven't done the version handshake yet
+  if (!version_sent || !internal_data.has_been_reset || !bluetooth_connection_service_peek()) {
     previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
     return;
   }
@@ -510,12 +528,6 @@ static void transmit_data() {
   // No comms if the last request went unanswered (out failed handler doesn't seem to spot too much)
   if (last_request > last_response) {
     set_icon(false, IS_COMMS);
-  }
-
-  // If we haven't sent the version this is priority
-  if (!version_sent) {
-    send_to_phone(KEY_VERSION, VERSION);
-    return;
   }
 
   // Send either base, from, to (if last sent is -1) or a point

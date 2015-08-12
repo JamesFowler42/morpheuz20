@@ -25,10 +25,12 @@
 #include "pebble.h"
 #include "analogue.h"
 #include "morpheuz.h"
+  
+#define HAND_MACRO(x) { 13, (GPoint[] ) { { -1, 0 }, { -1, -8 }, { -3, -10 }, { -4, -12 }, { -4, -(x) }, { -3, -((x)+2) }, { 0, -((x)+4) },  { 3, -((x)+2) }, { 4, -(x) }, { 4, -12 }, { 3, -10 }, { 1, -8 }, { 1, 0 },} }
 
-const GPathInfo MINUTE_HAND_POINTS = { 5, (GPoint[] ) { { -5, 8 }, { 5, 8 }, { 5, -40 }, { 0, -50 }, { -5, -40 }, } };
+const GPathInfo MINUTE_HAND_POINTS = HAND_MACRO(49);
 
-const GPathInfo HOUR_HAND_POINTS = { 5, (GPoint[] ) { { -5, 8 }, { 5, 8 }, { 5, -30 }, { 0, -40 }, { -5, -30 }, } };
+const GPathInfo HOUR_HAND_POINTS = HAND_MACRO(35);
 
 static Layer *analgue_layer;
 
@@ -41,6 +43,7 @@ static bool show_smart_points;
 static int16_t from_time;
 static int16_t to_time;
 static int16_t start_time;
+static int16_t start_time_round;
 static int16_t progress_1;
 static int16_t progress_2;
 static bool is_visible = false;
@@ -54,8 +57,11 @@ static bool g_call_post_init;
  * stop = 0 to 1440 ending position
  * step = 120: hourly; 24: minute; etc
  * jitter = line thickening (low numbers less, high numbers more)
+ * color = line color
  */
-static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int start, int stop, int step, int jitter) {
+static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int start, int stop, int step, int jitter, GColor color) {
+  graphics_context_set_stroke_color(ctx, color);
+  
   GRect bounds = layer_get_bounds(layer);
   const GPoint center = grect_center_point(&bounds);
   const int16_t furthestOut = bounds.size.w / 2;
@@ -93,49 +99,35 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
 
   graphics_context_set_fill_color(ctx, ANALOGUE_COLOR);
 
-  graphics_context_set_stroke_color(ctx, ANALOGUE_COLOR);
-
-#ifdef PBL_COLOR
-  graphics_context_set_compositing_mode(ctx, GCompOpSet);
-#endif
-
-  // Hours and minute marks
-  draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7);
-  draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, 24, 1);
-
-  // Hour text
-  graphics_draw_text(ctx, TEXT_12, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144 / 2 - 14, 21, 20, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  graphics_draw_text(ctx, TEXT_3, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144 - 34, 144 / 2 - 9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  graphics_draw_text(ctx, TEXT_6, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(144 / 2 - 6, 144 - 39, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-  graphics_draw_text(ctx, TEXT_9, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(21, 144 / 2 - 9, 10, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentRight, NULL);
-
-  // Small logo
-  GBitmap *bitmap = gbitmap_create_with_resource(RESOURCE_ID_SMALL_LOGO);
-  graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(144 / 2 - 25, 144 / 2 - 15 - 31 + 10, 50, 31));
-  gbitmap_destroy(bitmap);
+  #ifdef PBL_COLOR
+    graphics_context_set_compositing_mode(ctx, GCompOpSet);
+  #endif
 
   // Start and first and last times for smart alarm
   if (show_smart_points) {
-    graphics_context_set_stroke_color(ctx, FROM_TIME_COLOR);
-    draw_marks(layer, ctx, OUTER_STOP, OUTER, from_time, from_time + 1, 1, 7);
-    graphics_context_set_stroke_color(ctx, TO_TIME_COLOR);
-    draw_marks(layer, ctx, OUTER_STOP, OUTER, to_time, to_time + 1, 1, 7);
+    draw_marks(layer, ctx, OUTER_STOP, OUTER, from_time, from_time + 1, 1, 7, FROM_TIME_COLOR);
+    draw_marks(layer, ctx, OUTER_STOP, OUTER, to_time, to_time + 1, 1, 7, TO_TIME_COLOR);
   }
+
+  // Minute marks
+  draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, MINUTE_STEP, 1, MARK_COLOR);
 
   // Show reset point
   if (start_time != -1) {
-    graphics_context_set_stroke_color(ctx, START_TIME_COLOR);
-    draw_marks(layer, ctx, OUTER_STOP, OUTER, start_time, start_time + 1, 1, 7);
+    draw_marks(layer, ctx, OUTER_STOP, OUTER, start_time, start_time + 1, 1, 7, START_TIME_COLOR);
 
     // Progress line
     if (progress_1 != -1) {
-      graphics_context_set_stroke_color(ctx, PROGRESS_COLOR);
-      draw_marks(layer, ctx, PROGRESS_STOP, PROGRESS, start_time, progress_1, 1, 1);
+      draw_marks(layer, ctx, MIN, CLOCK, start_time_round, progress_1, PROGRESS_STEP, 1, PROGRESS_COLOR);
       if (progress_2 != -1) {
-        draw_marks(layer, ctx, PROGRESS_STOP, PROGRESS, 0, progress_2, 1, 1);
+        draw_marks(layer, ctx, MIN, CLOCK, 0, progress_2, PROGRESS_STEP, 1, PROGRESS_COLOR);
       }
     }
   }
+  
+  // Hour marks
+  draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7, MARK_COLOR);
+
 }
 
 /*
@@ -155,9 +147,11 @@ void analogue_set_smart_times() {
 void analogue_set_base(time_t base) {
   if (base == 0) {
     start_time = -1;
+    start_time_round = 0;
   } else {
     struct tm *time = localtime(&base);
     start_time = (time->tm_hour > 12 ? time->tm_hour - 12 : time->tm_hour) * 120 + time->tm_min * 2;
+    start_time_round = start_time - (start_time % 24);
   }
   if (is_visible)
     layer_mark_dirty(analgue_layer);
@@ -167,7 +161,7 @@ void analogue_set_base(time_t base) {
  * Mark progress on the analogue clock. Progress 1-54. Trigger an update of the layer
  */
 void analogue_set_progress(uint8_t progress_level_in) {
-  progress_1 = start_time + ((int16_t) progress_level_in) * 20;
+  progress_1 = start_time_round + ((int16_t) progress_level_in) * 20;
   if (progress_1 >= 1440) {
     progress_2 = progress_1 - 1440;
     progress_1 = 1439;
@@ -188,21 +182,26 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
   struct tm *t = localtime(&now);
 
   // minute/hour hand
-  graphics_context_set_fill_color(ctx, GColorWhite);
-  graphics_context_set_stroke_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, MINUTE_HAND_COLOR);
+  graphics_context_set_stroke_color(ctx, MINUTE_HAND_OUTLINE);
 
   gpath_rotate_to(minute_arrow, TRIG_MAX_ANGLE * t->tm_min / 60);
   gpath_draw_filled(ctx, minute_arrow);
   gpath_draw_outline(ctx, minute_arrow);
 
+  #ifdef PBL_COLOR
+    graphics_context_set_fill_color(ctx, HOUR_HAND_COLOR);
+    graphics_context_set_stroke_color(ctx, HOUR_HAND_OUTLINE);
+  #endif
+  
   gpath_rotate_to(hour_arrow, (TRIG_MAX_ANGLE * (((t->tm_hour % 12) * 6) + (t->tm_min / 10))) / (12 * 6));
   gpath_draw_filled(ctx, hour_arrow);
   gpath_draw_outline(ctx, hour_arrow);
 
   // dot in the middle
-  graphics_context_set_fill_color(ctx, GColorBlack);
+  graphics_context_set_fill_color(ctx, CENTRE_OUTLINE);
   graphics_fill_rect(ctx, GRect(bounds.size.w / 2 - 2, bounds.size.h / 2 - 2, 5, 5), 1, GCornersAll);
-  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_fill_color(ctx, CENTRE_COLOR);
   graphics_fill_rect(ctx, GRect(bounds.size.w / 2 - 1, bounds.size.h / 2 - 1, 3, 3), 0, GCornersAll);
 }
 
@@ -226,6 +225,7 @@ void analogue_window_load(Window *window) {
   from_time = 0;
   to_time = 0;
   start_time = -1;
+  start_time_round = 0;
   progress_1 = -1;
   progress_2 = -1;
 

@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <project name="morpheuz" basedir="." default="all">
 
-	<property name="ver" value="32"/>
-	<property name="inc" value="28"/>
+	<property name="ver" value="33"/>
+	<property name="inc" value="11"/>
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>

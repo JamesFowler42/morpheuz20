@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn */
 
 /*
  * Reset log
@@ -43,10 +43,14 @@ function resetWithPreserve() {
   var swpstat = window.localStorage.getItem("swpstat");
   var exptime = window.localStorage.getItem("exptime");
   var usage = window.localStorage.getItem("usage");
+  var lazarus = window.localStorage.getItem("lazarus");
   var autoReset = window.localStorage.getItem("autoReset");
   var quote = window.localStorage.getItem("quote");
   var lifxToken = window.localStorage.getItem("lifx-token");
   var lifxTime = window.localStorage.getItem("lifx-time");
+  var hueip =  window.localStorage.getItem("hueip");
+  var hueusername =  window.localStorage.getItem("hueusername");
+  var hueid = window.localStorage.getItem("hueid");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -62,10 +66,14 @@ function resetWithPreserve() {
   window.localStorage.setItem("swpstat", nvl(swpstat, ""));
   window.localStorage.setItem("exptime", nvl(exptime, ""));
   window.localStorage.setItem("usage", nvl(usage, "Y"));
+  window.localStorage.setItem("lazarus", nvl(lazarus, "Y"));
   window.localStorage.setItem("autoReset", nvl(autoReset, "0"));
   window.localStorage.setItem("quote", nvl(quote, ""));
   window.localStorage.setItem("lifx-token", nvl(lifxToken, ""));
   window.localStorage.setItem("lifx-time", nvl(lifxTime, ""));
+  window.localStorage.setItem("hueip", nvl(hueip, ""));
+  window.localStorage.setItem("hueusername", nvl(hueusername, ""));
+  window.localStorage.setItem("hueid", nvl(hueid, ""));
 }
 
 /*
@@ -117,7 +125,7 @@ function callWatchApp(ctrlVal) {
   function decodeKeyCtrl(ctrlVal, keyVal, name) {
     return (ctrlVal & keyVal) ? name + " " : "";
   }
-  console.log("ACK " + decodeKeyCtrl(ctrlVal, mConst().ctrlTransmitDone, "ctrlTransmitDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlVersionDone, "ctrlVersionDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlGoneOffDone, "ctrlGoneOffDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlDoNext, "ctrlDoNext") + decodeKeyCtrl(ctrlVal, mConst().ctrlSetLastSent, "ctrlSetLastSent"));
+  console.log("ACK " + decodeKeyCtrl(ctrlVal, mConst().ctrlTransmitDone, "ctrlTransmitDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlVersionDone, "ctrlVersionDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlGoneOffDone, "ctrlGoneOffDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlDoNext, "ctrlDoNext") + decodeKeyCtrl(ctrlVal, mConst().ctrlSetLastSent, "ctrlSetLastSent")+ decodeKeyCtrl(ctrlVal, mConst().ctrlLazarus, "ctrlLazarus"));
   Pebble.sendAppMessage({
     "keyCtrl" : ctrlVal
   });
@@ -136,7 +144,11 @@ Pebble.addEventListener("appmessage", function(e) {
     var version = parseInt(e.payload.keyVersion, 10);
     console.log("MSG version=" + version);
     window.localStorage.setItem("version", version);
-    ctrlVal = ctrlVal | mConst().ctrlVersionDone | mConst().ctrlDoNext;
+    ctrlVal = ctrlVal | mConst().ctrlVersionDone;
+    var lazarus = window.localStorage.getItem("lazarus");
+    if (lazarus !== "N") {
+      ctrlVal = ctrlVal | mConst().ctrlLazarus;
+    }
   }
 
   // Incoming origin timestamp - this is a reset
@@ -213,6 +225,7 @@ Pebble.addEventListener("appmessage", function(e) {
     ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
     addSmartAlarmPin();
     turnLifxLightsOn();
+    turnHueLightsOn();
   }
 
   // Incoming data point
@@ -270,22 +283,26 @@ function transmitMethods() {
 }
 
 /*
- * Monitor the closing of the config/display screen so as we can do a reset if
+ * Monitor the closing of the config/display screen so as we can do a save if
  * needed
  */
 Pebble.addEventListener("webviewclosed", function(e) {
   console.log("webviewclosed " + e.response);
   if (e.response === null)
     return;
-  var dataElems = e.response.split("!");
-  if (dataElems[0] === "reset") {
-    window.localStorage.setItem("emailto", dataElems[7]);
-    window.localStorage.setItem("pouser", dataElems[8]);
-    window.localStorage.setItem("potoken", dataElems[10]);
-    window.localStorage.setItem("swpdo", dataElems[12]);
-    window.localStorage.setItem("usage", dataElems[13]);
-    window.localStorage.setItem("lifx-token", dataElems[14]);
-    window.localStorage.setItem("lifx-time", dataElems[15]);
+  var configData = JSON.parse(decodeURIComponent(e.response));
+  if (configData.action === "save") {
+    window.localStorage.setItem("emailto", configData.emailto);
+    window.localStorage.setItem("pouser", configData.pouser);
+    window.localStorage.setItem("potoken", configData.potoken);
+    window.localStorage.setItem("swpdo", configData.swpdo);
+    window.localStorage.setItem("usage", configData.usage);
+    window.localStorage.setItem("lazarus", configData.lazarus);
+    window.localStorage.setItem("lifx-token", configData.lifxtoken);
+    window.localStorage.setItem("lifx-time", configData.lifxtime);
+    window.localStorage.setItem("hueip",  configData.hueip);
+    window.localStorage.setItem("hueusername", configData.hueuser);
+    window.localStorage.setItem("hueid", configData.hueid);
   }
 });
 
@@ -325,13 +342,18 @@ function buildUrl(noset) {
     var swpdo = nvl(window.localStorage.getItem("swpdo"), "");
     var swpstat = nvl(window.localStorage.getItem("swpstat"), "");
     var exptime = nvl(window.localStorage.getItem("exptime"), "");
-    var lifxToken = nvl(window.localStorage.getItem("lifxtoken"), "");
-    var lifxTime = nvl(window.localStorage.getItem("lifxtime"), "");
+    var lifxToken = nvl(window.localStorage.getItem("lifx-token"), "");
+    var lifxTime = nvl(window.localStorage.getItem("lifx-time"), "");
     var usage = nvl(window.localStorage.getItem("usage"), "Y");
+    var lazarus = nvl(window.localStorage.getItem("lazarus"), "Y");
+    var hueip =  nvl(window.localStorage.getItem("hueip"), "");
+    var hueusername =  nvl(window.localStorage.getItem("hueusername"), "");
+    var hueid = nvl(window.localStorage.getItem("hueid"), "");
     extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
            "&potoken=" + encodeURIComponent(potoken) + "&token=" + token + 
            "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
-           "&usage=" + usage + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime;
+           "&usage=" + usage + "&lazarus=" + lazarus + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime +
+           "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid;
   }
   
   var url = mConst().url + version + ".html" + 

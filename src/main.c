@@ -99,22 +99,11 @@ bool get_icon(IconState icon) {
   return icon_state[icon];
 }
 
-/**
- * Show worker icon
- */
-static void show_worker() {
-  set_icon(app_worker_is_running(), IS_ACTIVITY);
-}
-
 /*
- * Boot up background process
+ * Are we monitoring sleep (recording or powernap)?
  */
-void start_worker() {
-  AppWorkerResult result = app_worker_launch();
-  if (result == APP_WORKER_RESULT_SUCCESS || result == APP_WORKER_RESULT_ALREADY_RUNNING) {
-    show_worker();
-  }
-  LOG_DEBUG("wlaunch %d", result);
+bool is_monitoring_sleep() {
+  return get_icon(IS_RECORD) || is_doing_powernap();
 }
 
 /*
@@ -143,16 +132,26 @@ static void paint_icon(GContext *ctx, int *running_horizontal, int width, uint32
  */
 static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *running_horizontal) {
 
-#ifdef PBL_COLOR
-  graphics_context_set_compositing_mode(ctx, GCompOpSet);
-#else
-  graphics_context_set_compositing_mode(ctx, GCompOpAssign);
-#endif
+  #ifdef PBL_COLOR
+    graphics_context_set_compositing_mode(ctx, GCompOpSet);
+  #else
+    graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+  #endif
 
   if (!battery_plugged) {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
     graphics_context_set_stroke_color(ctx, BACKGROUND_COLOR);
-    graphics_context_set_fill_color(ctx, battery_level <= 10 ? BATTERY_BAR_COLOR_CRITICAL : BATTERY_BAR_COLOR);
+    #ifdef PBL_COLOR
+      GColor b_color = BATTERY_BAR_COLOR;
+      if (battery_level <= 20) {
+        b_color = BATTERY_BAR_COLOR_CRITICAL;
+      } else if (battery_level <= 40) {
+        b_color = BATTERY_BAR_COLOR_WARN;
+      }
+      graphics_context_set_fill_color(ctx, b_color);
+    #else
+      graphics_context_set_fill_color(ctx, BATTERY_BAR_COLOR);
+    #endif
     graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, battery_level / 9, 4), 0, GCornerNone);
   } else {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
@@ -202,11 +201,6 @@ static void icon_bar_update_callback(Layer *layer, GContext *ctx) {
   // Ignore icon
   if (icon_state[IS_IGNORE]) {
     paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_IGNORE);
-  }
-
-  // Activity icon
-  if (icon_state[IS_ACTIVITY]) {
-    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_ACTIVITY_ICON);
   }
 
   // Export icon
@@ -285,7 +279,6 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   uint16_t last_movement;
   if (is_animation_complete()) {
     last_movement = every_minute_processing();
-    show_worker();
   } else {
     last_movement = CLOCK_UPDATE_THRESHOLD;
   }
@@ -337,6 +330,7 @@ void set_progress() {
 void post_init_hook(void *data) {
   wakeup_init();
   animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
+  layer_mark_dirty(icon_bar);
 }
 
 static void animation_stopped(Animation *animation, bool finished, void *data);
@@ -551,6 +545,7 @@ static void handle_init() {
  * Close main window
  */
 void close_morpheuz() {
+  manual_shutdown_request();
   window_stack_remove(window, true);
   window_destroy(window);
 }
@@ -561,4 +556,5 @@ void close_morpheuz() {
 int main(void) {
   handle_init();
   app_event_loop();
+  lazarus();
 }

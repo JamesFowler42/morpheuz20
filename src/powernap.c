@@ -101,7 +101,8 @@ static void back_single_click_handler(ClickRecognizerRef recognizer, void *conte
   // Stop accidental closure of Morpheuz by defining this
   // Bring clock up to date if a button is pressed
   // Only if we're recording or running powernap
-  if (get_icon(IS_RECORD) || is_doing_powernap()) {
+  if (is_monitoring_sleep()) {
+    manual_shutdown_request();
     revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
   } else {
     close_morpheuz();  

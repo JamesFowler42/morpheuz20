@@ -30,17 +30,10 @@
 #define ANALOGUE_FINISH GRect(0, 24, 144, 144)
 #define ANALOGUE_START GRect(0, 169, 144, 144)
 
-#define TEXT_12 "12"
-#define TEXT_3 "3"
-#define TEXT_6 "6"
-#define TEXT_9 "9"
-
 #define OUTER 0
 #define OUTER_STOP (OUTER + 4)
-#define PROGRESS (OUTER_STOP + 3)
-#define PROGRESS_STOP (PROGRESS + 1)
-#define CLOCK (PROGRESS)
-#define HOUR (CLOCK + 14)
+#define CLOCK (OUTER_STOP + 2)
+#define HOUR (CLOCK + 8)
 #define MIN (CLOCK + 4)
 
 void analogue_window_load(Window *window);

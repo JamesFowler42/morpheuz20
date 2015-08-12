@@ -47,12 +47,14 @@ function mConst() {
     ctrlGoneOffDone : 4,
     ctrlDoNext : 8,
     ctrlSetLastSent : 16,
+    ctrlLazarus : 32,
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
     timeout : 4000,
     usageUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/usage/",
     usageSx : ".html",
-    quotesUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/quotes.json"
+    quotesUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/quotes.json",
+    hueTimeout: 3000
   };
 }
 

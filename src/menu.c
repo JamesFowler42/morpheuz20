@@ -40,7 +40,6 @@ static uint8_t inverse_state = 0;
 static uint8_t analogue_state = 0;
 static uint8_t power_nap_state = 0;
 static uint8_t auto_reset_state = 0;
-static uint8_t smart_alarm_state = 0;
 static bool alarm_on = false;
 static char menu_text[15];
 static int16_t selected_row;
@@ -54,7 +53,7 @@ static void menu_invert();
 
 static void menu_analogue();
 static void menu_resend();
-static void hide_menu();
+static void hide_menu(void *data);
 
 // Invoke a menu item
 typedef void (*MorphMenuAction)(void);
@@ -67,8 +66,6 @@ typedef struct {
   MorphMenuAction action;
 } MenuDef;
 
-
-
 // Define the menu
 #ifdef PBL_COLOR
   #define OPT_WAKEUP 7
@@ -77,7 +74,7 @@ static MenuDef menu_def[] = { {MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm}
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm},
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment},
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period},
-  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm},
+  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, NULL, show_set_alarm},
   { MENU_PRESET, MENU_PRESET_DES, NULL, show_preset_menu},
   { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode},
   { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle},
@@ -91,7 +88,7 @@ static MenuDef menu_def[] = { { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm }, 
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment }, 
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period }, 
-  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, &smart_alarm_state, show_set_alarm }, 
+  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, NULL, show_set_alarm }, 
   { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode }, 
   { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle }, 
   { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap }, 
@@ -206,13 +203,18 @@ static void menu_resend() {
 static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
   selected_row = alarm_on ? cell_index->row : cell_index->row + 2;
+  if (menu_def[selected_row].state != NULL) {
+    *(menu_def[selected_row].state) = !(*(menu_def[selected_row].state));
+    layer_mark_dirty(menu_layer_get_layer_jf(menu_layer));
+  }
   #ifndef PBL_COLOR
-    hide_menu();
+    app_timer_register(MENU_ACTION_HIDE_MS, hide_menu, NULL);
   #else
     if (selected_row != OPT_PRESETS) {
-      hide_menu();
+      app_timer_register(MENU_ACTION_HIDE_MS, hide_menu, NULL);
     }
   #endif
+
   app_timer_register(MENU_ACTION_MS, do_menu_action, NULL);
 }
 
@@ -262,7 +264,6 @@ void show_menu() {
   power_nap_state = is_doing_powernap();
   auto_reset_state = get_config_data()->auto_reset;
   alarm_on = get_icon(IS_ALARM_RING);
-  smart_alarm_state = get_config_data()->smart;
   window = window_create();
   // Setup the window handlers
   window_set_window_handlers(window, (WindowHandlers ) { .load = window_load, .unload = window_unload, });
@@ -272,7 +273,7 @@ void show_menu() {
 /*
  * Hide the menu (destroy)
  */
-static void hide_menu() {
+static void hide_menu(void *data) {
   window_stack_remove(window, true);
   window_destroy(window);
 }

@@ -122,16 +122,6 @@
                 "type": "png"
             },
             {
-                "file": "images/activity.png",
-                "name": "ACTIVITY_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/small-logo.png",
-                "name": "SMALL_LOGO",
-                "type": "png"
-            },
-            {
                 "file": "images/weekend.png",
                 "name": "WEEKEND_ICON",
                 "type": "png"
@@ -210,8 +200,7 @@
         "basalt"
     ],
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
-    "versionLabel": "3.2",
-    "versionCode": 32,
+    "versionLabel": "3.3",
     "watchapp": {
         "watchface": false
     }

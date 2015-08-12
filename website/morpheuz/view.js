@@ -34,11 +34,14 @@ function mConst() {
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
-    emailHeader: "<h2>CSV Sleep data</h2><br/>",
-    emailFooter1: "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
-    emailFooter2: "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
-    emailAddressMandatory: "valid email address is required",
-    sendingEmail: "Sending..."
+    emailHeader : "<h2>CSV Sleep data</h2>",
+    emailHeader2 : "<h2>Chart Display</h2>",
+    emailFooter1 : "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
+    emailFooter2 : "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
+    emailAddressMandatory : "valid email address is required",
+    sendingEmail : "Sending...",
+    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
+    report : "Report"
   };
 }
 
@@ -65,19 +68,22 @@ function buildGraphDataSet(base, splitup, more) {
 /*
  * Populate ignore segments
  */
-function populateIgnore(base, canvasOverlayConf, splitup) {
+function populateIgnore(base, canvasOverlayConf, splitup, totalWidth) {
+
+  var lineW = totalWidth / splitup.length;
 
   var startPoint = new Date(base);
   for (var i = 0; i < splitup.length; i++) {
     if (splitup[i] === "") {
       continue;
     }
+
     if (parseInt(splitup[i], 10) == -2) {
       var ignoreOverlay = {
         verticalLine : {
           name : "ignore",
           x : startPoint,
-          lineWidth : 5,
+          lineWidth : lineW,
           yOffset : 0,
           color : "#184E99",
           shadow : false
@@ -343,6 +349,10 @@ $("document").ready(function() {
   var token = getParameterByName("token");
   var exptime = decodeURIComponent(getParameterByName("exptime"));
   var usage = getParameterByName("usage");
+  var lazarus = getParameterByName("lazarus");
+  var hueip = getParameterByName("hueip");
+  var hueusername = getParameterByName("hueuser");
+  var hueid = getParameterByName("hueid");
 
   var smartOn = smart === "Y";
   var nosetOn = noset === "Y";
@@ -361,6 +371,10 @@ $("document").ready(function() {
   $("#swpstat").text(swpstat);
   $("#exptime").text(exptime);
   $("#usage").prop("checked", usage !== "N");
+  $("#hueip").val(hueip);
+  $("#hueuser").val(hueusername);
+  $("#hueid").val(hueid);
+  $("#lazarus").prop("checked", lazarus !== "N");
 
   // Set the status bullets for pushover
   if (postat === "OK") {
@@ -385,12 +399,19 @@ $("document").ready(function() {
     $("#liswp").addClass("red");
     $("#swpstat").addClass("red");
   }
-  
+
   // Set the status bullets for LIFX
   if (lifxToken === "") {
     $("#lilifx").addClass("blue");
   } else {
     $("#lilifx").addClass("green");
+  }
+
+  // Set the status bullets for Hue
+  if (hueip === "") {
+    $("#lihue").addClass("blue");
+  } else {
+    $("#lihue").addClass("green");
   }
 
   $("#version").text(parseInt(vers, 10) / 10);
@@ -418,7 +439,7 @@ $("document").ready(function() {
   };
 
   // Build ignore bars
-  populateIgnore(base, canvasOverlayConf, splitup);
+  populateIgnore(base, canvasOverlayConf, splitup, $("#chart1").width());
 
   // Return start and stop times
   startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverlayConf, splitup);
@@ -562,48 +583,55 @@ $("document").ready(function() {
 
   // Handle the Save and reset option
   $(".save").click(function() {
-    var unused = "N";
-    var blank = "";
-    var emailpart = encodeURIComponent($("#emailto").val());
-    var potoken = encodeURIComponent($("#ptoken").val());
-    var pouser = encodeURIComponent($("#puser").val());
-    var swpdo = $("#swpdo").is(':checked') ? "Y" : "N";
-    var usage = $("#usage").is(':checked') ? "Y" : "N";
-    var lifxToken = encodeURIComponent($("#lifxToken").val());
-    var lifxTime = encodeURIComponent($("#lifxTime").val());
-    window.location.href = "pebblejs://close#reset" + "!" + unused + "!" + blank + "!" + blank + "!" + blank + "!" + blank + "!" + unused + "!" + emailpart + "!" + pouser + "!" + blank + "!" + potoken + "!" + unused + "!" + swpdo + "!" + usage + "!" + lifxToken + "!" + lifxTime;
+    var configData = {
+      action : "save",
+      emailto : $("#emailto").val(),
+      pouser : $("#puser").val(),
+      potoken : $("#ptoken").val(),
+      swpdo : $("#swpdo").is(':checked') ? "Y" : "N",
+      usage : $("#usage").is(':checked') ? "Y" : "N",
+      lifxtoken : $("#lifxToken").val(),
+      lifxtime : $("#lifxTime").val(),
+      hueip : $("#hueip").val(),
+      hueuser : $("#hueuser").val(),
+      hueid : $("#hueid").val(),
+      lazarus : $("#lazarus").is(':checked') ? "Y" : "N"
+    };
+    document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
   });
-  
+
   //Send an email containing CSV data
   $("#mail").removeAttr("disabled");
   $("#mail").click(function() {
-    
+
     // Get email address
     var emailto = $("#emailto").val();
-    
+
     // Ensure address supplied
     if (emailto === "" || !validateEmail(emailto)) {
       $("#emailSendResult").text(mConst().emailAddressMandatory);
       $("#emailSendResult").addClass("red");
       return;
     }
-    
+
     // Extract data
     var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
-   
+
+    var url = "<a href='" + mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "'>" + mConst().report + "</a><br/>";
+
     // Build email json
-    var email = { 
-        "from": "Morpheuz <noreply@morpheuz.co.uk>", 
-        "to": emailto,
-        "subject": "Morpheuz-" + new Date(base).format("yyyy-MM-dd"),
-        "message": mConst().emailHeader + cpy.body + mConst().emailFooter1 + mConst().emailFooter2 
-        };
-    
+    var email = {
+      "from" : "Morpheuz <noreply@morpheuz.co.uk>",
+      "to" : emailto,
+      "subject" : "Morpheuz-" + new Date(base).format("yyyy-MM-dd"),
+      "message" : mConst().emailHeader2 + url + mConst().emailHeader + cpy.body + mConst().emailFooter1 + mConst().emailFooter2
+    };
+
     // Disable button and put out sending text
     $("#mail").attr("disabled", "disabled");
     $("#emailSendResult").removeClass("red").removeClass("green");
     $("#emailSendResult").text(mConst().sendingEmail);
-    
+
     // Send to server and await response
     sendMailViaServer(email, function(stat, resp) {
       if (stat === 1) {
@@ -613,11 +641,9 @@ $("document").ready(function() {
       }
       $("#emailSendResult").text(resp);
       $("#mail").removeAttr("disabled");
-      
+
     })
-    
+
   });
 
 });
-
-

@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 32
-#define VERSION_TXT "3.2"
+#define VERSION 33
+#define VERSION_TXT "3.3"
 
 // Comment out for production build - leaves errors on BASALT and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -71,7 +71,8 @@
 #define POWER_NAP_SETTLE_THRESHOLD 1000
 #define CLOCK_UPDATE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
-#define MENU_ACTION_MS 500
+#define MENU_ACTION_MS 750
+#define MENU_ACTION_HIDE_MS 500
 #define WEEKEND_PERIOD (12*60*60)
 
 #define BED_FINISH GRect(8, 17, 127, 70)
@@ -95,27 +96,37 @@
   #define BACKGROUND_COLOR GColorDukeBlue
   #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
   #define ACTION_BAR_BACKGROUND_COLOR GColorWhite
-  #define HIGHLIGHT_BG_COLOR GColorBlueMoon
+  #define HIGHLIGHT_BG_COLOR GColorBlack
   #define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR
   #define HIGHLIGHT_FG_COLOR GColorWhite
   #define NON_HIGHLIGHT_FG_COLOR GColorWhite
   #define FROM_TIME_COLOR GColorGreen
   #define TO_TIME_COLOR GColorRed
   #define START_TIME_COLOR GColorYellow
-  #define PROGRESS_COLOR GColorLightGray
+  #define PROGRESS_COLOR GColorWhite
   #define ANALOGUE_COLOR GColorWhite
   #define FAILURE_COLOR GColorRed
   #define BATTERY_BAR_COLOR GColorYellow
   #define BATTERY_BAR_COLOR_CRITICAL GColorRed
+  #define BATTERY_BAR_COLOR_WARN GColorRajah
   #define BAR_CHART_MARKS GColorLightGray
   #define ANIMATE_MAIN_DURATION 500
   #define ANIMATE_HEAD_DURATION 250
   #define ANIMATE_ANALOGUE_DURATION 375
   #define PRE_ANIMATE_DELAY 1500
   #define MENU_TEXT_COLOR GColorWhite
-  #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorOxfordBlue
+  #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorBlack
   #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
   #define MENU_HEAD_COLOR GColorWhite
+  #define MINUTE_HAND_COLOR GColorWhite
+  #define HOUR_HAND_COLOR GColorPictonBlue
+  #define MINUTE_HAND_OUTLINE GColorWhite
+  #define HOUR_HAND_OUTLINE GColorPictonBlue
+  #define CENTRE_OUTLINE GColorWhite
+  #define CENTRE_COLOR GColorPictonBlue
+  #define MARK_COLOR GColorDarkGray
+  #define MINUTE_STEP 24
+  #define PROGRESS_STEP 24
 #else
   #define BACKGROUND_COLOR GColorBlack
   #define SETTING_BACKGROUND_COLOR GColorWhite
@@ -132,12 +143,22 @@
   #define FAILURE_COLOR GColorWhite
   #define BATTERY_BAR_COLOR GColorWhite
   #define BATTERY_BAR_COLOR_CRITICAL GColorWhite
+  #define BATTERY_BAR_COLOR_WARN GColorWhite
   #define BAR_CHART_MARKS GColorWhite
   #define ANIMATE_MAIN_DURATION 1000
   #define ANIMATE_HEAD_DURATION 500
   #define ANIMATE_ANALOGUE_DURATION 750
   #define PRE_ANIMATE_DELAY 3000
   #define MENU_HEAD_COLOR GColorBlack
+  #define MINUTE_HAND_COLOR GColorWhite
+  #define HOUR_HAND_COLOR GColorWhite
+  #define MINUTE_HAND_OUTLINE GColorBlack
+  #define HOUR_HAND_OUTLINE GColorBlack
+  #define CENTRE_OUTLINE GColorBlack
+  #define CENTRE_COLOR GColorWhite
+  #define MARK_COLOR GColorWhite
+  #define MINUTE_STEP 24
+  #define PROGRESS_STEP 12
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
@@ -165,14 +186,14 @@ enum CtrlValues {
   CTRL_VERSION_DONE = 2,
   CTRL_GONEOFF_DONE = 4,
   CTRL_DO_NEXT = 8,
-  CTRL_SET_LAST_SENT = 16
+  CTRL_SET_LAST_SENT = 16,
+  CTRL_LAZARUS = 32
 };
 
 typedef enum {
   IS_COMMS = 0,
   IS_RECORD,
   IS_IGNORE,
-  IS_ACTIVITY,
   IS_WEEKEND,
   IS_ALARM,
   IS_ALARM_RING,
@@ -190,7 +211,7 @@ typedef enum {
 
 #define NO_FAILURE "E....."
 
-#define MAX_ICON_STATE 9
+#define MAX_ICON_STATE 8
 
 #define PERSIST_MEMORY_KEY 12121
 #define PERSIST_CONFIG_KEY 12122
@@ -203,6 +224,10 @@ typedef enum {
 #define FIVE_MINUTES_MS (5*60*1000)
 #define TEN_SECONDS_MS (10*1000)
 #define COMPLETE_OUTSTANDING_MS (15*1000)
+#define FIVE_MINUTES (5*60)
+#define FIVE_SECONDS 5
+#define VERSION_SEND_INTERVAL_MS (1000)
+#define VERSION_SEND_SLOW_INTERVAL_MS (60*1000)
 
 #define LIMIT 60
 #define DIVISOR 600
@@ -220,6 +245,7 @@ typedef enum {
 #define ELEVEN_HOURS_IN_SECONDS (11*60*60)
 #define WAKEUP_AUTO_RESTART 1
 #define WAKEUP_FOR_TRANSMIT 2
+#define WAKEUP_LAZARUS 3
 #define ONE_MINUTE 60
 
 typedef struct {
@@ -239,6 +265,7 @@ typedef struct {
   bool analogue;
   bool smart;
   bool auto_reset;
+  bool lazarus;
   uint8_t autohr;
   uint8_t automin;
   uint8_t fromhr;
@@ -303,10 +330,12 @@ void show_set_alarm();
 void trigger_config_save();
 bool is_doing_powernap();
 void open_comms();
-void start_worker();
 void set_icon(bool enabled, IconState icon);
 bool get_icon(IconState icon);
 void mark_failure(FailureNote fn);
 void show_preset_menu();
+void manual_shutdown_request();
+void lazarus();
+bool is_monitoring_sleep();
 
 #endif /* MORPHEUZ_H_ */

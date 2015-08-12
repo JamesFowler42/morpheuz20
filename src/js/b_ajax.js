@@ -113,8 +113,8 @@ function makeGetAjaxCall(url, resp) {
  */
 function turnLifxLightsOn() {
   if (window.localStorage.getItem("lifx-token") && window.localStorage.getItem("lifx-time")) {
-    var token = window.localStorage.getItem("lifxtoken");
-    var fadeInTime = window.localStorage.getItem("lifxtime");
+    var token = window.localStorage.getItem("lifx-token");
+    var fadeInTime = window.localStorage.getItem("lifx-time");
     var url = "https://api.lifx.com/v1beta1/lights/all/power";
     var method = "PUT";
     var data = new FormData();

@@ -37,7 +37,6 @@
 <script type="text/javascript" src="jqplot/plugins/jqplot.canvasTextRenderer.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.canvasAxisTickRenderer.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.canvasOverlay.min.js"></script>
-<script type="text/javascript" src="jqplot/plugins/jqplot.trendline.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.pieRenderer.min.js"></script>
 
 <script type="text/javascript" src="utils.js?v=1"></script>
@@ -106,7 +105,7 @@
             <td id="tends">-</td>
           </tr>
         </table>
-        <h3 class="exporthead">Export</h3>
+        <h3 class="exporthead">Export &amp; Home Automation</h3>
         <div class="exportwrap">
           <ol>
             <li class="grey">
@@ -175,6 +174,35 @@
                 Get your LIFX token by logging into your profile at <a href="http://cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.
               </p>
             </li>
+            <li id="lihue" class="noset">
+              <p>Philips Hue Smart Bulb</p>
+              <div class="row">
+                <div class="cell">
+                  <label for="hueip">Bridge IP:</label>
+                </div>
+                <div class="cell">
+                  <input id="hueip" type="text" maxlength="15" class="textbox wide" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="cell">
+                  <label for="hueuser">Username:</label>
+                </div>
+                <div class="cell">
+                  <input id="hueuser" type="text" maxlength="50" class="textbox wide" />
+                </div>
+              </div>
+              <div class="row">
+                <div class="cell">
+                  <label for="hueid">Bulb Id:</label>
+                </div>
+                <div class="cell">
+                  <input id="hueid" type="number" maxlength="5" class="textbox wide" />
+                </div>
+              </div>
+              <p class="small">If the values are correct, your Hue lightbulbs will fade on as soon as your alarm goes off.</p>
+              <p class="small">Should the light be already on, Morpheuz will not change it.</p>
+            </li>
           </ol>
           <p class="small noset indent">
             Last auto export done: <span id="exptime"></span>
@@ -190,11 +218,18 @@
           <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
         </ul>
         </p>
-        <h3 class="exporthead noset">Usage Reporting</h3>
+        <h3 class="exporthead noset">Special Features</h3>
         <div class="exportwrap noset usageindent">
-          <p>Help to improve Morpheuz by allowing once a day anonymous usage statistics.</p>
-          <label for="usage">Allow:</label><input id="usage" type="checkbox" />
-          <p class="small">No personal data is sent or saved.</p>
+          <ol>
+            <li class="grey">
+              <p>Help to improve Morpheuz by allowing once a day anonymous usage statistics.</p> <label for="usage">Allow:</label><input id="usage" type="checkbox" />
+              <p class="small">No personal data is sent or saved.</p>
+            </li>
+            <li class="grey">
+              <p>Protect against certain activity monitoring apps interfering with Morpheuz.</p> <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox"/>
+              <p class="small">UP and Misfit use a background process. They then come to the foreground to sync and stop Morpheuz. Enabling this feature ensures that Morpheuz will revive after 5 minutes if it is exited abnormally whilst monitoring sleep.</p>
+            </li>
+          </ol>
           <input type="button" id="save2" class="save" value="Save" />
         </div>
         <p class="centre small">&copy; 2013-2015 James Fowler</p>

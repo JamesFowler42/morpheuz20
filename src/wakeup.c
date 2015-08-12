@@ -28,6 +28,7 @@
 #include "analogue.h"
   
 AppTimer *auto_shutdown_timer = NULL; 
+static time_t requested_exit;
 
 /*
  * Build a wakeup entry
@@ -111,7 +112,6 @@ void wakeup_init() {
   if (launch_reason() == APP_LAUNCH_WAKEUP) {
     wakeup_get_launch_event(&wakeup_id, &cookie);
     if (cookie == WAKEUP_AUTO_RESTART) {
-      start_worker();
       reset_sleep_period();
     } else if (cookie == WAKEUP_FOR_TRANSMIT) {
       auto_shutdown_timer = app_timer_register(get_internal_data()->transmit_sent ? TEN_SECONDS_MS : FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
@@ -120,10 +120,8 @@ void wakeup_init() {
   } else if (launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {
     switch (launch_get_args()) {
       case TIMELINE_LAUNCH_USE:
-      start_worker();
       break;
       case TIMELINE_LAUNCH_SLEEP_NOW:
-      start_worker();
       reset_sleep_period();
       break;
       case TIMELINE_LAUNCH_CLEAR_AUTOSLEEP:
@@ -133,10 +131,8 @@ void wakeup_init() {
       break;
     }
 #endif
-  } else {
-    start_worker();
-  }
-
+  } 
+  requested_exit = time(NULL) - 100;
 }
 
 /*
@@ -146,4 +142,27 @@ void wakeup_toggle() {
   get_config_data()->auto_reset = get_internal_data()->has_been_reset ? !get_config_data()->auto_reset : false;
   set_next_wakeup();
   resend_all_data(true); // Force resend - we've fiddled with the wakeup
+}
+
+/*
+ * Remember 
+ */
+void manual_shutdown_request() {
+  requested_exit = time(NULL);
+}
+
+/*
+ * Determine if kill was unexpected and schedule wake up
+ */
+void lazarus() {
+  // If morpheuz is monitoring sleep (or powernap), and the quit menu or exit hasn't been pressed in
+  // the last 5 seconds then schedule a wakeup in 5 minutes. Hence Lazarus - wake from the dead.
+  // We also have a config option on this to ensure it can be disabled if undesirable
+  if (get_config_data()->lazarus && is_monitoring_sleep() && (requested_exit + FIVE_SECONDS <= time(NULL))) {
+    time_t timestamp = time(NULL) + FIVE_MINUTES;
+    build_wakeup_entry(timestamp, WAKEUP_LAZARUS);
+    LOG_ERROR("Abnormal exit, reboot in 5 mins");
+  } else {
+    LOG_ERROR("Requested exit");
+  }
 }
