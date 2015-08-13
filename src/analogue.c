@@ -110,7 +110,7 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   }
 
   // Minute marks
-  draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, MINUTE_STEP, 1, MARK_COLOR);
+  draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, MINUTE_STEP, 1, MINUTE_MARK_COLOR);
 
   // Show reset point
   if (start_time != -1) {
@@ -126,7 +126,7 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
   }
   
   // Hour marks
-  draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7, MARK_COLOR);
+  draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7, HOUR_MARK_COLOR);
 
 }
 

@@ -124,7 +124,8 @@
   #define HOUR_HAND_OUTLINE GColorPictonBlue
   #define CENTRE_OUTLINE GColorWhite
   #define CENTRE_COLOR GColorPictonBlue
-  #define MARK_COLOR GColorDarkGray
+  #define MINUTE_MARK_COLOR GColorDarkGray
+  #define HOUR_MARK_COLOR GColorWhite
   #define MINUTE_STEP 24
   #define PROGRESS_STEP 24
 #else
@@ -156,7 +157,8 @@
   #define HOUR_HAND_OUTLINE GColorBlack
   #define CENTRE_OUTLINE GColorBlack
   #define CENTRE_COLOR GColorWhite
-  #define MARK_COLOR GColorWhite
+  #define MINUTE_MARK_COLOR GColorWhite
+  #define HOUR_MARK_COLOR GColorWhite
   #define MINUTE_STEP 24
   #define PROGRESS_STEP 12
 #endif
