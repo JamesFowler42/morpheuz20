@@ -215,6 +215,7 @@ static void save_internal_data_timer(void *data) {
 static void clear_internal_data() {
   memset(&internal_data, 0, sizeof(internal_data));
   internal_data_checksum = 0;
+  internal_data.internal_ver = INTERNAL_VER;
 }
 
 /*
@@ -233,7 +234,7 @@ static void set_progress_based_on_persist() {
  */
 void read_internal_data() {
   int read = persist_read_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
-  if (read != sizeof(internal_data)) {
+  if (read != sizeof(internal_data) || internal_data.internal_ver != INTERNAL_VER) {
     clear_internal_data();
   } else {
     internal_data_checksum = dirty_checksum(&internal_data, sizeof(internal_data));
@@ -274,6 +275,7 @@ static void clear_config_data() {
   config_data.from = to_mins(FROM_HR_DEF,FROM_MIN_DEF);
   config_data.to = to_mins(TO_HR_DEF,TO_MIN_DEF);
   config_data.lazarus = true;
+  config_data.config_ver = CONFIG_VER;
 }
 
 /*
@@ -281,7 +283,7 @@ static void clear_config_data() {
  */
 void read_config_data() {
   int read = persist_read_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
-  if (read != sizeof(config_data)) {
+  if (read != sizeof(config_data) || config_data.config_ver != CONFIG_VER) {
     clear_config_data();
   }
 }

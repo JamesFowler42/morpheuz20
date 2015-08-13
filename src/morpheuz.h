@@ -248,7 +248,10 @@ typedef enum {
 #define WAKEUP_LAZARUS 3
 #define ONE_MINUTE 60
 
+// Change INTERNAL_VER only if the InternalData struct changes
+#define INTERNAL_VER 42
 typedef struct {
+  uint8_t internal_ver;
   uint32_t base;
   uint16_t gone_off;
   uint8_t highest_entry;
@@ -260,7 +263,10 @@ typedef struct {
   bool transmit_sent;
 } InternalData;
 
+// Change the CONFIG_VER only if the ConfigData struct changes
+#define CONFIG_VER 42
 typedef struct {
+  uint8_t config_ver;
   bool invert;
   bool analogue;
   bool smart;

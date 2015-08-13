@@ -56,7 +56,10 @@ static PresetDef menu_def[] = { { PRESET_RECALL_1, 0, false },
   { PRESET_STORE_2, 1, true}, 
 { PRESET_STORE_3, 2, true} };
 
+// Change the version only if the PresetData structure changes
+#define PRESET_VER 42
 typedef struct {
+  uint8_t preset_ver;
   uint8_t fromhr[NO_PRESETS];
   uint8_t frommin[NO_PRESETS];
   uint8_t tohr[NO_PRESETS];
@@ -83,22 +86,23 @@ void save_preset_data() {
  */
 static void clear_preset_data() {
   memset(&preset_data, 0, sizeof(preset_data));
+  preset_data.preset_ver = PRESET_VER;
   for (uint8_t i = 0; i < NO_PRESETS; i++) {
-  preset_data.fromhr[i] = FROM_HR_DEF;
-  preset_data.frommin[i] = FROM_MIN_DEF;
-  preset_data.tohr[i] = TO_HR_DEF;
-  preset_data.tomin[i] = TO_MIN_DEF;
-  preset_data.from[i] = to_mins(FROM_HR_DEF,FROM_MIN_DEF);
-  preset_data.to[i] = to_mins(TO_HR_DEF,TO_MIN_DEF);
+    preset_data.fromhr[i] = FROM_HR_DEF;
+    preset_data.frommin[i] = FROM_MIN_DEF;
+    preset_data.tohr[i] = TO_HR_DEF;
+    preset_data.tomin[i] = TO_MIN_DEF;
+    preset_data.from[i] = to_mins(FROM_HR_DEF,FROM_MIN_DEF);
+    preset_data.to[i] = to_mins(TO_HR_DEF,TO_MIN_DEF);
   }
 }
 
 /*
  * Read the preset data (or create it if missing)
  */
-void read_preset_data() {
+static void read_preset_data() {
   int read = persist_read_data(PERSIST_PRESET_KEY, &preset_data, sizeof(preset_data));
-  if (read != sizeof(preset_data)) {
+  if (read != sizeof(preset_data) || preset_data.preset_ver != PRESET_VER) {
     clear_preset_data();
   }
 }
