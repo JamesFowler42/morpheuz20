@@ -109,9 +109,8 @@
         <div class="exportwrap">
           <ol>
             <li class="grey">
-              <p>E-Mail CSV Data</p> <label for="emailto">To:</label><input id="emailto" type="email" maxlength="254" class="textbox" /><input type="button" id="mail" value="Export" />
+              <p>E-Mail - CSV Data &amp; Chart</p> <label for="emailto">To:</label><input id="emailto" type="email" maxlength="254" class="textbox" /><input type="button" id="mail" value="Export" />
               <p class="small" id="emailSendResult"></p>
-              <p class="small noset">'To' only saved by pressing Save.</p>
             </li>
             <li id="lipushover" class="noset">
               <p>Pushover - Daily Chart Export</p>
@@ -131,7 +130,6 @@
                   <input id="puser" type="text" maxlength="30" class="textbox wide" />
                 </div>
               </div>
-              <p class="small">'token' & 'user' only saved by pressing Save.</p>
               <p class="small">Setting these values will enable automatic push messages to Pushover</p>
               <p class="small">
                 Last result: <span id="presult"></span>
@@ -169,7 +167,6 @@
                   <input id="lifxTime" type="number" maxlength="4" class="textbox wide" />
                 </div>
               </div>
-              <p class="small">LIFX values will only saved by pressing Save.</p>
               <p class="small">
                 Get your LIFX token by logging into your profile at <a href="http://cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.
               </p>
@@ -204,11 +201,10 @@
               <p class="small">Should the light be already on, Morpheuz will not change it.</p>
             </li>
           </ol>
+          <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset"/><label for="testsettings" class="noset small">Test Pushover &amp; smartbulb settings on save</label>
           <p class="small noset indent">
             Last auto export done: <span id="exptime"></span>
           </p>
-          <input class="noset save" type="button" id="save" value="Save" />
-
         </div>
         <h3>See also</h3>
         <p>
@@ -226,8 +222,8 @@
               <p class="small">No personal data is sent or saved.</p>
             </li>
             <li class="grey">
-              <p>Protect against certain activity monitoring apps interfering with Morpheuz.</p> <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox"/>
-              <p class="small">UP and Misfit use a background process. They then come to the foreground to sync and stop Morpheuz. Enabling this feature ensures that Morpheuz will revive after 5 minutes if it is exited abnormally whilst monitoring sleep.</p>
+              <p>Protect against some activity monitoring apps interfering with Morpheuz.</p> <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox"/>
+              <p class="small">UP and Misfit use a background process. To sync their data, they replace Morpheuz as the running app. Enabling this setting will make Morpheuz revive after 5 minutes, allowing these apps to sync their data, and Morpheuz to continue to monitor sleep.</p>
             </li>
           </ol>
           <input type="button" id="save2" class="save" value="Save" />

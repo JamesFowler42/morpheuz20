@@ -303,6 +303,13 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("hueip",  configData.hueip);
     window.localStorage.setItem("hueusername", configData.hueuser);
     window.localStorage.setItem("hueid", configData.hueid);
+    
+    if (configData.testsettings === "Y") {
+      console.log("Test settings requested");
+      pushoverTransmit(); 
+      turnLifxLightsOn();
+      turnHueLightsOn();
+    }
   }
 });
 

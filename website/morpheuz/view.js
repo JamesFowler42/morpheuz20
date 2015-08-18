@@ -595,7 +595,8 @@ $("document").ready(function() {
       hueip : $("#hueip").val(),
       hueuser : $("#hueuser").val(),
       hueid : $("#hueid").val(),
-      lazarus : $("#lazarus").is(':checked') ? "Y" : "N"
+      lazarus : $("#lazarus").is(':checked') ? "Y" : "N",
+      testsettings : $("#testsettings").is(':checked') ? "Y" : "N"
     };
     document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
   });

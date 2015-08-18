@@ -40,6 +40,7 @@ static uint8_t inverse_state = 0;
 static uint8_t analogue_state = 0;
 static uint8_t power_nap_state = 0;
 static uint8_t auto_reset_state = 0;
+static uint8_t original_auto_reset_state = 0;
 static bool alarm_on = false;
 static char menu_text[15];
 static int16_t selected_row;
@@ -154,7 +155,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   const char *subtitle = menu_def[index].subtitle;
   GBitmap *icon = menu_def[index].state == NULL ? NULL : menu_icons[*(menu_def[index].state)];
 
-  if (index == OPT_WAKEUP && auto_reset_state == 1) {
+  if (index == OPT_WAKEUP && auto_reset_state == 1 && original_auto_reset_state == 1) {
     snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin);
     subtitle = menu_text;
   }
@@ -263,6 +264,7 @@ void show_menu() {
   analogue_state = get_config_data()->analogue;
   power_nap_state = is_doing_powernap();
   auto_reset_state = get_config_data()->auto_reset;
+  original_auto_reset_state = auto_reset_state;
   alarm_on = get_icon(IS_ALARM_RING);
   window = window_create();
   // Setup the window handlers
