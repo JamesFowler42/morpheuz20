@@ -27,6 +27,8 @@
  */
 function mConst() {
   return {
+    chartBottom : -50,
+    chartTop: 4000,
     awakeAbove : 1000,
     lightAbove : 120,
     sampleIntervalMins : 10,
@@ -545,10 +547,11 @@ $("document").ready(function() {
           min : new Date(base)
         },
         yaxis : {
+          ticks:[ mConst().chartBottom, mConst().lightAbove, mConst().awakeAbove, mConst().chartTop ],
           labelRenderer : $.jqplot.CanvasAxisLabelRenderer,
           label : "Movement",
-          min : -50,
-          max : 4000,
+          min : mConst().chartBottom,
+          max : mConst().chartTop,
           labelOptions : {
             textColor : "#1898FF"
           }
