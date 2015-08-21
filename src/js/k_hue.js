@@ -52,28 +52,30 @@ function turnHueLightsOn() {
     var state1 = {
       "on": true,
       "bri": 1,
-      "transistiontime":0
+      "transitiontime":0
     };
   
     // Slowly raise to max brightness
     var state2 = {
       "on": true,
       "bri": 254,
-      "transistiontime":600
+      "transitiontime":600
     };
 	
     // Set the light on - minimum brightness	
     makeAjaxCall("PUT", baseurl + "/state", mConst().hueTimeout, JSON.stringify(state1), function(r1) {
       if (typeof r1.status !== 'undefined' && r1.status === 1) {
-        console.log("Light on - minimum brightness");
-        // Set the light to brighten to max over a minute
-        makeAjaxCall("PUT", baseurl + "/state", mConst().hueTimeout, JSON.stringify(state2), function(r2) {
-          if (typeof r2.status !== 'undefined' && r2.status === 1) {
-            console.log("Light on - brightening to max");
-          } else {
-            console.log("Final state rejected:" + JSON.stringify(r2.errors));
-          }
-        });
+        console.log("Light on - minimum brightness:" + JSON.stringify(r1));
+        setInterval(function () {
+          // Set the light to brighten to max over a minute
+          makeAjaxCall("PUT", baseurl + "/state", mConst().hueTimeout, JSON.stringify(state2), function(r2) {
+            if (typeof r2.status !== 'undefined' && r2.status === 1) {
+              console.log("Light on - brightening to max:" + JSON.stringify(r2));
+            } else {
+              console.log("Final state rejected:" + JSON.stringify(r2.errors));
+            }
+          });
+        }, 1000);
       } else {
         console.log("Initial on state, min bright rejected:" + JSON.stringify(r1.errors));
       }
