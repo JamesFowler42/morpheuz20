@@ -8,7 +8,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2014 James Fowler
+ * Copyright (c) 2013-2015 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,7 @@
         <h3 id="sleep-time"></h3>
         <div id="info-message" style="display: none">
           <p class="settingswrap">
-            Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a>.
+            Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a> or a tiny donation.
           </p>
         </div>
         <h3 class="movement-head">Sleep Movement</h3>
@@ -201,19 +201,23 @@
               <p class="small">Should the light be already on, Morpheuz will not change it.</p>
             </li>
           </ol>
-          <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset"/><label for="testsettings" class="noset small">Test Pushover &amp; smartbulb settings on save</label>
+          <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset" /><label for="testsettings" class="noset small">Test Pushover &amp; smartbulb settings on save</label>
           <p class="small noset indent">
             Last auto export done: <span id="exptime"></span>
           </p>
         </div>
-        <h3>See also</h3>
-        <p>
-        <ul>
-          <li><a href="http://www.morpheuz.net/p/instructions.html" target="_blank">Instructions @ www.morpheuz.net</a></li>
-          <li><a class="ios" href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class="android">morpheuzsleepmonitor on Facebook</span></li>
-          <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
-        </ul>
-        </p>
+      </form>
+      <h3>See also</h3>
+      <ul>
+        <li><a href="http://www.morpheuz.net/p/instructions.html" target="_blank">Instructions @ www.morpheuz.net</a></li>
+        <li><a class="ios" href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class="android">morpheuzsleepmonitor on Facebook</span></li>
+        <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
+        <li><p>Morpheuz is free and will remain so, but requires hosting space, domain names and I require an occasional motivational coffee. Please consider a tiny donation.</p>
+          <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
+            <input type="hidden" name="cmd" value="_s-xclick" /> <input type="hidden" name="hosted_button_id" value="ECS3FWQLRZ5SW" /> <input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online." /> <img alt="" border="0" src="https://www.paypalobjects.com/en_GB/i/scr/pixel.gif" width="1" height="1" />
+          </form></li>
+      </ul>
+      <form action="">
         <h3 class="exporthead noset">Special Features</h3>
         <div class="exportwrap noset usageindent">
           <ol>
@@ -222,14 +226,14 @@
               <p class="small">No personal data is sent or saved.</p>
             </li>
             <li class="grey">
-              <p>Protect against some activity monitoring apps interfering with Morpheuz.</p> <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox"/>
+              <p>Protect against some activity monitoring apps interfering with Morpheuz.</p> <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox" />
               <p class="small">UP and Misfit use a background process. To sync their data, they replace Morpheuz as the running app. Enabling this setting will make Morpheuz revive after 5 minutes, allowing these apps to sync their data, and Morpheuz to continue to monitor sleep.</p>
             </li>
           </ol>
           <input type="button" id="save2" class="save" value="Save" />
         </div>
-        <p class="centre small">&copy; 2013-2015 James Fowler</p>
       </form>
+      <p class="centre small">&copy; 2013-2015 James Fowler</p>
     </div>
   </div>
 </body>
