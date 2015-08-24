@@ -15,8 +15,11 @@ Please visit http://www.morpheuz.net for further information.
 
 Sleep well.
 
+
 Bug? Please report using http://www.morpheuz.net/p/bug-report.html
+
 Would like a new feature? Please use http://www.morpheuz.net/p/change-request.html
+
 
 Full version history on http://www.morpheuz.net
 
