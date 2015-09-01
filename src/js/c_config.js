@@ -28,11 +28,13 @@
  * Constants
  */
 function mConst() {
+  var urlPrefix = "http://ui.morpheuz.net/keith.j.fowler/morpheuz/";
   return {
     limit : 60,
     divisor : 600000,
-    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
-    versionDef : "22",
+    url : urlPrefix + "view-",
+    versionDef : "0",
+    lowestVersion : 22,
     smartDef : "N",
     fromhrDef : "6",
     fromminDef : "30",
@@ -51,10 +53,13 @@ function mConst() {
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
     timeout : 4000,
-    usageUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/usage/",
+    usageUrl : urlPrefix + "usage/",
     usageSx : ".html",
-    quotesUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/quotes.json",
-    hueTimeout: 3000
+    quotesUrl : urlPrefix + "quotes.json",
+    hueTimeout: 3000,
+    urlNotReady: urlPrefix + "view-not-ready.html",
+    makerAlarmUrl: "https://maker.ifttt.com/trigger/morpheuz_alarm/with/key/",
+    makerDataUrl: "https://maker.ifttt.com/trigger/morpheuz_data/with/key/"
   };
 }
 

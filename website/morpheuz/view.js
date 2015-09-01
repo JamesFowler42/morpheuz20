@@ -28,7 +28,7 @@
 function mConst() {
   return {
     chartBottom : -50,
-    chartTop: 4000,
+    chartTop : 4000,
     awakeAbove : 1000,
     lightAbove : 120,
     sampleIntervalMins : 10,
@@ -355,6 +355,8 @@ $("document").ready(function() {
   var hueip = getParameterByName("hueip");
   var hueusername = getParameterByName("hueuser");
   var hueid = getParameterByName("hueid");
+  var ifkey = decodeURIComponent(getParameterByName("ifkey"));
+  var ifstat = decodeURIComponent(getParameterByName("ifstat"));
 
   var smartOn = smart === "Y";
   var nosetOn = noset === "Y";
@@ -377,6 +379,8 @@ $("document").ready(function() {
   $("#hueuser").val(hueusername);
   $("#hueid").val(hueid);
   $("#lazarus").prop("checked", lazarus !== "N");
+  $("#ifkey").val(ifkey);
+  $("#ifstat").text(ifstat);
 
   // Set the status bullets for pushover
   if (postat === "OK") {
@@ -415,6 +419,18 @@ $("document").ready(function() {
   } else {
     $("#lihue").addClass("green");
   }
+  
+  // Set the status bullets for pushover
+  if (ifstat === "OK") {
+    $("#liif").addClass("green");
+    $("#ifstat").addClass("green");
+  } else if (ifstat === "" || ifstat === null || ifstat === "Disabled") {
+    $("#liif").addClass("blue");
+    $("#ifstat").addClass("blue");
+  } else {
+    $("#liif").addClass("red");
+    $("#ifstat").addClass("red");
+  }
 
   $("#version").text(parseInt(vers, 10) / 10);
   $("#sleep-time").text(new Date(base).format(mConst().displayDateFmt));
@@ -422,6 +438,14 @@ $("document").ready(function() {
   if ((new Date().valueOf()) % 10 === 0) {
     $("#info-message").css("display", "block");
   }
+
+  $(".licollapse > p").click(function() {
+    if ($(this).parent().hasClass("liopen")) {
+      $(this).parent().removeClass("liopen").addClass("liclosed");
+    } else {
+      $(this).parent().removeClass("liclosed").addClass("liopen");
+    }
+  });
 
   // Show version warning
   if (!nosetOn) {
@@ -547,7 +571,7 @@ $("document").ready(function() {
           min : new Date(base)
         },
         yaxis : {
-          ticks:[ mConst().chartBottom, mConst().lightAbove, mConst().awakeAbove, mConst().chartTop ],
+          ticks : [ mConst().chartBottom, mConst().lightAbove, mConst().awakeAbove, mConst().chartTop ],
           labelRenderer : $.jqplot.CanvasAxisLabelRenderer,
           label : "Movement",
           min : mConst().chartBottom,
@@ -599,12 +623,13 @@ $("document").ready(function() {
       hueuser : $("#hueuser").val(),
       hueid : $("#hueid").val(),
       lazarus : $("#lazarus").is(':checked') ? "Y" : "N",
-      testsettings : $("#testsettings").is(':checked') ? "Y" : "N"
+      testsettings : $("#testsettings").is(':checked') ? "Y" : "N",
+      ifkey : $("#ifkey").val(),
     };
     document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
   });
 
-  //Send an email containing CSV data
+  // Send an email containing CSV data
   $("#mail").removeAttr("disabled");
   $("#mail").click(function() {
 

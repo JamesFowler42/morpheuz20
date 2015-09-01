@@ -316,7 +316,7 @@ static void reset_sleep_period_action(void *data) {
   internal_data.base = now;
   internal_data.last_sent = LAST_SENT_INIT;
   internal_data.has_been_reset = true;
-  set_icon(false, IS_RECORD);
+  set_icon(true, IS_RECORD);
   set_icon(false, IS_IGNORE);
   set_icon(false, IS_EXPORT);
   analogue_set_base(internal_data.base);
@@ -519,7 +519,7 @@ static void transmit_points_or_background_data(int8_t last_sent) {
  * Send data to phone
  */
 static void transmit_data() {
-
+  
   // Retry will occur on the next minute, so no connection, no sweat
   // Also don't bother if initial state or we haven't done the version handshake yet
   if (!version_sent || !internal_data.has_been_reset || !bluetooth_connection_service_peek()) {

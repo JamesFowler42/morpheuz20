@@ -40,7 +40,7 @@ function sendAnonymousUsageData() {
     var platform = isBasalt() ? "Basalt" : "Aplite";
     var hostua = getUserAgent();
     var basicUrl = "v" + version + "-" + hostua + "-" + platform + mConst().usageSx;
-    var actionUrl = mConst().usageUrl + basicUrl.toLowerCase();
+    var actionUrl = mConst().usageUrl + basicUrl.toLowerCase() + "?v=" + new Date().getTime();
 
     // Send the usage stats
     console.log("sendAnonymousUsageData: event=" + actionUrl);

@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 33
-#define VERSION_TXT "3.3"
+#define VERSION 34
+#define VERSION_TXT "3.4"
 
 // Comment out for production build - leaves errors on BASALT and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -128,6 +128,7 @@
   #define HOUR_MARK_COLOR GColorWhite
   #define MINUTE_STEP 24
   #define PROGRESS_STEP 24
+  #define COPYRIGHT_COLOR GColorPictonBlue
 #else
   #define BACKGROUND_COLOR GColorBlack
   #define SETTING_BACKGROUND_COLOR GColorWhite
@@ -161,6 +162,7 @@
   #define HOUR_MARK_COLOR GColorWhite
   #define MINUTE_STEP 24
   #define PROGRESS_STEP 12
+  #define COPYRIGHT_COLOR GColorWhite
 #endif
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation

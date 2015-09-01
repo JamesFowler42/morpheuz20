@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData */
 
 /*
  * Reset log
@@ -51,6 +51,8 @@ function resetWithPreserve() {
   var hueip =  window.localStorage.getItem("hueip");
   var hueusername =  window.localStorage.getItem("hueusername");
   var hueid = window.localStorage.getItem("hueid");
+  var ifkey = window.localStorage.getItem("ifkey");
+  var ifstat = window.localStorage.getItem("ifstat");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -74,6 +76,8 @@ function resetWithPreserve() {
   window.localStorage.setItem("hueip", nvl(hueip, ""));
   window.localStorage.setItem("hueusername", nvl(hueusername, ""));
   window.localStorage.setItem("hueid", nvl(hueid, ""));
+  window.localStorage.setItem("ifkey", nvl(ifkey, ""));
+  window.localStorage.setItem("ifstat", nvl(ifstat, ""));
 }
 
 /*
@@ -226,6 +230,7 @@ Pebble.addEventListener("appmessage", function(e) {
     addSmartAlarmPin();
     turnLifxLightsOn();
     turnHueLightsOn();
+    iftttMakerInterfaceAlarm();
   }
 
   // Incoming data point
@@ -276,6 +281,7 @@ function transmitMethods() {
   pushoverTransmit();
   smartwatchProTransmit();
   sendAnonymousUsageData();
+  iftttMakerInterfaceData();
 
   // Protect and report time
   window.localStorage.setItem("transmitDone", "done");
@@ -303,12 +309,14 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("hueip",  configData.hueip);
     window.localStorage.setItem("hueusername", configData.hueuser);
     window.localStorage.setItem("hueid", configData.hueid);
+    window.localStorage.setItem("ifkey", configData.ifkey);
     
     if (configData.testsettings === "Y") {
       console.log("Test settings requested");
       pushoverTransmit(); 
       turnLifxLightsOn();
       turnHueLightsOn();
+      iftttMakerInterfaceAlarm();
     }
   }
 });
@@ -317,6 +325,13 @@ Pebble.addEventListener("webviewclosed", function(e) {
  * Build the url for the config and report display @param noset
  */
 function buildUrl(noset) {
+  // If the version is set, keep it, if not the provide a not ready screen
+  var version = nvl(window.localStorage.getItem("version"), mConst().versionDef);
+  if (parseInt(version, 10) < mConst().lowestVersion) {
+    return mConst().urlNotReady;
+  }
+  
+  // Gather the chart together
   var base = window.localStorage.getItem("base");
   var graph = "";
   for (var i = 0; i < mConst().limit; i++) {
@@ -328,9 +343,6 @@ function buildUrl(noset) {
       graph = graph + valueStr + "!";
     }
   }
-  var version = window.localStorage.getItem("version");
-  if (!(parseInt(version, 10) >= 22))
-    version = "22";
 
   var fromhr = nvl(window.localStorage.getItem("fromhr"), mConst().fromhrDef);
   var tohr = nvl(window.localStorage.getItem("tohr"), mConst().tohrDef);
@@ -356,11 +368,14 @@ function buildUrl(noset) {
     var hueip =  nvl(window.localStorage.getItem("hueip"), "");
     var hueusername =  nvl(window.localStorage.getItem("hueusername"), "");
     var hueid = nvl(window.localStorage.getItem("hueid"), "");
+    var ifkey = nvl(window.localStorage.getItem("ifkey"), "");
+    var ifstat = nvl(window.localStorage.getItem("ifstat"), "");
     extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
            "&potoken=" + encodeURIComponent(potoken) + "&token=" + token + 
            "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
            "&usage=" + usage + "&lazarus=" + lazarus + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime +
-           "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid;
+           "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid +
+           "&ifkey=" + ifkey + "&ifstat=" + encodeURIComponent(ifstat);
   }
   
   var url = mConst().url + version + ".html" + 

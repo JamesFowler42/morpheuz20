@@ -23,7 +23,7 @@
  */
 
 /*global mConst, clearTimeout, nvl, window, btoa, FormData */
-/*exported makePostAjaxCall, makeGetAjaxCall, turnLifxLightsOn */
+/*exported makePostAjaxCall, makeGetAjaxCall, turnLifxLightsOn, makeAjaxCall */
 
 /*
  * Standard Post Ajax call routine
@@ -132,5 +132,60 @@ function turnLifxLightsOn() {
     req.onload = function() {
       //response
     };
+  }
+}
+
+/*
+ * Generic ajax support function (used by Maker and Hue bulb interface)
+ */
+function makeAjaxCall(mode, url, toTime, dataout, resp) {
+  var tout = setTimeout(function() {
+    resp({
+      "status" : 0,
+      "errors" : [ "timeout" ]
+    });
+  }, toTime);
+  var req = new XMLHttpRequest();
+  req.open(mode, url, true);
+  req.setRequestHeader("Content-Type", "application/json");
+  req.timeout = toTime;
+  req.ontimeout = function() {
+    resp({
+      "status" : 0,
+      "errors" : [ "timeout" ]
+    });
+    clearTimeout(tout);
+  };
+  req.onload = function() {
+    if (req.readyState === 4 && req.status === 200) {
+      clearTimeout(tout);
+      resp({
+        "status" : 1,
+        "data" : safeJSONparse(req.responseText)
+      });
+    } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
+      clearTimeout(tout);
+      resp({
+        "status" : 0,
+        "errors" : [ req.status, nvl(req.responseText, "No Msg") ]
+      });
+    }
+  };
+  if (dataout === "") {
+    req.send();
+  } else {
+	req.send(dataout);
+  }
+
+}
+
+/*
+ * JSON parse with built in safety - like if the message isn't bloody json
+ */
+function safeJSONparse(txt) {
+  try {
+    return JSON.parse(txt);
+  } catch (err) {
+    return txt;
   }
 }

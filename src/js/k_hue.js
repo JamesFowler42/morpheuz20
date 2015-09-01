@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global mConst, clearTimeout, nvl, window */
+/*global mConst, clearTimeout, nvl, window, makeAjaxCall */
 /*exported turnHueLightsOn */
 
 /*
@@ -102,43 +102,3 @@ function turnHueLightsOn() {
   });
 }
 
-function makeAjaxCall(mode, url, toTime, dataout, resp) {
-  var tout = setTimeout(function() {
-    resp({
-      "status" : 0,
-      "errors" : [ "timeout" ]
-    });
-  }, toTime);
-  var req = new XMLHttpRequest();
-  req.open(mode, url, true);
-  req.setRequestHeader("Content-Type", "application/json");
-  req.timeout = toTime;
-  req.ontimeout = function() {
-    resp({
-      "status" : 0,
-      "errors" : [ "timeout" ]
-    });
-    clearTimeout(tout);
-  };
-  req.onload = function() {
-    if (req.readyState === 4 && req.status === 200) {
-      clearTimeout(tout);
-      resp({
-        "status" : 1,
-        "data" : JSON.parse(req.responseText)
-      });
-    } else if (req.readyState === 4 && (req.status >= 300 && req.status <= 599)) {
-      clearTimeout(tout);
-      resp({
-        "status" : 0,
-        "errors" : [ req.status, nvl(req.responseText, "No Msg") ]
-      });
-    }
-  };
-  if (dataout === "") {
-    req.send();
-  } else {
-	req.send(dataout);
-  }
-
-}

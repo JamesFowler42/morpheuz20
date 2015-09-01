@@ -429,7 +429,7 @@ static void morpheuz_load(Window *window) {
   layer_set_update_proc(progress_layer, &progress_layer_update_callback);
   layer_add_child(window_layer, progress_layer);
 
-  block_layer = macro_text_layer_create(BLOCK_START, window_layer, GColorWhite, BACKGROUND_COLOR, notice_font, GTextAlignmentCenter);
+  block_layer = macro_text_layer_create(BLOCK_START, window_layer, COPYRIGHT_COLOR, BACKGROUND_COLOR, notice_font, GTextAlignmentCenter);
   text_layer_set_text(block_layer, COPYRIGHT);
 
   analogue_window_load(window);

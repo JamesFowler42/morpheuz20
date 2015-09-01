@@ -24,15 +24,15 @@
 html {
     -webkit-text-size-adjust: 100%; /* Prevent font scaling in landscape while allowing user zoom */
 }
- 
+
 body {
-    font-size:12px;
+    font-size: 12px;
     font-family: "Lucida Sans Unicode", "Lucida Grande", sans-serif;
     margin: 1px;
 }
 
 .outer {
-    width:100%;
+    width: 100%;
 }
 
 .inner {
@@ -303,6 +303,10 @@ p.small.red {
     padding-bottom: 5px;
 }
 
+.paddedtop {
+    padding-top: 5px;
+}
+
 .indent {
     padding-left: 5px;
 }
@@ -343,3 +347,40 @@ input#save2.save {
     width: 200px;
 }
 
+.licollapse.liopen .licollapsible {
+    display: block;
+}
+
+.licollapse.liclosed .licollapsible {
+    display: none;
+}
+
+.licollapse.liopen>p {
+    cursor: pointer;
+}
+
+.licollapse.liclosed>p {
+    cursor: pointer;
+}
+
+.liright,.lidown {
+    margin-right: 5px;
+    top: 3px;
+    position: relative;
+}
+
+.licollapse.liopen .liright {
+    display: none;
+}
+
+.licollapse.liclosed .liright {
+    display: inline;
+}
+
+.licollapse.liopen .lidown {
+    display: inline;
+}
+
+.licollapse.liclosed .lidown {
+    display: none;
+}

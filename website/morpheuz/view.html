@@ -108,100 +108,146 @@
         <h3 class="exporthead">Export &amp; Home Automation</h3>
         <div class="exportwrap">
           <ol>
-            <li class="grey">
-              <p>E-Mail - CSV Data &amp; Chart</p> <label for="emailto">To:</label><input id="emailto" type="email" maxlength="254" class="textbox" /><input type="button" id="mail" value="Export" />
-              <p class="small" id="emailSendResult"></p>
-            </li>
-            <li id="lipushover" class="noset">
-              <p>Pushover - Daily Chart Export</p>
-              <div class="row">
-                <div class="cell">
-                  <label for="ptoken">Token:</label>
-                </div>
-                <div class="cell">
-                  <input id="ptoken" type="text" maxlength="30" class="textbox wide" />
-                </div>
-              </div>
-              <div class="row">
-                <div class="cell">
-                  <label for="puser">User:</label>
-                </div>
-                <div class="cell">
-                  <input id="puser" type="text" maxlength="30" class="textbox wide" />
-                </div>
-              </div>
-              <p class="small">Setting these values will enable automatic push messages to Pushover</p>
-              <p class="small">
-                Last result: <span id="presult"></span>
+            <li class="grey licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />E-Mail - CSV Data &amp; Chart
               </p>
+              <div class="licollapsible">
+                <label for="emailto">To:</label><input id="emailto" type="email" maxlength="254" class="textbox" /><input type="button" id="mail" value="Export" />
+                <p class="small" id="emailSendResult"></p>
+              </div>
             </li>
-            <li class="grey noset ios">
-              <p class="paddedbottom">Manual Healthkit export via Smartwatch Pro</p> <a id="swp" href="swpro2hk://">Export</a>
-              <p class="small" id="swpnodata">The recorded data is not yet complete enough for export.</p>
-              <p class="small padded">
-                Needs iOS8 (or above) with <a id="swplink">Smartwatch Pro</a> installed
+            <li id="lipushover" class="noset licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />Pushover - Daily Chart Export
               </p>
+              <div class="licollapsible">
+                <div class="row">
+                  <div class="cell">
+                    <label for="ptoken">Token:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="ptoken" type="text" maxlength="30" class="textbox wide" />
+                  </div>
+                </div>
+                <div class="row">
+                  <div class="cell">
+                    <label for="puser">User:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="puser" type="text" maxlength="30" class="textbox wide" />
+                  </div>
+                </div>
+                <p class="small">Setting these values will enable automatic push messages to Pushover</p>
+                <p class="small">
+                  Last result: <span id="presult"></span>
+                </p>
+              </div>
             </li>
-            <li id="liswp" class="noset ios">
-              <p>Automatic Healthkit export via Smartwatch Pro</p> <label for="swpdo">Automatic:</label><input id="swpdo" type="checkbox" />
-              <p class="small">One manual export is required before activating automatic mode</p>
-              <p class="small">
-                Last result: <span id="swpstat"></span>
+            <li class="grey noset ios licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />Manual Healthkit export via Smartwatch Pro
               </p>
+              <div class="licollapsible paddedtop">
+                <a id="swp" href="swpro2hk://">Export</a>
+                <p class="small" id="swpnodata">The recorded data is not yet complete enough for export.</p>
+                <p class="small padded">
+                  Needs iOS8 (or above) with <a id="swplink">Smartwatch Pro</a> installed
+                </p>
+              </div>
             </li>
-            <li id="lilifx" class="noset">
-              <p>LIFX Smart Bulb</p>
-              <div class="row">
-                <div class="cell">
-                  <label for="lifxToken">Token:</label>
-                </div>
-                <div class="cell">
-                  <input id="lifxToken" type="text" maxlength="100" class="textbox wide" />
-                </div>
-              </div>
-              <div class="row">
-                <div class="cell">
-                  <label for="lifxTime">Fade-in Time:</label>
-                </div>
-                <div class="cell">
-                  <input id="lifxTime" type="number" maxlength="4" class="textbox wide" />
-                </div>
-              </div>
-              <p class="small">
-                Get your LIFX token by logging into your profile at <a href="http://cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.
+            <li id="liswp" class="noset ios licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />Automatic Healthkit export via Smartwatch Pro
               </p>
+              <div class="licollapsible">
+                <label for="swpdo">Automatic:</label><input id="swpdo" type="checkbox" />
+                <p class="small">One manual export is required before activating automatic mode</p>
+                <p class="small">
+                  Last result: <span id="swpstat"></span>
+                </p>
+              </div>
             </li>
-            <li id="lihue" class="noset">
-              <p>Philips Hue Smart Bulb</p>
-              <div class="row">
-                <div class="cell">
-                  <label for="hueip">Bridge IP:</label>
+            <li id="lilifx" class="noset licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />LIFX Smart Bulb
+              </p>
+              <div class="licollapsible">
+                <div class="row">
+                  <div class="cell">
+                    <label for="lifxToken">Token:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="lifxToken" type="text" maxlength="100" class="textbox wide" />
+                  </div>
                 </div>
-                <div class="cell">
-                  <input id="hueip" type="text" maxlength="15" class="textbox wide" />
+                <div class="row">
+                  <div class="cell">
+                    <label for="lifxTime">Fade-in Time:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="lifxTime" type="number" maxlength="4" class="textbox wide" />
+                  </div>
                 </div>
+                <p class="small">
+                  Get your LIFX token by logging into your profile at <a href="http://cloud.lifx.com">cloud.lifx.com</a> and selecting the "Generate New Token" button. If the values are correct, your LIFX lightbulbs will fade on as soon as your alarm goes off.
+                </p>
               </div>
-              <div class="row">
-                <div class="cell">
-                  <label for="hueuser">Username:</label>
+            </li>
+            <li id="lihue" class="noset licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />Philips Hue Smart Bulb
+              </p>
+              <div class="licollapsible">
+                <div class="row">
+                  <div class="cell">
+                    <label for="hueip">Bridge IP:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="hueip" type="text" maxlength="15" class="textbox wide" />
+                  </div>
                 </div>
-                <div class="cell">
-                  <input id="hueuser" type="text" maxlength="50" class="textbox wide" />
+                <div class="row">
+                  <div class="cell">
+                    <label for="hueuser">Username:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="hueuser" type="text" maxlength="50" class="textbox wide" />
+                  </div>
                 </div>
+                <div class="row">
+                  <div class="cell">
+                    <label for="hueid">Bulb Id:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="hueid" type="number" maxlength="5" class="textbox wide" />
+                  </div>
+                </div>
+                <p class="small">If the values are correct, your Hue lightbulbs will fade on as soon as your alarm goes off.</p>
+                <p class="small">Should the light be already on, Morpheuz will not change it.</p>
               </div>
-              <div class="row">
-                <div class="cell">
-                  <label for="hueid">Bulb Id:</label>
+            </li>
+            <li id="liif" class="noset licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />IFTTT - Maker - Daily Chart Export &amp; Alarm
+              </p>
+              <div class="licollapsible">
+                <div class="row">
+                  <div class="cell">
+                    <label for="ifkey">Key:</label>
+                  </div>
+                  <div class="cell">
+                    <input id="ifkey" type="text" maxlength="30" class="textbox wide" />
+                  </div>
                 </div>
-                <div class="cell">
-                  <input id="hueid" type="number" maxlength="5" class="textbox wide" />
-                </div>
+                <p class="small">Setting this value will send a 'morpheuz-alarm' &amp; a 'morpheuz-data' event to IFTTT at alarm time &amp; the normal export time respectively.</p>
+                <p class="small">
+                  Last result: <span id="ifstat"></span>
+                </p>
               </div>
-              <p class="small">If the values are correct, your Hue lightbulbs will fade on as soon as your alarm goes off.</p>
-              <p class="small">Should the light be already on, Morpheuz will not change it.</p>
             </li>
           </ol>
-          <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset" /><label for="testsettings" class="noset small">Test Pushover &amp; smartbulb settings on save</label>
+          <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset" /><label for="testsettings" class="noset small">Test Pushover, IFTTT &amp; light settings on save</label>
           <p class="small noset indent">
             Last auto export done: <span id="exptime"></span>
           </p>
@@ -221,13 +267,23 @@
         <h3 class="exporthead noset">Special Features</h3>
         <div class="exportwrap noset usageindent">
           <ol>
-            <li class="grey">
-              <p>Help to improve Morpheuz by allowing once a day anonymous usage statistics.</p> <label for="usage">Allow:</label><input id="usage" type="checkbox" />
-              <p class="small">No personal data is sent or saved.</p>
+            <li class="grey licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />Help to improve Morpheuz by allowing once a day anonymous usage statistics.
+              </p>
+              <div class="licollapsible">
+                <label for="usage">Allow:</label><input id="usage" type="checkbox" />
+                <p class="small">No personal data is sent or saved.</p>
+              </div>
             </li>
-            <li class="grey">
-              <p>Protect against some activity monitoring apps interfering with Morpheuz.</p> <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox" />
-              <p class="small">UP and Misfit use a background process. To sync their data, they replace Morpheuz as the running app. Enabling this setting will make Morpheuz revive after 5 minutes, allowing these apps to sync their data, and Morpheuz to continue to monitor sleep.</p>
+            <li class="grey licollapse liclosed">
+              <p>
+                <img src="img/plus.png" class="liright" /><img src="img/minus.png" class="lidown" />Protect against some activity monitoring apps interfering with Morpheuz.
+              </p>
+              <div class="licollapsible">
+                <label for="lazarus">Protect:</label><input id="lazarus" type="checkbox" />
+                <p class="small">UP and Misfit use a background process. To sync their data, they replace Morpheuz as the running app. Enabling this setting will make Morpheuz revive after 5 minutes, allowing these apps to sync their data, and Morpheuz to continue to monitor sleep.</p>
+              </div>
             </li>
           </ol>
           <input type="button" id="save2" class="save" value="Save" />
