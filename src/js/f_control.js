@@ -72,7 +72,7 @@ function resetWithPreserve() {
   window.localStorage.setItem("autoReset", nvl(autoReset, "0"));
   window.localStorage.setItem("quote", nvl(quote, ""));
   window.localStorage.setItem("lifx-token", nvl(lifxToken, ""));
-  window.localStorage.setItem("lifx-time", nvl(lifxTime, ""));
+  window.localStorage.setItem("lifx-time", nvl(lifxTime, mConst().lifxTimeDef));
   window.localStorage.setItem("hueip", nvl(hueip, ""));
   window.localStorage.setItem("hueusername", nvl(hueusername, ""));
   window.localStorage.setItem("hueid", nvl(hueid, ""));
@@ -294,9 +294,23 @@ function transmitMethods() {
  */
 Pebble.addEventListener("webviewclosed", function(e) {
   console.log("webviewclosed " + e.response);
-  if (e.response === null)
+  
+  // Nothing returned
+  if (e.response === null || typeof e.response === 'undefined') {
+    console.log("no config returned");
     return;
-  var configData = JSON.parse(decodeURIComponent(e.response));
+  }
+
+  // Even then a lack of trust is reasonable
+  var configData;
+  try {
+    configData = JSON.parse(decodeURIComponent(e.response));
+  } catch (err) {
+    console.log("no config returned");
+    return;
+  }
+  
+  // Process
   if (configData.action === "save") {
     window.localStorage.setItem("emailto", configData.emailto);
     window.localStorage.setItem("pouser", configData.pouser);
@@ -311,12 +325,14 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("hueid", configData.hueid);
     window.localStorage.setItem("ifkey", configData.ifkey);
     
+    // Test if requested
     if (configData.testsettings === "Y") {
       console.log("Test settings requested");
       pushoverTransmit(); 
       turnLifxLightsOn();
       turnHueLightsOn();
       iftttMakerInterfaceAlarm();
+      iftttMakerInterfaceData();
     }
   }
 });
@@ -362,7 +378,10 @@ function buildUrl(noset) {
     var swpstat = nvl(window.localStorage.getItem("swpstat"), "");
     var exptime = nvl(window.localStorage.getItem("exptime"), "");
     var lifxToken = nvl(window.localStorage.getItem("lifx-token"), "");
-    var lifxTime = nvl(window.localStorage.getItem("lifx-time"), "");
+    var lifxTime = nvl(window.localStorage.getItem("lifx-time"), mConst().lifxTimeDef);
+    if (lifxTime === "") {
+      lifxTime = mConst().lifxTimeDef;
+    }
     var usage = nvl(window.localStorage.getItem("usage"), "Y");
     var lazarus = nvl(window.localStorage.getItem("lazarus"), "Y");
     var hueip =  nvl(window.localStorage.getItem("hueip"), "");

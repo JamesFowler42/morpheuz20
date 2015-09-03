@@ -420,6 +420,20 @@ $("document").ready(function() {
     $("#lihue").addClass("green");
   }
   
+  // Set the usage bullet to indicate active or not
+  if (usage !== "N") {
+    $("#liusage").addClass("green");
+  } else {
+    $("#liusage").addClass("blue");
+  }
+  
+  // Set the lazarus bullet to indicate active or not
+  if (lazarus !== "N") {
+    $("#lilazarus").addClass("green");
+  } else {
+    $("#lilazarus").addClass("blue");
+  }
+  
   // Set the status bullets for pushover
   if (ifstat === "OK") {
     $("#liif").addClass("green");
@@ -431,7 +445,11 @@ $("document").ready(function() {
     $("#liif").addClass("red");
     $("#ifstat").addClass("red");
   }
+  
+  // Any failed exports are automatically opened on load
+  $("li.red").removeClass("liclosed").addClass("liopen");
 
+  // Set version
   $("#version").text(parseInt(vers, 10) / 10);
   $("#sleep-time").text(new Date(base).format(mConst().displayDateFmt));
 
@@ -676,3 +694,4 @@ $("document").ready(function() {
   });
 
 });
+

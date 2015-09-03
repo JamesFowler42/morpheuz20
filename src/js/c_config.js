@@ -28,7 +28,7 @@
  * Constants
  */
 function mConst() {
-  var urlPrefix = "http://ui.morpheuz.net/keith.j.fowler/morpheuz/";
+  var urlPrefix = "http://ui.morpheuz.net/morpheuz/";
   return {
     limit : 60,
     divisor : 600000,
@@ -59,7 +59,8 @@ function mConst() {
     hueTimeout: 3000,
     urlNotReady: urlPrefix + "view-not-ready.html",
     makerAlarmUrl: "https://maker.ifttt.com/trigger/morpheuz_alarm/with/key/",
-    makerDataUrl: "https://maker.ifttt.com/trigger/morpheuz_data/with/key/"
+    makerDataUrl: "https://maker.ifttt.com/trigger/morpheuz_data/with/key/",
+    lifxTimeDef: 60
   };
 }
 

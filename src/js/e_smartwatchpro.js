@@ -23,7 +23,7 @@
  */
 
 /*global window, nvl, mLang, mConst, makeGetAjaxCall */
-/*exported smartwatchProConfigured, smartwatchProTransmit, calculateStats */
+/*exported smartwatchProConfigured, smartwatchProTransmit, calculateStats, generateCopyLinkData */
 
 /*
  * Is Smartwatch Pro configured?
@@ -75,16 +75,7 @@ function smartwatchProTransmit() {
 function calculateStats() {
   var base = parseInt(window.localStorage.getItem("base"), 10);
   var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
-  var splitup = [];
-  for (var j = 0; j < mConst().limit; j++) {
-    var entry = "P" + j;
-    var valueStr = window.localStorage.getItem(entry);
-    if (valueStr === null) {
-      splitup[j] = "-1";
-    } else {
-      splitup[j] = valueStr;
-    }
-  }
+  var splitup = extractSplitup();
 
   // Get the full set of data up to the wake up point.
   // Ignore nulls
@@ -139,4 +130,59 @@ function returnAbsoluteMatch(early, late, actualstr) {
     point = point.addMinutes(1);
   }
   return early;
+}
+
+/*
+ * Extract splitup array from local storage
+ */
+function extractSplitup() {
+  var splitup = [];
+  for (var j = 0; j < mConst().limit; j++) {
+    var entry = "P" + j;
+    var valueStr = window.localStorage.getItem(entry);
+    if (valueStr === null) {
+      splitup[j] = "-1";
+    } else {
+      splitup[j] = valueStr;
+    }
+  }
+  return splitup;
+}
+
+/*
+ * Prepare the data for the ifttt value3
+ */
+function generateCopyLinkData() {
+  
+  var lb = "<br/>";
+  
+  var base = parseInt(window.localStorage.getItem("base"), 10);
+  var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
+  var splitup = extractSplitup();
+  var fromhr = nvl(window.localStorage.getItem("fromhr"), mConst().fromhrDef);
+  var tohr = nvl(window.localStorage.getItem("tohr"), mConst().tohrDef);
+  var frommin = nvl(window.localStorage.getItem("frommin"), mConst().fromminDef);
+  var tomin = nvl(window.localStorage.getItem("tomin"), mConst().tominDef);
+  var smartOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
+
+  var timePoint = new Date(base);
+  var body = "";
+
+  for (var i = 0; i < splitup.length; i++) {
+    if (splitup[i] === "") {
+      continue;
+    }
+    body = body + timePoint.format("hh:mm") + "," + splitup[i] + lb;
+    timePoint = timePoint.addMinutes(mConst().sampleIntervalMins);
+  }
+
+  // Add smart alarm info into CSV data
+  if (smartOn) {
+    body = body + fromhr + ":" + frommin + ",START" + lb + tohr + ":" + tomin + ",END" + lb;
+    if (goneoff != "N") {
+      var goneoffstr = goneoff.substr(0, 2) + ":" + goneoff.substr(2, 2);
+      body = body + goneoffstr + ",ALARM" + lb;
+    }
+  }
+  return body;
 }

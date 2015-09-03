@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global nvl, window, mLang, makeAjaxCall, mConst, buildUrl */
+/*global nvl, window, mLang, makeAjaxCall, mConst, buildUrl, generateCopyLinkData */
 /*exported iftttMakerInterfaceAlarm, iftttMakerInterfaceData */
 
 /*
@@ -82,8 +82,9 @@ function iftttMakerInterfaceData() {
     var base = window.localStorage.getItem("base");
     var resetDate = new Date(parseInt(base, 10)).format(mConst().displayDateFmt);
     var urlToAttach = buildUrl("Y");
+    var csvData = generateCopyLinkData();
   
-    var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : "" };
+    var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData };
   
     var url = mConst().makerDataUrl + ifkey;
     
@@ -102,3 +103,4 @@ function iftttMakerInterfaceData() {
     window.localStorage.setItem("ifstat", err.message);
   }
 }
+

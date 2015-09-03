@@ -109,30 +109,37 @@ function makeGetAjaxCall(url, resp) {
 }
 
 /*
- If LIFX values are set, this function will turn on all the lights with a custom fade-in time
+ * If LIFX values are set, this function will turn on all the lights with a custom fade-in time
  */
 function turnLifxLightsOn() {
-  if (window.localStorage.getItem("lifx-token") && window.localStorage.getItem("lifx-time")) {
-    var token = window.localStorage.getItem("lifx-token");
-    var fadeInTime = window.localStorage.getItem("lifx-time");
-    var url = "https://api.lifx.com/v1beta1/lights/all/power";
-    var method = "PUT";
-    var data = new FormData();
-
-    data.append('state', 'on');
-    data.append('duration', fadeInTime);
-
-    var req = new XMLHttpRequest();
-    req.open(method, url, true);
-    req.setRequestHeader("Authorization", "Basic " + btoa(token + ":" + ""));
-    req.withCredentials = "true";
-
-    req.send(data);
-
-    req.onload = function() {
-      //response
-    };
+  
+  // Find out config information
+  var token = nvl(window.localStorage.getItem("lifx-token"), "");
+  var fadeInTime = nvl(window.localStorage.getItem("lifx-time"), mConst().lifxTimeDef);
+  
+  // Escape if not configured
+  if (token === "" || fadeInTime === "") {
+    console.log("lifx control deactivated");
+    return;
   }
+
+  var url = "https://api.lifx.com/v1beta1/lights/all/power";
+  var method = "PUT";
+  var data = new FormData();
+
+  data.append('state', 'on');
+  data.append('duration', fadeInTime);
+
+  var req = new XMLHttpRequest();
+  req.open(method, url, true);
+  req.setRequestHeader("Authorization", "Basic " + btoa(token + ":" + ""));
+  req.withCredentials = "true";
+  req.send(data);
+
+  req.onload = function() {
+    //response
+  };
+
 }
 
 /*
