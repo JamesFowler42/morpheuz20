@@ -292,6 +292,7 @@ void analogue_visible(bool visible, bool call_post_init) {
   is_visible = visible;
 }
 
+#ifdef TESTING_BUILD
 /*
  * Unload the analogue watchface
  */
@@ -301,4 +302,5 @@ void analogue_window_unload() {
   layer_destroy(hands_layer);
   layer_destroy(analgue_layer);
 }
+#endif
 

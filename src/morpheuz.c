@@ -140,7 +140,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 /*
  * Initialise comms and accelerometer
  */
-void init_morpheuz(Window *window) {
+void init_morpheuz() {
 
   init_alarm();
 
@@ -149,9 +149,6 @@ void init_morpheuz(Window *window) {
   // Accelerometer
   accel_data_service_subscribe(25, accel_data_handler);
   accel_service_set_sampling_rate(ACCEL_SAMPLING_10HZ);
-
-  // Set click provider
-  window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
 
   // Set the smart status
   set_smart_status();

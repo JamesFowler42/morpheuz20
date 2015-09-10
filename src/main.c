@@ -331,6 +331,9 @@ void post_init_hook(void *data) {
   wakeup_init();
   animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
   layer_mark_dirty(icon_bar);
+  
+  // Set click provider
+  window_set_click_config_provider(window, (ClickConfigProvider) click_config_provider);
 }
 
 static void animation_stopped(Animation *animation, bool finished, void *data);
@@ -453,7 +456,7 @@ static void morpheuz_load(Window *window) {
   invert_screen();
 #endif
 
-  init_morpheuz(window);
+  init_morpheuz();
 
   set_icon(get_internal_data()->transmit_sent, IS_EXPORT);
 
@@ -478,10 +481,11 @@ static void morpheuz_unload(Window *window) {
   save_config_data(NULL);
   save_internal_data();
 
-#ifndef PBL_COLOR
-  inverter_layer_destroy(full_inverse_layer);
-#endif
-
+  #ifdef TESTING_BUILD
+  #ifndef PBL_COLOR
+    inverter_layer_destroy(full_inverse_layer);
+  #endif
+  
   analogue_window_unload();
 
   layer_destroy(progress_layer);
@@ -502,6 +506,7 @@ static void morpheuz_unload(Window *window) {
 
   fonts_unload_custom_font(time_font);
   fonts_unload_custom_font(notice_font);
+  #endif
 }
 
 /*

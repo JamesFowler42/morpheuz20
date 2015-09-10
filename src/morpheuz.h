@@ -292,7 +292,7 @@ typedef struct {
   GBitmap *bitmap;
 } BitmapLayerComp;
 
-void init_morpheuz(Window *window);
+void init_morpheuz();
 void set_smart_status_on_screen(bool show_special_text, char *special_text);
 void invert_screen();
 void revive_clock_on_movement(uint16_t last_movement);

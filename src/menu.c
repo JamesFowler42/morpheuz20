@@ -44,6 +44,8 @@ static uint8_t original_auto_reset_state = 0;
 static bool alarm_on = false;
 static char menu_text[15];
 static int16_t selected_row;
+static bool menu_live = false;
+static bool menu_act;
 
 extern char date_text[16];
 static char failure_text[] = NO_FAILURE;
@@ -169,6 +171,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
  */
 static void do_menu_action(void *data) {
   menu_def[selected_row].action();
+  menu_act = false;
 }
 
 #ifndef PBL_COLOR
@@ -202,6 +205,10 @@ static void menu_resend() {
  * Here we capture when a user selects a menu item
  */
 static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  if (menu_act) {
+    return;
+  }
+  menu_act = true;
   // Use the row to specify which item will receive the select action
   selected_row = alarm_on ? cell_index->row : cell_index->row + 2;
   if (menu_def[selected_row].state != NULL) {
@@ -213,9 +220,8 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
   #else
     if (selected_row != OPT_PRESETS) {
       app_timer_register(MENU_ACTION_HIDE_MS, hide_menu, NULL);
-    }
+    } 
   #endif
-
   app_timer_register(MENU_ACTION_MS, do_menu_action, NULL);
 }
 
@@ -251,13 +257,18 @@ static void window_unload(Window *window) {
   menu_layer_destroy(menu_layer);
   gbitmap_destroy(menu_icons[0]);
   gbitmap_destroy(menu_icons[1]);
-
+  menu_live = false;
 }
 
 /*
  * Show the menu
  */
 void show_menu() {
+  if (menu_live) {
+    return;
+  }
+  menu_live = true;
+  menu_act = false;
   ignore_state = get_icon(IS_IGNORE);
   weekend_state = get_config_data()->weekend_until != 0;
   inverse_state = get_config_data()->invert;
