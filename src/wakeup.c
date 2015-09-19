@@ -45,14 +45,13 @@ static void build_wakeup_entry(time_t timestamp, int32_t cookie) {
   }
   if (id < 0) {
     LOG_ERROR("Wakeup for cookie=%ld rejected with %ld", cookie, id);
-    mark_failure(FAIL_WAKEUP);
   } 
 }
 
 /*
  * Set the new wakeup, clear all others
  */
-void set_next_wakeup() {
+EXTFN void set_next_wakeup() {
 
   // Clear wakeups
   wakeup_cancel_all();
@@ -105,7 +104,7 @@ static void close_morpheuz_timer(void *data) {
 /*
  * Wakeup service initialisation hook
  */
-void wakeup_init() {
+EXTFN void wakeup_init() {
   WakeupId wakeup_id;
   int32_t cookie;
   wakeup_service_subscribe(wakeup_handler);
@@ -138,7 +137,7 @@ void wakeup_init() {
 /*
  * Turn auto wakeup on or off
  */
-void wakeup_toggle() {
+EXTFN void wakeup_toggle() {
   get_config_data()->auto_reset = get_internal_data()->has_been_reset ? !get_config_data()->auto_reset : false;
   set_next_wakeup();
   resend_all_data(true); // Force resend - we've fiddled with the wakeup
@@ -147,14 +146,14 @@ void wakeup_toggle() {
 /*
  * Remember 
  */
-void manual_shutdown_request() {
+EXTFN void manual_shutdown_request() {
   requested_exit = time(NULL);
 }
 
 /*
  * Determine if kill was unexpected and schedule wake up
  */
-void lazarus() {
+EXTFN void lazarus() {
   // If morpheuz is monitoring sleep (or powernap), and the quit menu or exit hasn't been pressed in
   // the last 5 seconds then schedule a wakeup in 5 minutes. Hence Lazarus - wake from the dead.
   // We also have a config option on this to ensure it can be disabled if undesirable

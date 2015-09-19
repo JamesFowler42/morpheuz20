@@ -42,9 +42,12 @@ static BitmapLayerComp logo_bed;
 static BitmapLayerComp logo_sleeper;
 static BitmapLayerComp logo_text;
 static BitmapLayerComp logo_head;
+static BitmapLayerComp alarm_button_top;
+static BitmapLayerComp alarm_button_button;
 
 #ifdef PBL_COLOR
 static TextLayer *text_time_shadow_layer;
+static uint8_t text_color_count = 0;
 #else
 static InverterLayer *full_inverse_layer;
 #endif
@@ -61,7 +64,7 @@ static uint8_t animation_count = 0;
 static uint8_t previous_mday = 255;
 static time_t last_clock_update;
 
-char date_text[16] = "";
+char date_text[DATE_FORMAT_LEN] = "";
 
 static bool icon_state[MAX_ICON_STATE];
 
@@ -85,7 +88,7 @@ static GColor bar_color(uint16_t height) {
 /*
  * Set the icon state for any icon
  */
-void set_icon(bool enabled, IconState icon) {
+EXTFN void set_icon(bool enabled, IconState icon) {
   if (enabled != icon_state[icon]) {
     icon_state[icon] = enabled;
     layer_mark_dirty(icon_bar);
@@ -95,21 +98,21 @@ void set_icon(bool enabled, IconState icon) {
 /*
  * Get the icon state
  */
-bool get_icon(IconState icon) {
+EXTFN bool get_icon(IconState icon) {
   return icon_state[icon];
 }
 
 /*
  * Are we monitoring sleep (recording or powernap)?
  */
-bool is_monitoring_sleep() {
+EXTFN bool is_monitoring_sleep() {
   return get_icon(IS_RECORD) || is_doing_powernap();
 }
 
 /*
  * Set the smart alarm status details
  */
-void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
+EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
   set_icon(smart_alarm_on, IS_ALARM);
   if (smart_alarm_on)
     text_layer_set_text(text_date_smart_alarm_range_layer, special_text);
@@ -269,7 +272,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
   // Only update the date if the day has changed
   if (tick_time->tm_mday != previous_mday) {
-    strftime(date_text, sizeof(date_text), "%B %e", tick_time);
+    strftime(date_text, sizeof(date_text), DATE_FORMAT, tick_time);
     if (!icon_state[IS_ALARM])
       text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
     previous_mday = tick_time->tm_mday;
@@ -296,7 +299,7 @@ static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
  * Display the clock on movement (ensures if you start moving the clock is up to date)
  * Also fired from button press
  */
-void revive_clock_on_movement(uint16_t last_movement) {
+EXTFN void revive_clock_on_movement(uint16_t last_movement) {
 
   if (last_movement >= CLOCK_UPDATE_THRESHOLD) {
     time_t now = time(NULL);
@@ -319,7 +322,7 @@ static void bluetooth_state_handler(bool connected) {
 /*
  * Progress indicator position (1-54)
  */
-void set_progress() {
+EXTFN void set_progress() {
   if (!get_config_data()->analogue)
     layer_mark_dirty(progress_layer);
 }
@@ -327,7 +330,7 @@ void set_progress() {
 /*
  * Stuff we only allow after we've gone through the normal pre-amble
  */
-void post_init_hook(void *data) {
+EXTFN void post_init_hook(void *data) {
   wakeup_init();
   animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
   layer_mark_dirty(icon_bar);
@@ -368,7 +371,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
 /**
  * Indicate if title animation complete
  */
-bool is_animation_complete() {
+EXTFN bool is_animation_complete() {
   return animation_count == 6;
 }
 
@@ -385,6 +388,21 @@ static void start_animate(void *data) {
   text_layer_destroy(version_text);
   text_layer_set_text(block_layer, "");
 }
+
+#ifdef PBL_COLOR
+/*
+ * Move copyright text through color cycle
+ */
+static void text_color_cycle(void *data) {
+  if (text_color_count >= 8) {
+    start_animate(NULL);
+    return;
+  }
+  text_layer_set_text_color(block_layer, bar_color(text_color_count));
+  text_color_count++;
+  app_timer_register(INTER_TEXT_COLOR_MS, text_color_cycle, NULL);
+}
+#endif
 
 /*
  * Load on window load
@@ -417,7 +435,7 @@ static void morpheuz_load(Window *window) {
 
   text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, GColorClear, time_font, GTextAlignmentCenter);
 
-  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(8, 86, 144 - 8, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(0, 86, 144, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
   icon_bar = layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12));
   layer_set_update_proc(icon_bar, &icon_bar_update_callback);
@@ -436,7 +454,10 @@ static void morpheuz_load(Window *window) {
   text_layer_set_text(block_layer, COPYRIGHT);
 
   analogue_window_load(window);
-
+  
+  macro_bitmap_layer_create(&alarm_button_top, GRect(114, 17, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
+  macro_bitmap_layer_create(&alarm_button_button, GRect(114, 120, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
+  
 #ifndef PBL_COLOR
   full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
   layer_add_child(window_layer, inverter_layer_get_layer_jf(full_inverse_layer));
@@ -462,8 +483,11 @@ static void morpheuz_load(Window *window) {
 
   light_enable_interaction();
 
-  app_timer_register(PRE_ANIMATE_DELAY, start_animate, NULL);
-
+  #ifndef PBL_COLOR
+    app_timer_register(PRE_ANIMATE_DELAY, start_animate, NULL);
+  #else
+    app_timer_register(INTER_TEXT_COLOR_MS, text_color_cycle, NULL);
+  #endif    
 }
 
 /*
@@ -503,6 +527,8 @@ static void morpheuz_unload(Window *window) {
   macro_bitmap_layer_destroy(&logo_sleeper);
   macro_bitmap_layer_destroy(&logo_text);
   macro_bitmap_layer_destroy(&logo_head);
+  macro_bitmap_layer_destroy(&alarm_button_top);
+  macro_bitmap_layer_destroy(&alarm_button_button);
 
   fonts_unload_custom_font(time_font);
   fonts_unload_custom_font(notice_font);
@@ -510,9 +536,9 @@ static void morpheuz_unload(Window *window) {
 }
 
 /*
- * Set the power nap text for the analogue display
+ * Set the power nap text for the display
  */
-void analogue_powernap_text(char *text) {
+EXTFN void analogue_powernap_text(char *text) {
   strncpy(powernap_text, text, sizeof(powernap_text));
   text_layer_set_text(powernap_layer, powernap_text);
 }
@@ -521,17 +547,29 @@ void analogue_powernap_text(char *text) {
 /*
  * Invert screen
  */
-void invert_screen() {
+EXTFN void invert_screen() {
   layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), !get_config_data()->invert);
 }
 #endif
 
-/**
+/*
  * Hide the bed when making the analogue face visible
  */
-void bed_visible(bool value) {
+EXTFN void bed_visible(bool value) {
   layer_set_hidden(bitmap_layer_get_layer_jf(logo_bed.layer), !value);
   layer_set_hidden(bitmap_layer_get_layer_jf(logo_head.layer), !value);
+}
+
+/*
+ * Show the alarm hint buttons
+ */
+EXTFN void show_alarm_buttons(bool value) {
+  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_top.layer), !value);
+  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_button.layer), !value);
+  text_layer_set_text_alignment(text_time_layer, value ? GTextAlignmentLeft : GTextAlignmentCenter);
+  #ifdef PBL_COLOR
+    text_layer_set_text_alignment(text_time_shadow_layer, value ? GTextAlignmentLeft : GTextAlignmentCenter);
+  #endif
 }
 
 /*
@@ -549,7 +587,7 @@ static void handle_init() {
 /**
  * Close main window
  */
-void close_morpheuz() {
+EXTFN void close_morpheuz() {
   manual_shutdown_request();
   window_stack_remove(window, true);
   window_destroy(window);
@@ -558,7 +596,7 @@ void close_morpheuz() {
 /*
  * Main
  */
-int main(void) {
+EXTFN int main(void) {
   handle_init();
   app_event_loop();
   lazarus();

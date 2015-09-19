@@ -194,3 +194,14 @@ function validateEmail(email)
     var re = /[^\s@]+@[^\s@]+\.[^\s@]+/;
     return re.test(email);
 }
+
+/*
+ * Trim safely
+ */
+function safeTrim(strval) {
+  try {
+    return strval.trim();
+  } catch (err) {
+    return strval;
+  }
+}

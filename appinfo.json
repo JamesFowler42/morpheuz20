@@ -19,6 +19,16 @@
     "resources": {
         "media": [
             {
+                "file": "images/button-alarm-bottom.png",
+                "name": "BUTTON_ALARM_BOTTOM",
+                "type": "png"
+            },
+            {
+                "file": "images/button-alarm-top.png",
+                "name": "BUTTON_ALARM_TOP",
+                "type": "png"
+            },
+            {
                 "file": "images/save.png",
                 "name": "SAVE_ICON",
                 "type": "png"
@@ -167,21 +177,6 @@
                 "type": "raw"
             },
             {
-                "file": "images/tick.png",
-                "name": "PICK_TICK",
-                "type": "png"
-            },
-            {
-                "file": "images/up.png",
-                "name": "PICK_UP",
-                "type": "png"
-            },
-            {
-                "file": "images/down.png",
-                "name": "PICK_DOWN",
-                "type": "png"
-            },
-            {
                 "file": "images/next.png",
                 "name": "PICK_NEXT",
                 "type": "png"
@@ -200,7 +195,7 @@
         "basalt"
     ],
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
-    "versionLabel": "3.4",
+    "versionLabel": "3.5",
     "watchapp": {
         "watchface": false
     }

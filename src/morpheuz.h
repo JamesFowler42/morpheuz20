@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 34
-#define VERSION_TXT "3.4"
+#define VERSION 35
+#define VERSION_TXT "3.5"
 
 // Comment out for production build - leaves errors on BASALT and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -48,6 +48,13 @@
   #define LOG_INFO(fmt, args...) 
   #define LOG_DEBUG(fmt, args...) 
 #endif
+  
+// Read clock mode from OS
+//#define IS_24_HOUR_MODE clock_is_24h_style()
+#define IS_24_HOUR_MODE false
+
+// Only do this to make greping for external functions easier (lot of space to be saved with statics)
+#define EXTFN
 
 #define LAST_SENT_INIT -4
 
@@ -67,10 +74,13 @@
 #define DUMMY_PREVIOUS_TO_PHONE 0xFFFFFFFF
 
 #define POWER_NAP_MINUTES 27
+// #define POWER_NAP_MINUTES 1 
+  
 #define POWER_NAP_SETTLE 2
 #define POWER_NAP_SETTLE_THRESHOLD 1000
 #define CLOCK_UPDATE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
+#define POST_MENU_ACTION_DISPLAY_UPDATE_MS 900
 #define MENU_ACTION_MS 750
 #define MENU_ACTION_HIDE_MS 500
 #define WEEKEND_PERIOD (12*60*60)
@@ -97,7 +107,7 @@
   #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
   #define ACTION_BAR_BACKGROUND_COLOR GColorWhite
   #define HIGHLIGHT_BG_COLOR GColorBlack
-  #define NON_HIGHLIGHT_BG_COLOR BACKGROUND_COLOR
+  #define NON_HIGHLIGHT_BG_COLOR GColorBlue
   #define HIGHLIGHT_FG_COLOR GColorWhite
   #define NON_HIGHLIGHT_FG_COLOR GColorWhite
   #define FROM_TIME_COLOR GColorGreen
@@ -113,7 +123,7 @@
   #define ANIMATE_MAIN_DURATION 500
   #define ANIMATE_HEAD_DURATION 250
   #define ANIMATE_ANALOGUE_DURATION 375
-  #define PRE_ANIMATE_DELAY 1500
+  #define INTER_TEXT_COLOR_MS 187
   #define MENU_TEXT_COLOR GColorWhite
   #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorBlack
   #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
@@ -128,15 +138,15 @@
   #define HOUR_MARK_COLOR GColorWhite
   #define MINUTE_STEP 24
   #define PROGRESS_STEP 24
-  #define COPYRIGHT_COLOR GColorPictonBlue
+  #define COPYRIGHT_COLOR BACKGROUND_COLOR
 #else
   #define BACKGROUND_COLOR GColorBlack
-  #define SETTING_BACKGROUND_COLOR GColorWhite
+  #define SETTING_BACKGROUND_COLOR GColorBlack
   #define ACTION_BAR_BACKGROUND_COLOR GColorBlack
-  #define HIGHLIGHT_BG_COLOR GColorBlack
-  #define NON_HIGHLIGHT_BG_COLOR GColorWhite
-  #define HIGHLIGHT_FG_COLOR GColorWhite
-  #define NON_HIGHLIGHT_FG_COLOR GColorBlack
+  #define HIGHLIGHT_BG_COLOR GColorWhite
+  #define NON_HIGHLIGHT_BG_COLOR GColorBlack
+  #define HIGHLIGHT_FG_COLOR GColorBlack
+  #define NON_HIGHLIGHT_FG_COLOR GColorWhite
   #define FROM_TIME_COLOR GColorWhite
   #define TO_TIME_COLOR GColorWhite
   #define START_TIME_COLOR GColorWhite
@@ -150,7 +160,7 @@
   #define ANIMATE_MAIN_DURATION 1000
   #define ANIMATE_HEAD_DURATION 500
   #define ANIMATE_ANALOGUE_DURATION 750
-  #define PRE_ANIMATE_DELAY 3000
+  #define PRE_ANIMATE_DELAY 1683
   #define MENU_HEAD_COLOR GColorBlack
   #define MINUTE_HAND_COLOR GColorWhite
   #define HOUR_HAND_COLOR GColorWhite
@@ -204,16 +214,6 @@ typedef enum {
   IS_BLUETOOTH,
   IS_EXPORT
 } IconState;
-
-// Failure recording
-typedef enum {
-  FAIL_ACCEL = 1,
-  FAIL_WAKEUP = 2, 
-  FAIL_TEXT_LONG = 3,
-  FAIL_TEXT_MISSING = 4
-} FailureNote;
-
-#define NO_FAILURE "E....."
 
 #define MAX_ICON_STATE 8
 
@@ -292,60 +292,70 @@ typedef struct {
   GBitmap *bitmap;
 } BitmapLayerComp;
 
-void init_morpheuz();
-void set_smart_status_on_screen(bool show_special_text, char *special_text);
-void invert_screen();
-void revive_clock_on_movement(uint16_t last_movement);
-void power_nap_countdown();
-void power_nap_check(uint16_t biggest);
-void click_config_provider(Window *window);
-void set_smart_status();
-void power_nap_reset();
-void reset_sleep_period();
-void server_processing(uint16_t biggest);
-void set_progress();
-InternalData *get_internal_data();
-void read_internal_data();
-void save_internal_data();
-void save_config_data(void *data);
-void read_config_data();
+// Externals
 ConfigData *get_config_data();
-void show_notice(uint32_t resource_id);
-void hide_notice_layer(void *data);
-void cancel_alarm();
-void fire_alarm();
-void snooze_alarm();
-void init_alarm();
-uint16_t every_minute_processing();
-void toggle_weekend_mode();
+InternalData *get_internal_data();
 TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment);
-int32_t join_value(int16_t top, int16_t bottom);
-int32_t dirty_checksum(void *data, uint8_t data_size);
-void set_ignore_on_current_time_segment();
-void resend_all_data(bool silent);
-void bed_visible(bool value);
+bool get_icon(IconState icon);
 bool is_animation_complete();
-void show_menu();
-void toggle_power_nap();
-void close_morpheuz();
+bool is_doing_powernap();
+bool is_monitoring_sleep();
 bool is_notice_showing();
+int main(void);
+int32_t dirty_checksum(void *data, uint8_t data_size);
+int32_t join_value(int16_t top, int16_t bottom);
+uint16_t every_minute_processing();
+uint8_t twenty_four_to_twelve(uint8_t hour);
+void analogue_minute_tick();
+void analogue_powernap_text(char *text);
+void analogue_set_base(time_t base);
+void analogue_set_progress(uint8_t progress_level_in);
+void analogue_set_smart_times();
+void analogue_visible(bool visible, bool call_post_init);
+void analogue_window_load(Window *window);
+void analogue_window_unload();
+void bed_visible(bool value);
+void cancel_alarm();
+void click_config_provider(Window *window);
+void close_morpheuz();
+void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin);
+void fire_alarm();
+void hide_notice_layer(void *data);
+void init_morpheuz();
+void invert_screen();
+void lazarus();
 void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible);
 void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
+void manual_shutdown_request();
+void open_comms();
+void post_init_hook(void *data);
+void power_nap_check(uint16_t biggest);
+void power_nap_countdown();
+void power_nap_reset();
+void read_config_data();
+void read_internal_data();
+void resend_all_data(bool invoked_by_change_of_time);
+void reset_sleep_period();
+void revive_clock_on_movement(uint16_t last_movement);
+void save_config_data(void *data);
+void save_internal_data();
+void server_processing(uint16_t biggest);
+void set_icon(bool enabled, IconState icon);
+void set_ignore_on_current_time_segment();
+void set_next_wakeup();
+void set_progress();
+void set_smart_status();
+void set_smart_status_on_screen(bool smart_alarm_on, char *special_text);
+void show_alarm_buttons(bool value);
+void show_menu();
+void show_notice(uint32_t resource_id);
+void show_preset_menu();
+void show_set_alarm();
+void snooze_alarm();
+void toggle_power_nap();
+void toggle_weekend_mode();
+void trigger_config_save();
 void wakeup_init();
 void wakeup_toggle();
-void set_next_wakeup();
-uint8_t twenty_four_to_twelve(uint8_t hour);
-void post_init_hook();
-void show_set_alarm();
-void trigger_config_save();
-bool is_doing_powernap();
-void open_comms();
-void set_icon(bool enabled, IconState icon);
-bool get_icon(IconState icon);
-void mark_failure(FailureNote fn);
-void show_preset_menu();
-void manual_shutdown_request();
-void lazarus();
-bool is_monitoring_sleep();
 
 #endif /* MORPHEUZ_H_ */

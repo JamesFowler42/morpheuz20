@@ -49,10 +49,19 @@
 #define MENU_AUTO_RESET "Auto bed time"
 #define MENU_AUTO_RESET_DES_OFF "... same time again"
 #define MENU_AUTO_RESET_DES_ON "... at %d:%02d"
-#define MENU_SMART_ALARM "Smart Alarm"
-#define MENU_SMART_ALARM_DES "Gentle wake-up"
+#define MENU_SMART_ALARM "Set Smart Alarm"
+#define MENU_SMART_ALARM_DES ""
 #define MENU_PRESET "Presets"
-#define MENU_PRESET_DES "Smart Alarm memory"
+#define MENU_PRESET_DES "Alarm time memories"
+#define MENU_TOGGLE_ALARM "Alarm on/off"
+#define MENU_TOGGLE_ALARM_DES "Turn alarm on/off"
+  
+#define MENU_SMART_ALARM_TIME_FORMAT_24 "%02d:%02d - %02d:%02d"
+#define MENU_SMART_ALARM_TIME_FORMAT_12 "%d:%02d %s - %d:%02d %s"
+#define TIME_RANGE_LEN 20
+  
+#define DATE_FORMAT "%a, %b %e"
+#define DATE_FORMAT_LEN 12
   
 #ifdef PBL_COLOR
   #define MENU_SNOOZE_DES  "... or press up"
@@ -62,15 +71,11 @@
   #define MENU_CANCEL_DES "... or press up"
 #endif
 
-#define ON "On"
-#define OFF "Off"
-#define DONE "Save"
-#define BAD "Bad!"
+#define TEXT_AM "AM"
+#define TEXT_PM "PM"
 
-#define SMART_ALARM "Smart Alarm:"
-#define EARLIEST "Earliest:"
-#define COLON ":"
-#define LATEST "Latest:"
+#define EARLIEST "Earliest"
+#define LATEST "Latest"
 
 #define COPYRIGHT "\n© 2015\nJames Fowler"
 

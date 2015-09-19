@@ -26,47 +26,39 @@
 #include "morpheuz.h"
 
 // Field definitions
-#define F_FROM_HOUR 1
-#define F_FROM_MINUTE 2
+#define F_FROM_HOUR 0
+#define F_FROM_MINUTE 1
+#define F_FROM_AMPM 2
 #define F_TO_HOUR 3
 #define F_TO_MINUTE 4
-#define F_SMART_ALARM 0
-#define F_DONE 5
+#define F_TO_AMPM 5
 #define MAX_SETTINGS_FIELDS 6
+ 
+// Position and size stuff
+#define SA_ROW_1_Y 8
+#define SA_ROW_2_Y 42
+#define SA_ROW_3_Y 77
+#define SA_ROW_4_Y 111
+  
+#define SA_HEIGHT 34
+#define SA_WIDTH 40
 
-#ifdef PBL_COLOR
-#define DONE_LEFT 65
-#define DONE_TOP 130
-#define SA_LEFT 83
-#define SA_TOP 27
-#else
-#define DONE_LEFT 77
-#define DONE_TOP 118
-#define SA_LEFT 94
-#define SA_TOP 1
-#endif
-
-// Position and size info
-#define SETTING_TITLE_LEFT 5
-#define SETTING_FROM_TOP 50
-#define SETTING_TO_TOP 100
-#define SETTING_BIG_FONT_HEIGHT 30
-#define SETTING_SMALL_FONT_HEIGHT 20
-#define SETTING_TIME_WIDTH 25
+#define SA_ROW_1_X 0
+#define SA_ROW_3_X 0
+#define SA_ROW_1_WIDTH 144
+#define SA_ROW_3_WIDTH 144
+  
+#define SA_HOUR_LEFT_12 8
+#define SA_HOUR_LEFT_24 30
+#define SA_AMPM_LEFT 96
+#define SA_MIN_LEFT_12 52
+#define SA_MIN_LEFT_24 74
 
 static Window *setting_window;
-static GBitmap *up_button_res;
-static GBitmap *next_button_res;
-static GBitmap *down_button_res;
-static GBitmap *tick_button_res;
-static GFont small_font;
 static GFont large_font;
-static ActionBarLayer *button_layer;
-static TextLayer *title_layer;
+static GFont small_font;
 static TextLayer *from_layer;
-static TextLayer *from_colon_layer;
 static TextLayer *to_layer;
-static TextLayer *to_color_layer;
 
 static TextLayer *fields[MAX_SETTINGS_FIELDS];
 static int values[MAX_SETTINGS_FIELDS];
@@ -74,16 +66,14 @@ static char value_text[5][MAX_SETTINGS_FIELDS];
 
 static int8_t current_field;
 
+static bool is24hr;
+
 /*
  * Highlight or unhighlight a field
  */
 static void highlight_field(int8_t id, bool hilight) {
   text_layer_set_background_color(fields[id], hilight ? HIGHLIGHT_BG_COLOR : NON_HIGHLIGHT_BG_COLOR);
   text_layer_set_text_color(fields[id], hilight ? HIGHLIGHT_FG_COLOR : NON_HIGHLIGHT_FG_COLOR);
-  if (hilight) {
-    action_bar_layer_set_icon(button_layer, BUTTON_ID_UP, id == F_DONE ? tick_button_res : up_button_res);
-    action_bar_layer_set_icon(button_layer, BUTTON_ID_DOWN, id == F_DONE ? tick_button_res : down_button_res);
-  }
 }
 
 /*
@@ -95,6 +85,13 @@ static void write_time_value_to_field(int8_t id) {
 }
 
 /*
+ * Write a ampm value into a field
+ */
+static void write_ampm_value_to_field(int8_t id) {
+  text_layer_set_text(fields[id], values[id] == 0 ? TEXT_AM : TEXT_PM);
+}
+
+/*
  * Write values from memory into fields
  */
 static void write_values_to_fields() {
@@ -102,8 +99,45 @@ static void write_values_to_fields() {
   write_time_value_to_field(F_FROM_MINUTE);
   write_time_value_to_field(F_TO_HOUR);
   write_time_value_to_field(F_TO_MINUTE);
-  text_layer_set_text(fields[F_SMART_ALARM], values[F_SMART_ALARM] == 1 ? ON : OFF);
-  text_layer_set_text(fields[F_DONE], values[F_DONE] == 1 ? DONE : BAD);
+  if (!is24hr) {
+    write_ampm_value_to_field(F_FROM_AMPM);
+    write_ampm_value_to_field(F_TO_AMPM);
+  }
+}
+
+/*
+ * Convert back to 24 hour clock
+ */
+static uint8_t hour_from_fields(int hour, int ampm) {
+  if (is24hr) {
+    return hour;
+  } else {
+    return (hour == 12 ? 0 : hour) + ampm * 12;
+  }
+}
+
+/*
+ * Drop values back into the rest of the system
+ */
+static void return_values() {
+  get_config_data()->smart = true;
+  get_config_data()->fromhr = hour_from_fields(values[F_FROM_HOUR],values[F_FROM_AMPM]);
+  get_config_data()->frommin = values[F_FROM_MINUTE];
+  get_config_data()->tohr = hour_from_fields(values[F_TO_HOUR],values[F_TO_AMPM]);
+  get_config_data()->tomin = values[F_TO_MINUTE];
+  get_config_data()->from = to_mins(get_config_data()->fromhr, get_config_data()->frommin);
+  get_config_data()->to = to_mins(get_config_data()->tohr, get_config_data()->tomin);
+  resend_all_data(true); // Force resend - we've fiddled with the times
+  trigger_config_save();
+  set_smart_status();
+}
+
+/*
+ * Close the settings page
+ */
+static void hide_set_alarm() {
+  return_values();
+  window_stack_remove(setting_window, true);
 }
 
 /*
@@ -112,8 +146,13 @@ static void write_values_to_fields() {
 static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   highlight_field(current_field, false);
   current_field++;
-  if (current_field > F_DONE)
-    current_field = F_SMART_ALARM;
+  if (is24hr && (current_field == F_FROM_AMPM || current_field == F_TO_AMPM)) {
+    current_field++;
+  }
+  if (current_field > F_TO_AMPM) {
+    hide_set_alarm();
+    return;
+  }
   highlight_field(current_field, true);
 }
 
@@ -129,55 +168,23 @@ static void alter_time(int8_t id, int8_t delta, int8_t top, int8_t bottom) {
 }
 
 /*
- * Drop values back into the rest of the system
- */
-static void return_values() {
-  get_config_data()->smart = values[F_SMART_ALARM];
-  get_config_data()->fromhr = values[F_FROM_HOUR];
-  get_config_data()->frommin = values[F_FROM_MINUTE];
-  get_config_data()->tohr = values[F_TO_HOUR];
-  get_config_data()->tomin = values[F_TO_MINUTE];
-  get_config_data()->from = to_mins(get_config_data()->fromhr, get_config_data()->frommin);
-  get_config_data()->to = to_mins(get_config_data()->tohr, get_config_data()->tomin);
-  resend_all_data(true); // Force resend - we've fiddled with the times
-  trigger_config_save();
-  set_smart_status();
-}
-
-/*
- * Close the settings page
- */
-static void hide_set_alarm(void) {
-  return_values();
-  window_stack_remove(setting_window, true);
-}
-
-/*
- * Handle an up or down button press and validate results
+ * Handle an up or down button press
  */
 static void up_down_handler(int8_t delta) {
   switch (current_field) {
     case F_FROM_HOUR:
     case F_TO_HOUR:
-      alter_time(current_field, delta, 23, 0);
+      alter_time(current_field, delta, is24hr ? 23 : 12, is24hr ? 0 : 1);
       break;
     case F_FROM_MINUTE:
     case F_TO_MINUTE:
       alter_time(current_field, 5 * delta, 55, 0);
       break;
-    case F_SMART_ALARM:
+    case F_FROM_AMPM:
+    case F_TO_AMPM:
       alter_time(current_field, 1, 1, 0);
       break;
-    case F_DONE:
-      if (values[F_DONE] == 1)
-        hide_set_alarm();
-      else
-        vibes_short_pulse();
-      break;
   }
-  uint32_t from = to_mins(values[F_FROM_HOUR], values[F_FROM_MINUTE]);
-  uint32_t to = to_mins(values[F_TO_HOUR], values[F_TO_MINUTE]);
-  values[F_DONE] = (from <= to);
   write_values_to_fields();
 }
 
@@ -208,12 +215,14 @@ static void setting_click_config_provider(void *context) {
  * Set the fields to the values from the rest of the system
  */
 static void set_values() {
-  values[F_SMART_ALARM] = get_config_data()->smart;
-  values[F_FROM_HOUR] = get_config_data()->fromhr;
+  values[F_FROM_HOUR] = twenty_four_to_twelve(get_config_data()->fromhr);
   values[F_FROM_MINUTE] = get_config_data()->frommin;
-  values[F_TO_HOUR] = get_config_data()->tohr;
+  values[F_TO_HOUR] = twenty_four_to_twelve(get_config_data()->tohr);
   values[F_TO_MINUTE] = get_config_data()->tomin;
-  values[F_DONE] = 1;
+  if (!is24hr) {
+    values[F_FROM_AMPM] = get_config_data()->fromhr >= 12 ? 1 : 0;
+    values[F_TO_AMPM] = get_config_data()->tohr >= 12 ? 1 : 0;
+  }
 }
 
 /*
@@ -224,69 +233,47 @@ static void create_settings_window(void) {
   Layer *window_layer = window_get_root_layer(setting_window);
 
   window_set_background_color(setting_window, SETTING_BACKGROUND_COLOR);
+  
+  is24hr = IS_24_HOUR_MODE;
 
   // Get the resources we need
-  up_button_res = gbitmap_create_with_resource(RESOURCE_ID_PICK_UP);
-  next_button_res = gbitmap_create_with_resource(RESOURCE_ID_PICK_NEXT);
-  down_button_res = gbitmap_create_with_resource(RESOURCE_ID_PICK_DOWN);
-  tick_button_res = gbitmap_create_with_resource(RESOURCE_ID_PICK_TICK);
-  small_font = fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD);
-  large_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
-
-  // button_layer
-  button_layer = action_bar_layer_create();
-  action_bar_layer_add_to_window(button_layer, setting_window);
-  action_bar_layer_set_background_color(button_layer, ACTION_BAR_BACKGROUND_COLOR);
-  action_bar_layer_set_icon(button_layer, BUTTON_ID_UP, up_button_res);
-  action_bar_layer_set_icon(button_layer, BUTTON_ID_SELECT, next_button_res);
-  action_bar_layer_set_icon(button_layer, BUTTON_ID_DOWN, down_button_res);
-#ifdef PBL_PLATFORM_BASALT 
-  action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_UP, ActionBarLayerIconPressAnimationMoveUp);
-  action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_SELECT, ActionBarLayerIconPressAnimationMoveRight);
-  action_bar_layer_set_icon_press_animation(button_layer, BUTTON_ID_DOWN, ActionBarLayerIconPressAnimationMoveDown);
-#endif
-  layer_add_child(window_layer, (Layer *) button_layer);
-  action_bar_layer_set_click_config_provider(button_layer, setting_click_config_provider);
-
-  // title_layer
-  title_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 6, 90, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
-  text_layer_set_text(title_layer, SMART_ALARM);
+  large_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);
+  small_font = fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD);
+ 
+  // Set click provider
+  window_set_click_config_provider(setting_window, (ClickConfigProvider) setting_click_config_provider);
 
   // from_layer
-  from_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 30, 55, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
+  from_layer = macro_text_layer_create(GRect(SA_ROW_1_X, SA_ROW_1_Y, SA_ROW_1_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, SETTING_BACKGROUND_COLOR, small_font, GTextAlignmentCenter);
   text_layer_set_text(from_layer, EARLIEST);
 
   // fields[FROM_HOUR]
-  fields[F_FROM_HOUR] = macro_text_layer_create(GRect(20, SETTING_FROM_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-
-  // from_colon_layer
-  from_colon_layer = macro_text_layer_create(GRect(43, SETTING_FROM_TOP, 13, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-  text_layer_set_text(from_colon_layer, COLON);
+  fields[F_FROM_HOUR] = macro_text_layer_create(GRect(is24hr ? SA_HOUR_LEFT_24 : SA_HOUR_LEFT_12, SA_ROW_2_Y, SA_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
   // fields[FROM_MINUTE]
-  fields[F_FROM_MINUTE] = macro_text_layer_create(GRect(52, SETTING_FROM_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
+  fields[F_FROM_MINUTE] = macro_text_layer_create(GRect(is24hr ? SA_MIN_LEFT_24 : SA_MIN_LEFT_12, SA_ROW_2_Y, SA_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
+  // fields[FROM_AMPM]
+  if (!is24hr) {
+    fields[F_FROM_AMPM] = macro_text_layer_create(GRect(SA_AMPM_LEFT, SA_ROW_2_Y, SA_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
+  }
+  
   // to_layer
-  to_layer = macro_text_layer_create(GRect(SETTING_TITLE_LEFT, 81, 48, SETTING_SMALL_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, small_font, GTextAlignmentLeft);
+  to_layer = macro_text_layer_create(GRect(SA_ROW_3_X, SA_ROW_3_Y, SA_ROW_3_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, SETTING_BACKGROUND_COLOR, small_font, GTextAlignmentCenter);
   text_layer_set_text(to_layer, LATEST);
 
   // fields[TO_HOUR]
-  fields[F_TO_HOUR] = macro_text_layer_create(GRect(20, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-
-  // to_color_layer
-  to_color_layer = macro_text_layer_create(GRect(43, SETTING_TO_TOP, 13, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-  text_layer_set_text(to_color_layer, COLON);
+  fields[F_TO_HOUR] = macro_text_layer_create(GRect(is24hr ? SA_HOUR_LEFT_24 : SA_HOUR_LEFT_12, SA_ROW_4_Y, SA_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
   // fields[TO_MINUTE]
-  fields[F_TO_MINUTE] = macro_text_layer_create(GRect(52, SETTING_TO_TOP, SETTING_TIME_WIDTH, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
+  fields[F_TO_MINUTE] = macro_text_layer_create(GRect(is24hr ? SA_MIN_LEFT_24 : SA_MIN_LEFT_12, SA_ROW_4_Y, SA_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
 
-  // fields[SMART_ALARM]
-  fields[F_SMART_ALARM] = macro_text_layer_create(GRect(SA_LEFT, SA_TOP, 25, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-
-  // fields[DONE]
-  fields[F_DONE] = macro_text_layer_create(GRect(DONE_LEFT, DONE_TOP, 45, SETTING_BIG_FONT_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
-
-  current_field = F_SMART_ALARM;
+  // fields[TO_AMPM]
+  if (!is24hr) {
+    fields[F_TO_AMPM] = macro_text_layer_create(GRect(SA_AMPM_LEFT, SA_ROW_4_Y, SA_WIDTH, SA_HEIGHT), window_layer, NON_HIGHLIGHT_FG_COLOR, NON_HIGHLIGHT_BG_COLOR, large_font, GTextAlignmentCenter);
+  }
+    
+  current_field = F_FROM_HOUR;
 
   set_values();
   write_values_to_fields();
@@ -298,22 +285,16 @@ static void create_settings_window(void) {
  */
 static void dispose_resources(void) {
   window_destroy(setting_window);
-  action_bar_layer_destroy(button_layer);
-  text_layer_destroy(title_layer);
   text_layer_destroy(from_layer);
   text_layer_destroy(fields[F_FROM_HOUR]);
   text_layer_destroy(fields[F_FROM_MINUTE]);
-  text_layer_destroy(from_colon_layer);
   text_layer_destroy(to_layer);
   text_layer_destroy(fields[F_TO_HOUR]);
-  text_layer_destroy(to_color_layer);
   text_layer_destroy(fields[F_TO_MINUTE]);
-  text_layer_destroy(fields[F_SMART_ALARM]);
-  text_layer_destroy(fields[F_DONE]);
-  gbitmap_destroy(up_button_res);
-  gbitmap_destroy(next_button_res);
-  gbitmap_destroy(tick_button_res);
-  gbitmap_destroy(down_button_res);
+  if (!is24hr) {
+     text_layer_destroy(fields[F_FROM_AMPM]); 
+     text_layer_destroy(fields[F_TO_AMPM]); 
+  }
 }
 
 /*
@@ -326,7 +307,8 @@ static void handle_window_unload(Window* window) {
 /*
  * Display window
  */
-void show_set_alarm() {
+EXTFN void show_set_alarm() {
+  // Smart alarm on. Set some times.
   create_settings_window();
   window_set_window_handlers(setting_window, (WindowHandlers ) { .unload = handle_window_unload, });
   window_stack_push(setting_window, true);

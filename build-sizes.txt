@@ -1,0 +1,5 @@
+Version		Aplite		Basalt 
+3.4		15555		17502
+3.5		15708		17600
+
+

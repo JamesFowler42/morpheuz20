@@ -33,7 +33,7 @@ static uint8_t power_nap_settle_count = 0;
 /*
  * Power nap reset
  */
-void power_nap_reset() {
+EXTFN void power_nap_reset() {
   power_nap_mode = false;
   analogue_powernap_text(POWER_NAP_OFF_INDICATOR);
 }
@@ -41,7 +41,7 @@ void power_nap_reset() {
 /*
  * Power nap settle check
  */
-void power_nap_check(uint16_t biggest) {
+EXTFN void power_nap_check(uint16_t biggest) {
 
   if (!power_nap_mode)
     return;
@@ -56,7 +56,7 @@ void power_nap_check(uint16_t biggest) {
 /*
  * Power nap countdown
  */
-void power_nap_countdown() {
+EXTFN void power_nap_countdown() {
 
   if (!power_nap_mode)
     return;
@@ -80,7 +80,7 @@ void power_nap_countdown() {
 /**
  * power nap
  */
-void toggle_power_nap() {
+EXTFN void toggle_power_nap() {
   // Toggle sleep
   if (power_nap_mode) {
     // Turn off power nap
@@ -133,7 +133,7 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, void *con
     show_menu();
 }
 
-bool is_doing_powernap() {
+EXTFN bool is_doing_powernap() {
   return power_nap_mode;
 }
 
@@ -154,7 +154,7 @@ static void up_single_click_handler(ClickRecognizerRef recognizer, void *context
 /*
  * Button config
  */
-void click_config_provider(Window *window) {
+EXTFN void click_config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_BACK, back_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);

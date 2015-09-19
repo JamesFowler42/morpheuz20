@@ -29,7 +29,7 @@
 /*
  * Do all the poop associated with creating a text box, but in one lump
  */
-TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment) {
+EXTFN TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment) {
   TextLayer* text_layer = text_layer_create(frame);
   text_layer_set_text_color(text_layer, tcolor);
   text_layer_set_background_color(text_layer, bcolor);
@@ -42,7 +42,7 @@ TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GC
 /*
  * Create a bitmap layer with bitmap in one go
  */
-void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible) {
+EXTFN void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible) {
   comp->layer = bitmap_layer_create(frame);
 #ifdef PBL_COLOR
   bitmap_layer_set_compositing_mode(comp->layer, GCompOpSet);
@@ -56,7 +56,7 @@ void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent
 /*
  * Get rid of the bitmap layer in one go
  */
-void macro_bitmap_layer_destroy(BitmapLayerComp *comp) {
+EXTFN void macro_bitmap_layer_destroy(BitmapLayerComp *comp) {
   bitmap_layer_destroy(comp->layer);
   gbitmap_destroy(comp->bitmap);
 }
@@ -64,7 +64,7 @@ void macro_bitmap_layer_destroy(BitmapLayerComp *comp) {
 /*
  * Combine two ints as a long
  */
-int32_t join_value(int16_t top, int16_t bottom) {
+EXTFN int32_t join_value(int16_t top, int16_t bottom) {
   int32_t top_as_32 = top;
   int32_t bottom_as_32 = bottom;
   return top_as_32 << 16 | bottom_as_32;
@@ -73,7 +73,7 @@ int32_t join_value(int16_t top, int16_t bottom) {
 /*
  * Simple checksum routine
  */
-int32_t dirty_checksum(void *data, uint8_t data_size) {
+EXTFN int32_t dirty_checksum(void *data, uint8_t data_size) {
   int16_t xor = 0xAAAA;
   int16_t sum = 0;
   uint8_t *d = data;
@@ -89,7 +89,22 @@ int32_t dirty_checksum(void *data, uint8_t data_size) {
 /*
  * Display the times using the settings the user prefers
  */
-uint8_t twenty_four_to_twelve(uint8_t hour) {
-  return (hour <= 12 || clock_is_24h_style()) ? hour : hour - 12;
+EXTFN uint8_t twenty_four_to_twelve(uint8_t hour) {
+  if (!IS_24_HOUR_MODE) {
+    return (hour == 0) ? 12 : (hour > 12) ? hour - 12 : hour;
+  } else {
+    return hour;
+  }
+}
+
+/*
+ * Copy time range into field
+ */
+EXTFN void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin ) {
+  if (IS_24_HOUR_MODE) {
+    snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT_24, fromhr, frommin, tohr, tomin);
+  } else {
+    snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT_12, twenty_four_to_twelve(fromhr), frommin, ((fromhr > 12) ? TEXT_PM : TEXT_AM), twenty_four_to_twelve(tohr), tomin, ((tohr > 12) ? TEXT_PM : TEXT_AM));
+  }
 }
 

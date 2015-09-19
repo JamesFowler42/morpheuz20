@@ -162,7 +162,7 @@ static void send_version(void *data) {
 /*
  * Calcuate buffer sizes and open comms
  */
-void open_comms() {
+EXTFN void open_comms() {
 
   LOG_DEBUG("internal_data %d, config_data %d", sizeof(internal_data), sizeof(config_data));
 
@@ -186,7 +186,7 @@ void open_comms() {
 /*
  * Save the internal data structure
  */
-void save_internal_data() {
+EXTFN void save_internal_data() {
   int32_t checksum = dirty_checksum(&internal_data, sizeof(internal_data));
   if (checksum != internal_data_checksum) {
     LOG_DEBUG("save_internal_data (%d)", sizeof(internal_data));
@@ -232,7 +232,7 @@ static void set_progress_based_on_persist() {
 /*
  * Read the internal data (or create it if missing)
  */
-void read_internal_data() {
+EXTFN void read_internal_data() {
   int read = persist_read_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
   if (read != sizeof(internal_data) || internal_data.internal_ver != INTERNAL_VER) {
     clear_internal_data();
@@ -247,14 +247,14 @@ void read_internal_data() {
 /*
  * Provide internal data structure to other units
  */
-InternalData *get_internal_data() {
+EXTFN InternalData *get_internal_data() {
   return &internal_data;
 }
 
 /*
  * Save the config data structure
  */
-void save_config_data(void *data) {
+EXTFN void save_config_data(void *data) {
   LOG_DEBUG("save_config_data (%d)", sizeof(config_data));
   int written = persist_write_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
   if (written != sizeof(config_data)) {
@@ -281,7 +281,7 @@ static void clear_config_data() {
 /*
  * Read the config data (or create it if missing)
  */
-void read_config_data() {
+EXTFN void read_config_data() {
   int read = persist_read_data(PERSIST_CONFIG_KEY, &config_data, sizeof(config_data));
   if (read != sizeof(config_data) || config_data.config_ver != CONFIG_VER) {
     clear_config_data();
@@ -291,14 +291,14 @@ void read_config_data() {
 /*
  * Provide config data structure to other units
  */
-ConfigData *get_config_data() {
+EXTFN ConfigData *get_config_data() {
   return &config_data;
 }
 
 /*
  * Get the config to save at some point in the future
  */
-void trigger_config_save() {
+EXTFN void trigger_config_save() {
   if (!save_config_requested) {
     app_timer_register(PERSIST_CONFIG_MS, save_config_data, NULL);
     save_config_requested = true;
@@ -334,7 +334,7 @@ static void reset_sleep_period_action(void *data) {
 /*
  * Perform reset - before bed action
  */
-void reset_sleep_period() {
+EXTFN void reset_sleep_period() {
   
   // If we haven't transmitted data, we've actually been reset, we're at the limit and this hasn't been requested once before (allows a force reset)
   // Then show a notice, wait for completion and then we complete do the reset
@@ -350,7 +350,7 @@ void reset_sleep_period() {
 /*
  * Force data resend
  */
-void resend_all_data(bool invoked_by_change_of_time) {
+EXTFN void resend_all_data(bool invoked_by_change_of_time) {
   if (!invoked_by_change_of_time) {
     show_notice(RESOURCE_ID_NOTICE_DATA_WILL_BE_RESENT_SHORTLY);
   } else if (internal_data.transmit_sent) {
@@ -382,7 +382,7 @@ static bool at_limit(int32_t offset) {
 /*
  * Set ignore on current time segment
  */
-void set_ignore_on_current_time_segment() {
+EXTFN void set_ignore_on_current_time_segment() {
   
   int32_t offset = calc_offset();
   
@@ -564,7 +564,7 @@ static void transmit_next_data(void *data) {
 /*
  * Storage of points, raising of smart alarm and transmission to phone
  */
-void server_processing(uint16_t biggest) {
+EXTFN void server_processing(uint16_t biggest) {
   if (!internal_data.has_been_reset) {
     if (no_record_warning) {
       show_notice(RESOURCE_ID_NOTICE_RESET_TO_START_USING);

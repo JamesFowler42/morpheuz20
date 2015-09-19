@@ -630,19 +630,19 @@ $("document").ready(function() {
   $(".save").click(function() {
     var configData = {
       action : "save",
-      emailto : $("#emailto").val(),
-      pouser : $("#puser").val(),
-      potoken : $("#ptoken").val(),
+      emailto : safeTrim($("#emailto").val()),
+      pouser : safeTrim($("#puser").val()),
+      potoken : safeTrim($("#ptoken").val()),
       swpdo : $("#swpdo").is(':checked') ? "Y" : "N",
       usage : $("#usage").is(':checked') ? "Y" : "N",
-      lifxtoken : $("#lifxToken").val(),
+      lifxtoken : safeTrim($("#lifxToken").val()),
       lifxtime : $("#lifxTime").val(),
       hueip : $("#hueip").val(),
-      hueuser : $("#hueuser").val(),
+      hueuser : safeTrim($("#hueuser").val()),
       hueid : $("#hueid").val(),
       lazarus : $("#lazarus").is(':checked') ? "Y" : "N",
       testsettings : $("#testsettings").is(':checked') ? "Y" : "N",
-      ifkey : $("#ifkey").val(),
+      ifkey :safeTrim( $("#ifkey").val())
     };
     document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
   });

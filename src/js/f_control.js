@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
 
 /*
  * Reset log
@@ -171,6 +171,7 @@ Pebble.addEventListener("appmessage", function(e) {
     window.localStorage.setItem("base", base);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
     addBedTimePin(base);
+    iftttMakerInterfaceBedtime();
   }
 
   // Incoming from value (first time for smart alarm)
@@ -333,6 +334,7 @@ Pebble.addEventListener("webviewclosed", function(e) {
       turnHueLightsOn();
       iftttMakerInterfaceAlarm();
       iftttMakerInterfaceData();
+      iftttMakerInterfaceBedtime();
     }
   }
 });

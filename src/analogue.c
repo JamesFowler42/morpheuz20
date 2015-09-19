@@ -133,7 +133,7 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
 /*
  * Record the smart times for display on the analogue clock. Trigger an update of the layer.
  */
-void analogue_set_smart_times() {
+EXTFN void analogue_set_smart_times() {
   show_smart_points = get_config_data()->smart;
   from_time = (get_config_data()->fromhr > 12 ? get_config_data()->fromhr - 12 : get_config_data()->fromhr) * 120 + get_config_data()->frommin * 2;
   to_time = (get_config_data()->tohr > 12 ? get_config_data()->tohr - 12 : get_config_data()->tohr) * 120 + get_config_data()->tomin * 2;
@@ -144,7 +144,7 @@ void analogue_set_smart_times() {
 /*
  * Record the base time for display on the analogue clock. Trigger an update of the layer.
  */
-void analogue_set_base(time_t base) {
+EXTFN void analogue_set_base(time_t base) {
   if (base == 0) {
     start_time = -1;
     start_time_round = 0;
@@ -160,7 +160,7 @@ void analogue_set_base(time_t base) {
 /*
  * Mark progress on the analogue clock. Progress 1-54. Trigger an update of the layer
  */
-void analogue_set_progress(uint8_t progress_level_in) {
+EXTFN void analogue_set_progress(uint8_t progress_level_in) {
   progress_1 = start_time_round + ((int16_t) progress_level_in) * 20;
   if (progress_1 >= 1440) {
     progress_2 = progress_1 - 1440;
@@ -208,7 +208,7 @@ static void hands_update_proc(Layer *layer, GContext *ctx) {
 /*
  * Trigger the refresh of the time
  */
-void analogue_minute_tick() {
+EXTFN void analogue_minute_tick() {
   if (is_visible)
     layer_mark_dirty(hands_layer);
 }
@@ -216,7 +216,7 @@ void analogue_minute_tick() {
 /**
  * Load the analogue clock watch face
  */
-void analogue_window_load(Window *window) {
+EXTFN void analogue_window_load(Window *window) {
 
   Layer *window_layer = window_get_root_layer(window);
 
@@ -279,7 +279,7 @@ static void start_animation(GRect *start, GRect *finish) {
 /*
  * Make the analogue watchface visible or invisible
  */
-void analogue_visible(bool visible, bool call_post_init) {
+EXTFN void analogue_visible(bool visible, bool call_post_init) {
   if (visible && !is_visible) {
     start_animation(&ANALOGUE_START, &ANALOGUE_FINISH);
   } else if (!visible && is_visible) {
@@ -296,7 +296,7 @@ void analogue_visible(bool visible, bool call_post_init) {
 /*
  * Unload the analogue watchface
  */
-void analogue_window_unload() {
+EXTFN void analogue_window_unload() {
   gpath_destroy(minute_arrow);
   gpath_destroy(hour_arrow);
   layer_destroy(hands_layer);

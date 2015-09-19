@@ -29,10 +29,10 @@
 // Times (in seconds) between each buzz (gives a progressive alarm and gaps between phases)
 static uint8_t alarm_pattern[] = { 3, 3, 2, 2, 2, 2, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 60 };
 
-static uint8_t alarm_count;
-static AppTimer *alarm_timer;
-
 #define ALARM_LIMIT (ARRAY_LENGTH(alarm_pattern) * ALARM_PATTERN_MAX_REPEAT)
+
+static uint8_t alarm_count = ALARM_LIMIT;
+static AppTimer *alarm_timer;
 
 /*
  * Alarm timer loop
@@ -59,6 +59,7 @@ static void do_alarm(void *data) {
   if (alarm_count >= ALARM_LIMIT) {
     power_nap_reset();
     set_icon(false, IS_ALARM_RING);
+    show_alarm_buttons(false);
   }
 
 }
@@ -66,16 +67,17 @@ static void do_alarm(void *data) {
 /*
  * Fire alarm
  */
-void fire_alarm() {
+EXTFN void fire_alarm() {
   alarm_count = 0;
   do_alarm(NULL);
   set_icon(true, IS_ALARM_RING);
+  show_alarm_buttons(true);
 }
 
 /*
  * Snooze alarm
  */
-void snooze_alarm() {
+EXTFN void snooze_alarm() {
   // Already hit the limit so cannot snooze
   if (alarm_count >= ALARM_LIMIT) {
     return;
@@ -91,7 +93,7 @@ void snooze_alarm() {
 /*
  * Cancel alarm - if there is one
  */
-void cancel_alarm() {
+EXTFN void cancel_alarm() {
 
   // Already hit the limit - nothing to cancel
   if (alarm_count >= ALARM_LIMIT) {
@@ -109,13 +111,7 @@ void cancel_alarm() {
 
   // Clear the alarm indicator
   set_icon(false, IS_ALARM_RING);
+  show_alarm_buttons(false);
 }
 
-/*
- * Init alarm
- */
-void init_alarm() {
-  // Max out the count
-  alarm_count = ALARM_LIMIT;
-}
 

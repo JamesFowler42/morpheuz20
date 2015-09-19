@@ -36,10 +36,10 @@ static Window *window;
 static MenuLayer *menu_layer;
 static GBitmap *menu_icons[NUM_MENU_ICONS];
 
-static char menu_text[15];
+static char menu_text[TIME_RANGE_LEN];
 static int16_t selected_row;
 
-extern char date_text[16];
+extern char date_text[DATE_FORMAT_LEN];
 
 // Define a menu item
 typedef struct {
@@ -71,9 +71,9 @@ typedef struct {
 static PresetData preset_data;
 
 /*
- * Save the config data structure
+ * Save the present data structure
  */
-void save_preset_data() {
+static void save_preset_data() {
   LOG_DEBUG("save_preset_data (%d)", sizeof(preset_data));
   int written = persist_write_data(PERSIST_PRESET_KEY, &preset_data, sizeof(preset_data));
   if (written != sizeof(preset_data)) {
@@ -151,7 +151,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   
   uint8_t icon = menu_def[index].set ? 1 : 0;
   
-  snprintf(menu_text, sizeof(menu_text), "%d:%02d - %d:%02d", twenty_four_to_twelve(preset_data.fromhr[no]), preset_data.frommin[no], twenty_four_to_twelve(preset_data.tohr[no]), preset_data.tomin[no]);
+  copy_time_range_into_field(menu_text, sizeof(menu_text), preset_data.fromhr[no], preset_data.frommin[no], preset_data.tohr[no], preset_data.tomin[no]);
 
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
 
@@ -197,7 +197,7 @@ static void hide_preset_menu() {
 /*
  * Here we capture when a user selects a menu item
  */
-void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
   // Use the row to specify which item will receive the select action
   selected_row = cell_index->row;
   hide_preset_menu();
@@ -239,7 +239,7 @@ static void window_unload(Window *window) {
 /*
  * Show the menu
  */
-void show_preset_menu() {
+EXTFN void show_preset_menu() {
   window = window_create();
   
   read_preset_data();

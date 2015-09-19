@@ -31,6 +31,7 @@ static AppTimer *notice_timer;
 static BitmapLayerComp notice_moon;
 
 extern GFont notice_font;
+extern bool menu_live;
 
 static TextLayer *notice_name_layer;
 static TextLayer *notice_text;
@@ -46,7 +47,7 @@ static char *buffer;
 /*
  * Remove the notice window
  */
-void hide_notice_layer(void *data) {
+EXTFN void hide_notice_layer(void *data) {
   if (notice_showing) {
     window_stack_remove(notice_window, true);
     macro_bitmap_layer_destroy(&notice_moon);
@@ -73,9 +74,6 @@ static void load_resource_into_buffer(uint32_t resource_id) {
   size_t size = resource_size(rh);
   if (size > (BUFFER_SIZE - 1)) {
     size = (BUFFER_SIZE - 1);
-    mark_failure(FAIL_TEXT_LONG);
-  } else if (size == 0) {
-    mark_failure(FAIL_TEXT_MISSING);
   }
   memset(buffer, '\0', BUFFER_SIZE);
   resource_load(rh, (uint8_t *) buffer, size);
@@ -94,7 +92,7 @@ static void single_click_handler(ClickRecognizerRef recognizer, void *context) {
 /*
  * Button config
  */
-void notice_click_config_provider(Window *window) {
+static void notice_click_config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_BACK, single_click_handler);
   window_single_click_subscribe(BUTTON_ID_UP, single_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, single_click_handler);
@@ -104,7 +102,12 @@ void notice_click_config_provider(Window *window) {
 /*
  * Show the notice window
  */
-void show_notice(uint32_t resource_id) {
+EXTFN void show_notice(uint32_t resource_id) {
+  
+  // If the menu is showing then it is rude to interup
+  if (menu_live) {
+    return;
+  }
 
   // It's night - want to see message
   light_enable_interaction();
@@ -152,7 +155,7 @@ void show_notice(uint32_t resource_id) {
   notice_timer = app_timer_register(NOTICE_DISPLAY_MS, hide_notice_layer, NULL);
 }
 
-bool is_notice_showing() {
+EXTFN bool is_notice_showing() {
   return notice_showing;
 }
 

@@ -60,6 +60,7 @@ function mConst() {
     urlNotReady: urlPrefix + "view-not-ready.html",
     makerAlarmUrl: "https://maker.ifttt.com/trigger/morpheuz_alarm/with/key/",
     makerDataUrl: "https://maker.ifttt.com/trigger/morpheuz_data/with/key/",
+    makerBedtimeUrl: "https://maker.ifttt.com/trigger/morpheuz_bedtime/with/key/",
     lifxTimeDef: 60
   };
 }

@@ -23,7 +23,7 @@
  */
 
 /*global nvl, window, mLang, makeAjaxCall, mConst, buildUrl, generateCopyLinkData */
-/*exported iftttMakerInterfaceAlarm, iftttMakerInterfaceData */
+/*exported iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
 
 /*
  * Call the ifttt maker interface when the alarm sounds
@@ -92,6 +92,43 @@ function iftttMakerInterfaceData() {
     window.localStorage.setItem("ifstat", mLang().sending);
     makeAjaxCall("POST", url, mConst().timeout, JSON.stringify(payload), function(resp) {
       console.log("iftttMakerInterfaceData: " + JSON.stringify(resp));
+      if (resp.status !== 1) {
+        window.localStorage.setItem("ifstat", JSON.stringify(resp.errors));
+      } else {
+        window.localStorage.setItem("ifstat", mLang().ok);
+      }     
+    });
+    
+  } catch (err) {
+    window.localStorage.setItem("ifstat", err.message);
+  }
+}
+
+/*
+ * Call the ifttt maker interface when the bedtime is activated
+ */
+function iftttMakerInterfaceBedtime() {
+
+  try {
+  
+    // Find out config information
+    var ifkey =  nvl(window.localStorage.getItem("ifkey"), "");
+  
+    // Escape if not configured
+    if (ifkey === "") {
+      console.log("ifttt maker deactivated");
+      window.localStorage.setItem("ifstat", mLang().disabled);
+      return;
+    }
+  
+    var payload = { "value1" : "", "value2" : "", "value3" : "" };
+
+    var url = mConst().makerBedtimeUrl + ifkey;
+    
+    console.log("iftttMakerInterfaceBedtime: url=" + url);
+    window.localStorage.setItem("ifstat", mLang().sending);
+    makeAjaxCall("POST", url, mConst().timeout, JSON.stringify(payload), function(resp) {
+      console.log("iftttMakerInterfaceBedtime: " + JSON.stringify(resp));
       if (resp.status !== 1) {
         window.localStorage.setItem("ifstat", JSON.stringify(resp.errors));
       } else {

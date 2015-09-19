@@ -36,14 +36,4 @@
 #define HOUR (CLOCK + 8)
 #define MIN (CLOCK + 4)
 
-void analogue_window_load(Window *window);
-void analogue_minute_tick();
-void analogue_set_smart_times();
-void analogue_set_base(time_t base);
-void analogue_set_progress(uint8_t progress_level_in);
-void analogue_window_unload();
-void analogue_visible(bool visible, bool call_post_init);
-void analogue_powernap_text(char *text);
-void set_weekend_icon(bool weekend);
-
 #endif /* ANALOGUE_H_ */

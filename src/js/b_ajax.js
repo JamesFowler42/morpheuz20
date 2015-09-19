@@ -38,8 +38,6 @@ function makePostAjaxCall(url, msg, resp) {
   var req = new XMLHttpRequest();
   req.open("POST", url, true);
   req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-  req.setRequestHeader("Content-length", msg.length);
-  req.setRequestHeader("Connection", "close");
   req.timeout = mConst().timeout;
   req.ontimeout = function() {
     resp({
@@ -80,7 +78,6 @@ function makeGetAjaxCall(url, resp) {
   }, mConst().timeout);
   var req = new XMLHttpRequest();
   req.open("GET", url, true);
-  req.setRequestHeader("Connection", "close");
   req.timeout = mConst().timeout;
   req.ontimeout = function() {
     resp({

@@ -28,14 +28,13 @@
 #include "analogue.h"
 
 static uint16_t biggest_movement_in_one_minute = 0;
-static bool accel_handler_called = false;
 
 /*
  * Set the on-screen status text
  */
-void set_smart_status() {
-  static char status_text[15];
-  snprintf(status_text, sizeof(status_text), "%d:%02d - %d:%02d", twenty_four_to_twelve(get_config_data()->fromhr), get_config_data()->frommin, twenty_four_to_twelve(get_config_data()->tohr), get_config_data()->tomin);
+EXTFN void set_smart_status() {
+  static char status_text[TIME_RANGE_LEN];
+  copy_time_range_into_field(status_text, sizeof(status_text), get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
   set_icon(get_config_data()->smart && get_config_data()->weekend_until != 0, IS_WEEKEND);
   set_smart_status_on_screen(get_config_data()->smart, status_text);
   analogue_set_smart_times();
@@ -54,9 +53,7 @@ static void validate_weekend() {
 /*
  * Do something with samples every minute
  */
-uint16_t every_minute_processing() {
-  if (!accel_handler_called)
-    mark_failure(FAIL_ACCEL);
+EXTFN uint16_t every_minute_processing() {
   uint16_t last_biggest = biggest_movement_in_one_minute;
   validate_weekend();
   power_nap_check(biggest_movement_in_one_minute);
@@ -102,9 +99,6 @@ static void do_axis(int16_t val, uint16_t *biggest, uint32_t avg) {
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 
-  // Remember this
-  accel_handler_called = true;
-
   // Average the data
   uint32_t avg_x = 0;
   uint32_t avg_y = 0;
@@ -140,9 +134,7 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
 /*
  * Initialise comms and accelerometer
  */
-void init_morpheuz() {
-
-  init_alarm();
+EXTFN void init_morpheuz() {
 
   open_comms();
 
@@ -157,7 +149,7 @@ void init_morpheuz() {
 /*
  * Toggle weekend mode
  */
-void toggle_weekend_mode() {
+EXTFN void toggle_weekend_mode() {
   if (!get_config_data()->smart) {
     show_notice(RESOURCE_ID_NOTICE_NEED_SMART_ALARM);
     return;
