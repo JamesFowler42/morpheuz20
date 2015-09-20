@@ -636,10 +636,10 @@ $("document").ready(function() {
       swpdo : $("#swpdo").is(':checked') ? "Y" : "N",
       usage : $("#usage").is(':checked') ? "Y" : "N",
       lifxtoken : safeTrim($("#lifxToken").val()),
-      lifxtime : $("#lifxTime").val(),
-      hueip : $("#hueip").val(),
+      lifxtime : safeTrim($("#lifxTime").val()),
+      hueip : safeTrim($("#hueip").val()),
       hueuser : safeTrim($("#hueuser").val()),
-      hueid : $("#hueid").val(),
+      hueid : safeTrim($("#hueid").val()),
       lazarus : $("#lazarus").is(':checked') ? "Y" : "N",
       testsettings : $("#testsettings").is(':checked') ? "Y" : "N",
       ifkey :safeTrim( $("#ifkey").val())

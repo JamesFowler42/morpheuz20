@@ -346,7 +346,7 @@ void set_next_wakeup();
 void set_progress();
 void set_smart_status();
 void set_smart_status_on_screen(bool smart_alarm_on, char *special_text);
-void show_alarm_buttons(bool value);
+void show_alarm_visuals(bool value);
 void show_menu();
 void show_notice(uint32_t resource_id);
 void show_preset_menu();

@@ -561,15 +561,12 @@ EXTFN void bed_visible(bool value) {
 }
 
 /*
- * Show the alarm hint buttons
+ * Show the alarm hint buttons and set icon
  */
-EXTFN void show_alarm_buttons(bool value) {
+EXTFN void show_alarm_visuals(bool value) {
+  set_icon(value, IS_ALARM_RING);
   layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_top.layer), !value);
   layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_button.layer), !value);
-  text_layer_set_text_alignment(text_time_layer, value ? GTextAlignmentLeft : GTextAlignmentCenter);
-  #ifdef PBL_COLOR
-    text_layer_set_text_alignment(text_time_shadow_layer, value ? GTextAlignmentLeft : GTextAlignmentCenter);
-  #endif
 }
 
 /*
