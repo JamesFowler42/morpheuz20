@@ -50,8 +50,8 @@
 #endif
   
 // Read clock mode from OS
-//#define IS_24_HOUR_MODE clock_is_24h_style()
-#define IS_24_HOUR_MODE false
+#define IS_24_HOUR_MODE clock_is_24h_style()
+//#define IS_24_HOUR_MODE false
 
 // Only do this to make greping for external functions easier (lot of space to be saved with statics)
 #define EXTFN
@@ -208,7 +208,6 @@ typedef enum {
   IS_COMMS = 0,
   IS_RECORD,
   IS_IGNORE,
-  IS_WEEKEND,
   IS_ALARM,
   IS_ALARM_RING,
   IS_BLUETOOTH,
@@ -284,7 +283,7 @@ typedef struct {
   uint8_t tomin;
   uint32_t from;
   uint32_t to;
-  time_t weekend_until;
+  time_t unused;
 } ConfigData;
 
 typedef struct {
@@ -301,6 +300,7 @@ bool is_animation_complete();
 bool is_doing_powernap();
 bool is_monitoring_sleep();
 bool is_notice_showing();
+char* am_pm_text(uint8_t hour);
 int main(void);
 int32_t dirty_checksum(void *data, uint8_t data_size);
 int32_t join_value(int16_t top, int16_t bottom);
@@ -318,7 +318,10 @@ void bed_visible(bool value);
 void cancel_alarm();
 void click_config_provider(Window *window);
 void close_morpheuz();
+#ifdef PBL_PLATFORM_BASALT
 void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin);
+#endif
+void copy_alarm_time_range_into_field(char *field, size_t fsize);
 void fire_alarm();
 void hide_notice_layer(void *data);
 void init_morpheuz();
@@ -353,7 +356,6 @@ void show_preset_menu();
 void show_set_alarm();
 void snooze_alarm();
 void toggle_power_nap();
-void toggle_weekend_mode();
 void trigger_config_save();
 void wakeup_init();
 void wakeup_toggle();

@@ -197,8 +197,8 @@ static void icon_bar_update_callback(Layer *layer, GContext *ctx) {
   }
 
   // Alarm icon
-  if (icon_state[IS_ALARM_RING] || icon_state[IS_WEEKEND] || icon_state[IS_ALARM]) {
-    paint_icon(ctx, &running_horizontal, 12, icon_state[IS_ALARM_RING] ? RESOURCE_ID_ALARM_RING_ICON : (icon_state[IS_WEEKEND] ? RESOURCE_ID_WEEKEND_ICON : RESOURCE_ID_ALARM_ICON));
+  if (icon_state[IS_ALARM_RING] || icon_state[IS_ALARM]) {
+    paint_icon(ctx, &running_horizontal, 12, icon_state[IS_ALARM_RING] ? RESOURCE_ID_ALARM_RING_ICON : RESOURCE_ID_ALARM_ICON);
   }
 
   // Ignore icon

@@ -34,20 +34,9 @@ static uint16_t biggest_movement_in_one_minute = 0;
  */
 EXTFN void set_smart_status() {
   static char status_text[TIME_RANGE_LEN];
-  copy_time_range_into_field(status_text, sizeof(status_text), get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
-  set_icon(get_config_data()->smart && get_config_data()->weekend_until != 0, IS_WEEKEND);
+  copy_alarm_time_range_into_field(status_text, sizeof(status_text));
   set_smart_status_on_screen(get_config_data()->smart, status_text);
   analogue_set_smart_times();
-}
-
-/*
- * Reset the weekend time
- */
-static void validate_weekend() {
-  if (get_config_data()->weekend_until > 0 && get_config_data()->weekend_until < time(NULL)) {
-    get_config_data()->weekend_until = 0;
-    set_smart_status();
-  }
 }
 
 /*
@@ -55,7 +44,6 @@ static void validate_weekend() {
  */
 EXTFN uint16_t every_minute_processing() {
   uint16_t last_biggest = biggest_movement_in_one_minute;
-  validate_weekend();
   power_nap_check(biggest_movement_in_one_minute);
   server_processing(biggest_movement_in_one_minute);
   biggest_movement_in_one_minute = 0;
@@ -146,23 +134,5 @@ EXTFN void init_morpheuz() {
   set_smart_status();
 }
 
-/*
- * Toggle weekend mode
- */
-EXTFN void toggle_weekend_mode() {
-  if (!get_config_data()->smart) {
-    show_notice(RESOURCE_ID_NOTICE_NEED_SMART_ALARM);
-    return;
-  }
-  // Toggle weekend
-  if (get_config_data()->weekend_until > 0) {
-    // Turn off weekend
-    get_config_data()->weekend_until = 0;
-    set_smart_status();
-  } else {
-    // Turn on weekend
-    get_config_data()->weekend_until = time(NULL) + WEEKEND_PERIOD;
-    set_smart_status();
-  }
-}
+
 

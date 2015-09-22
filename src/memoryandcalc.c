@@ -322,7 +322,7 @@ static void reset_sleep_period_action(void *data) {
   analogue_set_base(internal_data.base);
   set_progress_based_on_persist();
   set_next_wakeup();
-  if (config_data.smart && config_data.weekend_until == 0) {
+  if (config_data.smart) {
     show_notice(RESOURCE_ID_NOTICE_TIMER_RESET_ALARM);
     vibes_double_pulse();
   } else {
@@ -438,10 +438,6 @@ static bool smart_alarm(uint16_t point) {
 
   // Are we doing smart alarm thing
   if (!config_data.smart)
-    return false;
-
-  // Not alarming at the moment
-  if (config_data.weekend_until > 0)
     return false;
 
   // Now has the alarm been sounded yet

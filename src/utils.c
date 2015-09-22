@@ -25,6 +25,10 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+  
+static char *text_pm_pad = TEXT_PM_PAD;
+static char *text_am_pad = TEXT_AM_PAD;
+static char *text_empty = "";
 
 /*
  * Do all the poop associated with creating a text box, but in one lump
@@ -98,13 +102,36 @@ EXTFN uint8_t twenty_four_to_twelve(uint8_t hour) {
 }
 
 /*
- * Copy time range into field
+ * AM/PM indicator
  */
-EXTFN void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin ) {
-  if (IS_24_HOUR_MODE) {
-    snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT_24, fromhr, frommin, tohr, tomin);
+EXTFN char* am_pm_text(uint8_t hour) {
+  if (!IS_24_HOUR_MODE) {
+    return ((hour > 11) ? text_pm_pad : text_am_pad);
   } else {
-    snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT_12, twenty_four_to_twelve(fromhr), frommin, ((fromhr > 12) ? TEXT_PM : TEXT_AM), twenty_four_to_twelve(tohr), tomin, ((tohr > 12) ? TEXT_PM : TEXT_AM));
+    return text_empty;
   }
 }
+
+/*
+ * Copy time range into field
+ */
+#ifdef PBL_PLATFORM_BASALT
+EXTFN void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin ) {
+  snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT, twenty_four_to_twelve(fromhr), frommin, am_pm_text(fromhr), twenty_four_to_twelve(tohr), tomin, am_pm_text(tohr));
+}
+#else
+static void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin ) {
+  snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT, twenty_four_to_twelve(fromhr), frommin, am_pm_text(fromhr), twenty_four_to_twelve(tohr), tomin, am_pm_text(tohr));
+}
+#endif  
+
+/*
+ * Copy alarm time range into field
+ */
+EXTFN void copy_alarm_time_range_into_field(char *field, size_t fsize) {
+    copy_time_range_into_field(field,fsize, get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+}
+
+
+
 

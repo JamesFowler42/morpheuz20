@@ -33,9 +33,7 @@
 #define MENU_RESET "Bed time"
 #define MENU_RESET_DES "Start new sleep cycle"
 #define MENU_POWER_NAP "Power nap"
-#define MENU_POWER_NAP_DES "Refreshment"
-#define MENU_WEEKEND "Weekend"
-#define MENU_WEEKEND_DES "Lay-in mode"
+#define MENU_POWER_NAP_DES "A 27 min nap"
 #define MENU_RESEND "Resend"
 #define MENU_RESEND_DES "Resend data to phone"
 #define MENU_INVERSE "Inverse"
@@ -48,16 +46,14 @@
 #define MENU_CANCEL "Cancel Alarm"
 #define MENU_AUTO_RESET "Auto bed time"
 #define MENU_AUTO_RESET_DES_OFF "... same time again"
-#define MENU_AUTO_RESET_DES_ON "... at %d:%02d"
+#define MENU_AUTO_RESET_DES_ON "... at %d:%02d%s"
 #define MENU_SMART_ALARM "Set Smart Alarm"
-#define MENU_SMART_ALARM_DES ""
 #define MENU_PRESET "Presets"
 #define MENU_PRESET_DES "Alarm time memories"
 #define MENU_TOGGLE_ALARM "Alarm on/off"
 #define MENU_TOGGLE_ALARM_DES "Turn alarm on/off"
   
-#define MENU_SMART_ALARM_TIME_FORMAT_24 "%02d:%02d - %02d:%02d"
-#define MENU_SMART_ALARM_TIME_FORMAT_12 "%d:%02d %s - %d:%02d %s"
+#define MENU_SMART_ALARM_TIME_FORMAT "%d:%02d%s - %d:%02d%s"
 #define TIME_RANGE_LEN 20
   
 #define DATE_FORMAT "%a, %b %e"
@@ -73,6 +69,8 @@
 
 #define TEXT_AM "AM"
 #define TEXT_PM "PM"
+#define TEXT_AM_PAD " AM"
+#define TEXT_PM_PAD " PM"
 
 #define EARLIEST "Earliest"
 #define LATEST "Latest"

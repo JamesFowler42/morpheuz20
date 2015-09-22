@@ -36,7 +36,6 @@ static GBitmap *menu_icons[NUM_MENU_ICONS];
 
 static uint8_t smart_alarm = 0;
 static uint8_t ignore_state = 0;
-static uint8_t weekend_state = 0;
 static uint8_t inverse_state = 0;
 static uint8_t analogue_state = 0;
 static uint8_t power_nap_state = 0;
@@ -75,31 +74,29 @@ typedef struct {
 
 // Define the menu
 #ifdef PBL_COLOR
-  #define OPT_WAKEUP 8
+  #define OPT_WAKEUP 7
 static MenuDef menu_def[] = { 
   { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, true},
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, true},
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, true},
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, true},
-  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, NULL, show_set_alarm, false},
+  { MENU_SMART_ALARM, NULL, NULL, show_set_alarm, false},
   { MENU_TOGGLE_ALARM, MENU_TOGGLE_ALARM_DES, &smart_alarm, toggle_alarm, false},
   { MENU_PRESET, MENU_PRESET_DES, NULL, show_preset_menu, false},
-  { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode, true},
   { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle, true},
   { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap, true},
   { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, true},
   { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend, true},
   { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz, true}};
 #else
-    #define OPT_WAKEUP 7
+    #define OPT_WAKEUP 6
 static MenuDef menu_def[] = { 
   { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, true }, 
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, true }, 
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, true }, 
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, true }, 
-  { MENU_SMART_ALARM, MENU_SMART_ALARM_DES, NULL, show_set_alarm, false }, 
+  { MENU_SMART_ALARM, NULL, NULL, show_set_alarm, false }, 
   { MENU_TOGGLE_ALARM, MENU_TOGGLE_ALARM_DES, &smart_alarm, toggle_alarm, false},
-  { MENU_WEEKEND, MENU_WEEKEND_DES, &weekend_state, toggle_weekend_mode, true }, 
   { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle, true }, 
   { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap, true }, 
   { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert, true }, 
@@ -154,10 +151,10 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   GBitmap *icon = menu_def[index].state == NULL ? NULL : menu_icons[*(menu_def[index].state)];
 
   if (index == OPT_WAKEUP && auto_reset_state == 1 && original_auto_reset_state == 1) {
-    snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin);
+    snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin, am_pm_text(get_config_data()->autohr));
     subtitle = menu_text;
   } else if (index == OPT_SMART) {
-    copy_time_range_into_field(menu_text, sizeof(menu_text), get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
+    copy_alarm_time_range_into_field(menu_text, sizeof(menu_text));
     subtitle = menu_text;
   }
   
@@ -193,7 +190,7 @@ static void toggle_alarm() {
   trigger_config_save();
   set_smart_status();
 }
-  
+ 
 /*
  * Analogue option
  */
@@ -301,7 +298,6 @@ EXTFN void show_menu() {
   menu_act = false;
   smart_alarm = get_config_data()->smart;
   ignore_state = get_icon(IS_IGNORE);
-  weekend_state = get_config_data()->weekend_until != 0;
   inverse_state = get_config_data()->invert;
   analogue_state = get_config_data()->analogue;
   power_nap_state = is_doing_powernap();
