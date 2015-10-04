@@ -115,7 +115,7 @@ EXTFN char* am_pm_text(uint8_t hour) {
 /*
  * Copy time range into field
  */
-#ifdef PBL_PLATFORM_BASALT
+#ifdef PBL_COLOR
 EXTFN void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin ) {
   snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT, twenty_four_to_twelve(fromhr), frommin, am_pm_text(fromhr), twenty_four_to_twelve(tohr), tomin, am_pm_text(tohr));
 }

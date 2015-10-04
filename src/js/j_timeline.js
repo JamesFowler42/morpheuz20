@@ -22,8 +22,16 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, isBasalt, window, mLang, makeGetAjaxCall, mConst */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, getPlatform */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin */
+
+/*
+ * Which platform support timeline - all except aplite at the moment
+ */
+function isTimeline() {
+   return (getPlatform() !== "aplite" );
+}
+
 
 /*
  * Ensure that we only insert one pin per day for each type and they move if we reset
@@ -37,7 +45,7 @@ function getPinId(base, type) {
  * Add a smart alarm pin when wakeup occurs
  */
 function addSmartAlarmPin() {
-  if (!isBasalt()) {
+  if (!isTimeline()) {
     return;
   }
 
@@ -92,7 +100,7 @@ function addSmartAlarmPin() {
  * Add a bed time pin when we're due to go to sleep
  */
 function addBedTimePin(base) {
-  if (!isBasalt()) {
+  if (!isTimeline()) {
     return;
   }
 
@@ -139,7 +147,7 @@ function addBedTimePin(base) {
  * Get some interesting body text
  */
 function getQuoteOfTheDay() {
-  if (!isBasalt()) {
+  if (!isTimeline()) {
     return;
   }
   makeGetAjaxCall(mConst().quotesUrl + "?v=" + new Date().getTime(), function(resp) {

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global nvl, window, mConst, getUserAgent, makeGetAjaxCall, isBasalt */
+/*global nvl, window, mConst, getUserAgent, makeGetAjaxCall, getPlatform */
 /*exported sendAnonymousUsageData */
 
 /**
@@ -37,7 +37,7 @@ function sendAnonymousUsageData() {
       return;
     }
     var version = nvl(window.localStorage.getItem("version"), mConst().versionDef);
-    var platform = isBasalt() ? "Basalt" : "Aplite";
+    var platform = getPlatform();
     var hostua = getUserAgent();
     var basicUrl = "v" + version + "-" + hostua + "-" + platform + mConst().usageSx;
     var actionUrl = mConst().usageUrl + basicUrl.toLowerCase() + "?v=" + new Date().getTime();

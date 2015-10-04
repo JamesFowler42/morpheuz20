@@ -1,0 +1,350 @@
+/*
+ * Morpheuz Sleep Monitor
+ *
+ * Copyright (c) 2013-2015 James Fowler
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+ * THE SOFTWARE.
+ */
+
+#include "pebble.h"
+#include "morpheuz.h"
+#include "language.h"
+ 
+// Private  
+static bool icon_state[MAX_ICON_STATE];
+static uint8_t previous_mday = 255;
+static time_t last_clock_update;
+static char powernap_text[3];
+
+// Shared with rootui, rectui, roundui and primary_window with main
+Window *primary_window;
+Layer *icon_bar;
+TextLayer *text_date_smart_alarm_range_layer;
+uint8_t animation_count;
+TextLayer *powernap_layer;
+#ifdef PBL_COLOR
+TextLayer *text_time_shadow_layer;
+#endif 
+TextLayer *text_time_layer;
+uint8_t battery_level;
+bool battery_plugged;
+BitmapLayerComp alarm_button_top;
+BitmapLayerComp alarm_button_button;
+Layer *progress_layer;
+GFont notice_font;
+GFont time_font;
+TextLayer *version_text;
+
+// Shared with menu, rootui and presets 
+char date_text[DATE_FORMAT_LEN] = "";
+
+/**
+ * Indicate if title animation complete
+ */
+EXTFN bool is_animation_complete() {
+  return animation_count == 6;
+}
+
+/*
+ * Stuff we only allow after we've gone through the normal pre-amble
+ */
+EXTFN void post_init_hook(void *data) {
+  wakeup_init();
+  animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
+  layer_mark_dirty(icon_bar);
+  
+  // Set click provider
+  window_set_click_config_provider(primary_window, (ClickConfigProvider) click_config_provider);
+}
+
+/*
+ * Bar chart color based on height of bar. Would normally do this with a constant array, but GColorXXXX aren't constants apparently.
+ */
+#ifdef PBL_COLOR
+EXTFN GColor bar_color(uint16_t height) {
+  if (height == 0) return GColorBlue; 
+  if (height == 1) return GColorBlueMoon;
+  if (height == 2) return GColorPictonBlue;
+  if (height == 3) return GColorVividCerulean;
+  if (height == 4) return GColorMalachite;
+  if (height == 5) return GColorBrightGreen;
+  if (height == 6) return GColorSpringBud;
+  if (height == 7) return GColorYellow;
+  return GColorPastelYellow;
+}
+#endif
+  
+  /*
+ * Set the icon state for any icon
+ */
+EXTFN void set_icon(bool enabled, IconState icon) {
+  if (enabled != icon_state[icon]) {
+    icon_state[icon] = enabled;
+    layer_mark_dirty(icon_bar);
+  }
+}
+
+/*
+ * Get the icon state
+ */
+EXTFN bool get_icon(IconState icon) {
+  return icon_state[icon];
+}
+
+/*
+ * Are we monitoring sleep (recording or powernap)?
+ */
+EXTFN bool is_monitoring_sleep() {
+  return get_icon(IS_RECORD) || is_doing_powernap();
+}
+
+/*
+ * Set the smart alarm status details
+ */
+EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
+  set_icon(smart_alarm_on, IS_ALARM);
+  if (smart_alarm_on)
+    text_layer_set_text(text_date_smart_alarm_range_layer, special_text);
+  else
+    text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+}
+
+/*
+ * Build an icon
+ */
+static void paint_icon(GContext *ctx, int *running_horizontal, int width, uint32_t resource_id) {
+  GBitmap *bitmap = gbitmap_create_with_resource(resource_id);
+  *running_horizontal -= width + ICON_PAD;
+  graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(*running_horizontal, 0, width, 12));
+  gbitmap_destroy(bitmap);
+}
+
+/*
+ * Battery icon callback handler (called via icon bar update now)
+ */
+static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *running_horizontal) {
+
+  #ifdef PBL_COLOR
+    graphics_context_set_compositing_mode(ctx, GCompOpSet);
+  #else
+    graphics_context_set_compositing_mode(ctx, GCompOpAssign);
+  #endif
+
+  if (!battery_plugged) {
+    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
+    graphics_context_set_stroke_color(ctx, BACKGROUND_COLOR);
+    #ifdef PBL_COLOR
+      GColor b_color = BATTERY_BAR_COLOR;
+      if (battery_level <= 20) {
+        b_color = BATTERY_BAR_COLOR_CRITICAL;
+      } else if (battery_level <= 40) {
+        b_color = BATTERY_BAR_COLOR_WARN;
+      }
+      graphics_context_set_fill_color(ctx, b_color);
+    #else
+      graphics_context_set_fill_color(ctx, BATTERY_BAR_COLOR);
+    #endif
+    graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, battery_level / 9, 4), 0, GCornerNone);
+  } else {
+    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
+  }
+}
+
+/*
+ * Icon bar update handler
+ */
+EXTFN void icon_bar_update_callback(Layer *layer, GContext *ctx) {
+
+  int running_horizontal = ICON_BAR_WIDTH;
+
+  graphics_context_set_fill_color(ctx, BACKGROUND_COLOR);
+  graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+
+  graphics_context_set_fill_color(ctx, GColorWhite);
+  graphics_context_set_stroke_color(ctx, GColorBlack);
+
+#ifdef PBL_COLOR
+  graphics_context_set_compositing_mode(ctx, GCompOpSet);
+#endif
+
+  // Don't draw if we're currently doing
+  if (!is_animation_complete())
+    return;
+
+  // Battery icon (always showing)
+  battery_layer_update_callback(layer, ctx, &running_horizontal);
+  running_horizontal += ICON_PAD_BATTERY;
+
+  // Comms icon / Bluetooth icon
+  if (icon_state[IS_COMMS] || icon_state[IS_BLUETOOTH]) {
+    paint_icon(ctx, &running_horizontal, 9, icon_state[IS_COMMS] ? RESOURCE_ID_COMMS_ICON : RESOURCE_ID_BLUETOOTH_ICON);
+  }
+
+  // Record icon
+  if (icon_state[IS_RECORD]) {
+    paint_icon(ctx, &running_horizontal, 10, RESOURCE_ID_ICON_RECORD);
+  }
+
+  // Alarm icon
+  if (icon_state[IS_ALARM_RING] || icon_state[IS_ALARM]) {
+    paint_icon(ctx, &running_horizontal, 12, icon_state[IS_ALARM_RING] ? RESOURCE_ID_ALARM_RING_ICON : RESOURCE_ID_ALARM_ICON);
+  }
+
+  // Ignore icon
+  if (icon_state[IS_IGNORE]) {
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_IGNORE);
+  }
+
+  // Export icon
+  if (icon_state[IS_EXPORT]) {
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_EXPORT);
+  }
+}
+
+/*
+ * Battery state change
+ */
+EXTFN void battery_state_handler(BatteryChargeState charge) {
+  battery_level = charge.charge_percent;
+  battery_plugged = charge.is_plugged;
+  layer_mark_dirty(icon_bar);
+}
+
+/*
+ * Progress line
+ */
+EXTFN void progress_layer_update_callback(Layer *layer, GContext *ctx) {
+  graphics_context_set_fill_color(ctx, BACKGROUND_COLOR);
+  graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+
+  graphics_context_set_fill_color(ctx, BAR_CHART_MARKS);
+
+  graphics_context_set_stroke_color(ctx, BAR_CHART_MARKS);
+
+  for (uint8_t i = 0; i <= 120; i += 12) {
+    graphics_draw_pixel(ctx, GPoint(i, 8));
+    graphics_draw_pixel(ctx, GPoint(i, 7));
+  }
+
+  for (uint8_t i = 0; i <= get_internal_data()->highest_entry; i++) {
+    if (!get_internal_data()->ignore[i]) {
+      uint16_t height = get_internal_data()->points[i] / 500;
+      uint8_t i2 = i * 2;
+      #ifdef PBL_COLOR
+          graphics_context_set_stroke_color(ctx, bar_color(height));
+      #endif
+      graphics_draw_line(ctx, GPoint(i2, 8 - height), GPoint(i2, 8));
+    }
+  }
+}
+
+/*
+ * Perform the clock update
+ */
+static void update_clock() {
+  static char time_text[6];
+  clock_copy_time_string(time_text, sizeof(time_text));
+  if (time_text[4] == ' ')
+    time_text[4] = '\0';
+  text_layer_set_text(text_time_layer, time_text);
+  #ifdef PBL_COLOR
+     text_layer_set_text(text_time_shadow_layer, time_text); 
+  #endif
+  analogue_minute_tick();
+  last_clock_update = time(NULL);
+}
+
+/*
+ * Process clockface
+ */
+EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+
+  // Only update the date if the day has changed
+  if (tick_time->tm_mday != previous_mday) {
+    strftime(date_text, sizeof(date_text), DATE_FORMAT, tick_time);
+    if (!icon_state[IS_ALARM])
+      text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+    previous_mday = tick_time->tm_mday;
+  }
+
+  // Perform all background processing
+  uint16_t last_movement;
+  if (is_animation_complete()) {
+    last_movement = every_minute_processing();
+  } else {
+    last_movement = CLOCK_UPDATE_THRESHOLD;
+  }
+
+  // Do the power nap countdown
+  power_nap_countdown();
+
+  // Only update the clock every five minutes unless awake
+  if (last_movement >= CLOCK_UPDATE_THRESHOLD || (tick_time->tm_min % 5 == 0)) {
+    update_clock();
+  }
+}
+
+/*
+ * Display the clock on movement (ensures if you start moving the clock is up to date)
+ * Also fired from button press
+ */
+EXTFN void revive_clock_on_movement(uint16_t last_movement) {
+
+  if (last_movement >= CLOCK_UPDATE_THRESHOLD) {
+    time_t now = time(NULL);
+    if ((now - last_clock_update) > 60) {
+      update_clock();
+    }
+  }
+
+}
+
+/*
+ * Bluetooth connection status
+ */
+EXTFN void bluetooth_state_handler(bool connected) {
+  set_icon(connected, IS_BLUETOOTH);
+  if (!connected)
+    set_icon(false, IS_COMMS); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
+}
+
+/*
+ * Progress indicator position (1-54)
+ */
+EXTFN void set_progress() {
+  if (!get_config_data()->analogue)
+    layer_mark_dirty(progress_layer);
+}
+
+/*
+ * Set the power nap text for the display
+ */
+EXTFN void analogue_powernap_text(char *text) {
+  strncpy(powernap_text, text, sizeof(powernap_text));
+  text_layer_set_text(powernap_layer, powernap_text);
+}
+
+/*
+ * Show the alarm hint buttons and set icon
+ */
+EXTFN void show_alarm_visuals(bool value) {
+  set_icon(value, IS_ALARM_RING);
+  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_top.layer), !value);
+  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_button.layer), !value);
+}

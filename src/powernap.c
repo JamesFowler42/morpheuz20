@@ -133,6 +133,9 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, void *con
     show_menu();
 }
 
+/*
+ * Are we doing a powernap?
+ */
 EXTFN bool is_doing_powernap() {
   return power_nap_mode;
 }

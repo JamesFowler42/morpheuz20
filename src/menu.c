@@ -27,13 +27,18 @@
 #include "language.h"
 #include "analogue.h"
 
+// Constants
 #define NUM_MENU_SECTIONS 1
 #define NUM_MENU_ICONS 2
+#define FEATURE_NONE 0
+#define FEATURE_AUTO_HIDE 1
+#define FEATURE_SMART_ALARM 2
+#define FEATURE_WAKEUP 4
 
+// Private
 static Window *window;
 static MenuLayer *menu_layer = NULL;
 static GBitmap *menu_icons[NUM_MENU_ICONS];
-
 static uint8_t smart_alarm = 0;
 static uint8_t ignore_state = 0;
 static uint8_t inverse_state = 0;
@@ -46,14 +51,16 @@ static char menu_text[TIME_RANGE_LEN];
 static int16_t selected_row;
 bool menu_live = false;
 static bool menu_act;
-
-extern char date_text[DATE_FORMAT_LEN];
+static int16_t centre;
+static int16_t width;
 
 #ifndef PBL_COLOR
 static void menu_invert();
 #endif
 
+#ifdef PBL_RECT
 static void menu_analogue();
+#endif
 static void menu_resend();
 static void hide_menu(void *data);
 static void toggle_alarm();
@@ -67,43 +74,33 @@ typedef struct {
   char *subtitle;
   uint8_t *state;
   MorphMenuAction action;
-  bool auto_hide;
+  uint8_t feature;
 } MenuDef;
-
-#define OPT_SMART 4
-
+  
 // Define the menu
-#ifdef PBL_COLOR
-  #define OPT_WAKEUP 7
 static MenuDef menu_def[] = { 
-  { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, true},
-  { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, true},
-  { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, true},
-  { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, true},
-  { MENU_SMART_ALARM, NULL, NULL, show_set_alarm, false},
-  { MENU_TOGGLE_ALARM, MENU_TOGGLE_ALARM_DES, &smart_alarm, toggle_alarm, false},
-  { MENU_PRESET, MENU_PRESET_DES, NULL, show_preset_menu, false},
-  { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle, true},
-  { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap, true},
-  { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, true},
-  { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend, true},
-  { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz, true}};
-#else
-    #define OPT_WAKEUP 6
-static MenuDef menu_def[] = { 
-  { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, true }, 
-  { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, true }, 
-  { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, true }, 
-  { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, true }, 
-  { MENU_SMART_ALARM, NULL, NULL, show_set_alarm, false }, 
-  { MENU_TOGGLE_ALARM, MENU_TOGGLE_ALARM_DES, &smart_alarm, toggle_alarm, false},
-  { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle, true }, 
-  { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap, true }, 
-  { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert, true }, 
-  { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, true }, 
-  { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend, true }, 
-  { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz, true } };
+  { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, FEATURE_AUTO_HIDE},
+  { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, FEATURE_AUTO_HIDE},
+  { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, FEATURE_AUTO_HIDE},
+  { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, FEATURE_AUTO_HIDE},
+  { MENU_SMART_ALARM, NULL, NULL, show_set_alarm, FEATURE_SMART_ALARM},
+  { MENU_TOGGLE_ALARM, MENU_TOGGLE_ALARM_DES, &smart_alarm, toggle_alarm, FEATURE_NONE},
+#ifndef PBL_PLATFORM_APLITE
+  { MENU_PRESET, MENU_PRESET_DES, NULL, show_preset_menu, FEATURE_NONE},
 #endif
+  { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle, FEATURE_AUTO_HIDE | FEATURE_WAKEUP},
+  { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap, FEATURE_AUTO_HIDE},
+#ifdef PBL_SDK_2
+  { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert, FEATURE_AUTO_HIDE }, 
+#endif
+#ifdef PBL_RECT
+  { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, FEATURE_AUTO_HIDE},
+#endif
+  { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend, FEATURE_AUTO_HIDE},
+  { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz, FEATURE_AUTO_HIDE}};
+
+// Shared with menu, rootui and presets 
+extern char date_text[DATE_FORMAT_LEN];
 
 /*
  * A callback is used to specify the amount of sections of menu items
@@ -133,7 +130,7 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
  */
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
   graphics_context_set_text_color(ctx, MENU_HEAD_COLOR);
-  graphics_draw_text(ctx, date_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GRect(0, -2, 144, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, date_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GRect(0, -2, width, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
 /*
@@ -150,15 +147,22 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   const char *subtitle = menu_def[index].subtitle;
   GBitmap *icon = menu_def[index].state == NULL ? NULL : menu_icons[*(menu_def[index].state)];
 
-  if (index == OPT_WAKEUP && auto_reset_state == 1 && original_auto_reset_state == 1) {
+  if ((menu_def[index].feature & FEATURE_WAKEUP) == FEATURE_WAKEUP && auto_reset_state == 1 && original_auto_reset_state == 1) {
     snprintf(menu_text, sizeof(menu_text), MENU_AUTO_RESET_DES_ON, twenty_four_to_twelve(get_config_data()->autohr), get_config_data()->automin, am_pm_text(get_config_data()->autohr));
     subtitle = menu_text;
-  } else if (index == OPT_SMART) {
+  } else if ((menu_def[index].feature & FEATURE_SMART_ALARM) == FEATURE_SMART_ALARM) {
     copy_alarm_time_range_into_field(menu_text, sizeof(menu_text));
     subtitle = menu_text;
   }
   
-  menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, subtitle, icon);
+  #ifndef PBL_ROUND
+     menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, subtitle, icon);
+  #else
+     menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, subtitle, NULL);
+     if (icon != NULL) {
+        graphics_draw_bitmap_in_rect(ctx, icon, GRect(10, 7, 24, 28));
+     }
+  #endif
 
 }
 
@@ -190,7 +194,8 @@ static void toggle_alarm() {
   trigger_config_save();
   set_smart_status();
 }
- 
+
+#ifdef PBL_RECT
 /*
  * Analogue option
  */
@@ -199,6 +204,7 @@ static void menu_analogue() {
   trigger_config_save();
   analogue_visible(get_config_data()->analogue, false);
 }
+#endif
 
 /*
  * Resend option
@@ -225,7 +231,7 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
   }
   
   // Schedule a menu hide if required, so items auto hide, others stay on the menu for a better workflow
-  if (menu_def[selected_row].auto_hide) {
+  if ((menu_def[selected_row].feature & FEATURE_AUTO_HIDE) == FEATURE_AUTO_HIDE) {
     app_timer_register(MENU_ACTION_HIDE_MS, hide_menu, NULL);
   }
   
@@ -242,6 +248,8 @@ static void window_load(Window *window) {
 
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
+  centre = bounds.size.w / 2;
+  width = bounds.size.w;
 
   menu_layer = menu_layer_create(bounds);
 

@@ -25,15 +25,25 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+  
+#define MOON_START GRect(width+6, 72, 58, 46)  
+#ifdef PBL_ROUND
+  #define MOON_FINISH GRect(centre - 29, 5, 58, 46)
+#else
+  #define MOON_FINISH GRect(6, 5, 58, 46)
+#endif
 
 static AppTimer *notice_timer;
 
 static BitmapLayerComp notice_moon;
 
-extern GFont notice_font;
 extern bool menu_live;
+extern GFont notice_font;
 
+#ifndef PBL_ROUND
 static TextLayer *notice_name_layer;
+#endif
+  
 static TextLayer *notice_text;
 
 static Window *notice_window;
@@ -44,6 +54,8 @@ static struct PropertyAnimation *moon_animation;
 
 static char *buffer;
 
+
+  
 /*
  * Remove the notice window
  */
@@ -51,7 +63,9 @@ EXTFN void hide_notice_layer(void *data) {
   if (notice_showing) {
     window_stack_remove(notice_window, true);
     macro_bitmap_layer_destroy(&notice_moon);
-    text_layer_destroy(notice_name_layer);
+    #ifndef PBL_ROUND
+      text_layer_destroy(notice_name_layer);
+    #endif
     text_layer_destroy(notice_text);
     window_destroy(notice_window);
     free(buffer);
@@ -63,7 +77,7 @@ EXTFN void hide_notice_layer(void *data) {
  * End of notice window animation
  */
 static void moon_animation_stopped(Animation *animation, bool finished, void *data) {
-#ifndef PBL_PLATFORM_BASALT
+#ifdef PBL_SDK_2
   animation_unschedule(animation);
   animation_destroy(animation);
 #endif
@@ -124,7 +138,7 @@ EXTFN void show_notice(uint32_t resource_id) {
   // Bring up notice
   notice_showing = true;
   notice_window = window_create();
-#ifndef PBL_PLATFORM_BASALT
+#ifdef PBL_SDK_2
   window_set_fullscreen(notice_window, true);
 #endif
   window_stack_push(notice_window, true /* Animated */);
@@ -135,13 +149,19 @@ EXTFN void show_notice(uint32_t resource_id) {
   window_set_background_color(notice_window, invert ? GColorWhite : BACKGROUND_COLOR);
 
   Layer *window_layer = window_get_root_layer(notice_window);
+  
+  GRect bounds = layer_get_bounds(window_layer);
+  int16_t centre = bounds.size.w / 2;
+  int16_t width = bounds.size.w;
 
   macro_bitmap_layer_create(&notice_moon, MOON_START, window_layer, invert ? RESOURCE_ID_KEYBOARD_BG_WHITE : RESOURCE_ID_KEYBOARD_BG, true);
 
+  #ifndef PBL_ROUND
   notice_name_layer = macro_text_layer_create(GRect(5, 15, 134, 30), window_layer, fcolor, GColorClear, notice_font, GTextAlignmentRight);
   text_layer_set_text(notice_name_layer, MORPHEUZ);
+  #endif
 
-  notice_text = macro_text_layer_create(GRect(4, 68, 136, 100), window_layer, fcolor, GColorClear, notice_font, GTextAlignmentLeft);
+  notice_text = macro_text_layer_create(GRect(0, 68, width, 100), window_layer, fcolor, GColorClear, notice_font, GTextAlignmentCenter);
   load_resource_into_buffer(resource_id);
 
   window_set_click_config_provider(notice_window, (ClickConfigProvider) notice_click_config_provider);

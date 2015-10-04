@@ -26,6 +26,8 @@
 #include "analogue.h"
 #include "morpheuz.h"
   
+#ifdef PBL_RECT
+  
 #define HAND_MACRO(x) { 13, (GPoint[] ) { { -1, 0 }, { -1, -8 }, { -3, -10 }, { -4, -12 }, { -4, -(x) }, { -3, -((x)+2) }, { 0, -((x)+4) },  { 3, -((x)+2) }, { 4, -(x) }, { 4, -12 }, { 3, -10 }, { 1, -8 }, { 1, 0 },} }
 
 const GPathInfo MINUTE_HAND_POINTS = HAND_MACRO(49);
@@ -254,7 +256,7 @@ EXTFN void analogue_window_load(Window *window) {
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-#ifndef PBL_PLATFORM_BASALT
+#ifdef PBL_SDK_2
   animation_unschedule(animation);
   animation_destroy(animation);
 #endif
@@ -292,7 +294,7 @@ EXTFN void analogue_visible(bool visible, bool call_post_init) {
   is_visible = visible;
 }
 
-#ifdef TESTING_BUILD
+#ifndef PBL_PLATFORM_APLITE 
 /*
  * Unload the analogue watchface
  */
@@ -302,5 +304,7 @@ EXTFN void analogue_window_unload() {
   layer_destroy(hands_layer);
   layer_destroy(analgue_layer);
 }
+#endif
+  
 #endif
 

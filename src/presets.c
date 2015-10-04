@@ -26,20 +26,22 @@
 #include "morpheuz.h"
 #include "language.h"
   
-#ifdef PBL_PLATFORM_BASALT
+#ifndef PBL_PLATFORM_APLITE
 
 #define NUM_MENU_SECTIONS 1
 #define NO_PRESETS 3
 #define NUM_MENU_ICONS 2
 
+// Private
 static Window *window;
 static MenuLayer *menu_layer;
 static GBitmap *menu_icons[NUM_MENU_ICONS];
-
 static char menu_text[TIME_RANGE_LEN];
 static int16_t selected_row;
+static int16_t centre;
+static int16_t width;
 
-extern char date_text[DATE_FORMAT_LEN];
+
 
 // Define a menu item
 typedef struct {
@@ -69,6 +71,9 @@ typedef struct {
 } PresetData;
 
 static PresetData preset_data;
+
+// Shared with menu, rootui and presets 
+extern char date_text[DATE_FORMAT_LEN];
 
 /*
  * Save the present data structure
@@ -137,7 +142,7 @@ static int16_t menu_get_header_height_callback(MenuLayer *menu_layer, uint16_t s
  */
 static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, uint16_t section_index, void *data) {
   graphics_context_set_text_color(ctx, MENU_HEAD_COLOR);
-  graphics_draw_text(ctx, date_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GRect(0, -2, 144, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentLeft, NULL);
+  graphics_draw_text(ctx, date_text, fonts_get_system_font(FONT_KEY_GOTHIC_14_BOLD), GRect(0, -2, width, 32), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
 }
 
 /*
@@ -154,8 +159,15 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   copy_time_range_into_field(menu_text, sizeof(menu_text), preset_data.fromhr[no], preset_data.frommin[no], preset_data.tohr[no], preset_data.tomin[no]);
 
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
-
-  menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, menu_icons[icon]);
+  
+  #ifndef PBL_ROUND
+     menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, menu_icons[icon]);
+  #else
+     menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, NULL);
+     if (menu_icons[icon] != NULL) {
+        graphics_draw_bitmap_in_rect(ctx, menu_icons[icon], GRect(10, 7, 24, 28));
+     }
+  #endif
 
 }
 
@@ -213,6 +225,8 @@ static void window_load(Window *window) {
  
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
+  centre = bounds.size.w / 2;
+  width = bounds.size.w;
 
   menu_layer = menu_layer_create(bounds);
 

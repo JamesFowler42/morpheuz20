@@ -27,10 +27,10 @@
 
 #include "pebble.h"
 
-#define VERSION 35
-#define VERSION_TXT "3.5"
+#define VERSION 36
+#define VERSION_TXT "3.6"
 
-// Comment out for production build - leaves errors on BASALT and nothing on APLITE as this is much tighter for memory
+// Comment out for production build - leaves errors on BASALT/CHALK and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
 
 #ifdef TESTING_BUILD
@@ -39,7 +39,7 @@
   #define LOG_INFO(fmt, args...) app_log(APP_LOG_LEVEL_INFO, "", 0, fmt, ## args)
   #define LOG_DEBUG(fmt, args...) app_log(APP_LOG_LEVEL_DEBUG, "", 0, fmt, ## args)
 #else
-  #ifdef PBL_PLATFORM_BASALT 
+  #ifndef PBL_PLATFORM_APLITE 
     #define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)
   #else
     #define LOG_ERROR(fmt, args...)
@@ -83,25 +83,25 @@
 #define POST_MENU_ACTION_DISPLAY_UPDATE_MS 900
 #define MENU_ACTION_MS 750
 #define MENU_ACTION_HIDE_MS 500
-#define WEEKEND_PERIOD (12*60*60)
 
-#define BED_FINISH GRect(8, 17, 127, 70)
-#define SLEEPER_FINISH GRect(25, 24, 110, 29)
-#define HEAD_FINISH GRect(25, 24, 19, 16)
-#define TEXT_FINISH GRect(26, 72, 92, 15)
-#define BLOCK_FINISH GRect(0,169,144,78)
-#define MOON_FINISH GRect(6, 5, 58, 46)
-#define ICON_TOPS 1
+
+
 #define ICON_PAD 5
 #define ICON_PAD_BATTERY 4
-#define ICON_BAR_WIDTH 118
-#define BED_START GRect(-144-8, 17, 127, 70)
-#define SLEEPER_START GRect(25+144, 24, 110, 29)
-#define HEAD_START GRect(25, -24, 19, 16)
-#define TEXT_START GRect(26, 25, 92, 15)
-#define BLOCK_START GRect(0,91,144,78)
-#define MOON_START GRect(144+6, 72, 58, 46)  
 
+
+  
+#define PRE_ANIMATE_DELAY 1683
+  
+#ifdef PBL_RECT
+  #define ICON_TOPS 1 
+  #define ICON_BAR_WIDTH 118
+#else
+  #define ICON_TOPS 26
+  #define ICON_BAR_WIDTH 88
+#endif
+  
+  
 #ifdef PBL_COLOR 
   #define BACKGROUND_COLOR GColorDukeBlue
   #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
@@ -160,7 +160,6 @@
   #define ANIMATE_MAIN_DURATION 1000
   #define ANIMATE_HEAD_DURATION 500
   #define ANIMATE_ANALOGUE_DURATION 750
-  #define PRE_ANIMATE_DELAY 1683
   #define MENU_HEAD_COLOR GColorBlack
   #define MINUTE_HAND_COLOR GColorWhite
   #define HOUR_HAND_COLOR GColorWhite
@@ -291,6 +290,7 @@ typedef struct {
   GBitmap *bitmap;
 } BitmapLayerComp;
 
+
 // Externals
 ConfigData *get_config_data();
 InternalData *get_internal_data();
@@ -301,6 +301,9 @@ bool is_doing_powernap();
 bool is_monitoring_sleep();
 bool is_notice_showing();
 char* am_pm_text(uint8_t hour);
+#ifdef PBL_COLOR
+GColor bar_color(uint16_t height);
+#endif
 int main(void);
 int32_t dirty_checksum(void *data, uint8_t data_size);
 int32_t join_value(int16_t top, int16_t bottom);
@@ -314,27 +317,34 @@ void analogue_set_smart_times();
 void analogue_visible(bool visible, bool call_post_init);
 void analogue_window_load(Window *window);
 void analogue_window_unload();
+void battery_state_handler(BatteryChargeState charge);
 void bed_visible(bool value);
+void bluetooth_state_handler(bool connected);
 void cancel_alarm();
 void click_config_provider(Window *window);
 void close_morpheuz();
-#ifdef PBL_PLATFORM_BASALT
+#ifdef PBL_COLOR
 void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin);
 #endif
 void copy_alarm_time_range_into_field(char *field, size_t fsize);
 void fire_alarm();
+void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed);
 void hide_notice_layer(void *data);
+void icon_bar_update_callback(Layer *layer, GContext *ctx);
 void init_morpheuz();
 void invert_screen();
 void lazarus();
 void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible);
 void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
 void manual_shutdown_request();
+void morpheuz_load(Window *window);
+void morpheuz_unload(Window *window);
 void open_comms();
 void post_init_hook(void *data);
 void power_nap_check(uint16_t biggest);
 void power_nap_countdown();
 void power_nap_reset();
+void progress_layer_update_callback(Layer *layer, GContext *ctx);
 void read_config_data();
 void read_internal_data();
 void resend_all_data(bool invoked_by_change_of_time);

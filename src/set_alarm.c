@@ -43,16 +43,16 @@
 #define SA_HEIGHT 34
 #define SA_WIDTH 40
 
-#define SA_ROW_1_X 0
-#define SA_ROW_3_X 0
-#define SA_ROW_1_WIDTH 144
-#define SA_ROW_3_WIDTH 144
+#define SA_ROW_1_X (0)
+#define SA_ROW_3_X (0)
+#define SA_ROW_1_WIDTH (width)
+#define SA_ROW_3_WIDTH (width)
   
-#define SA_HOUR_LEFT_12 8
-#define SA_HOUR_LEFT_24 30
-#define SA_AMPM_LEFT 96
-#define SA_MIN_LEFT_12 52
-#define SA_MIN_LEFT_24 74
+#define SA_HOUR_LEFT_12 (8 - 72 + centre)
+#define SA_HOUR_LEFT_24 (30 - 72 + centre)
+#define SA_AMPM_LEFT (96 - 72 + centre)
+#define SA_MIN_LEFT_12 (52 - 72 + centre)
+#define SA_MIN_LEFT_24 (74 - 72 + centre)
 
 static Window *setting_window;
 static GFont large_font;
@@ -231,6 +231,9 @@ static void set_values() {
 static void create_settings_window(void) {
   setting_window = window_create();
   Layer *window_layer = window_get_root_layer(setting_window);
+  GRect bounds = layer_get_bounds(window_layer);
+  int16_t centre = bounds.size.w / 2;
+  int16_t width = bounds.size.w;
 
   window_set_background_color(setting_window, SETTING_BACKGROUND_COLOR);
   

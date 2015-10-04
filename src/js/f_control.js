@@ -81,16 +81,23 @@ function resetWithPreserve() {
 }
 
 /*
- * Which platform
+ * Returns the platform
  */
-function isBasalt() {
+function getPlatform() {
   if (Pebble.getActiveWatchInfo) {
     var watchinfo = Pebble.getActiveWatchInfo();
     var platform = watchinfo.platform;
-    return (platform === "basalt");
+    return platform;
   } else {
-    return false;
+    return "aplite" ;
   }
+}
+
+/*
+ * Which platforms require time zone correction
+ */
+function isTimeZoneCorrectionRequired() {
+   return (getPlatform() === "aplite" );
 }
 
 /*
@@ -161,7 +168,7 @@ Pebble.addEventListener("appmessage", function(e) {
     console.log("MSG base (watch)=" + base);
     // Watch delivers local time in seconds...
     var offset = 0;
-    if (!isBasalt()) {
+    if (isTimeZoneCorrectionRequired()) {
       offset = new Date().getTimezoneOffset() * 60;
     }
     console.log("offset = " + offset);
