@@ -27,6 +27,12 @@
 #include "language.h"
 
 #ifdef PBL_ROUND
+
+// Constants
+#define HOUR_RADIUS 8
+#define HOUR_COLOR GColorVividCerulean
+#define MINUTE_RADIUS 6
+#define MINUTE_COLOR GColorIcterine 
   
 // Private
 static BitmapLayerComp round_background;
@@ -93,11 +99,6 @@ void analogue_minute_tick() {
 static int32_t get_angle_for_hour(int hour, int minute) {
   return ((hour * 360) / 12) + ((minute * 30) / 60);
 }
-
-#define HOUR_RADIUS 10
-#define HOUR_COLOR GColorVividCerulean
-#define MINUTE_RADIUS 8
-#define MINUTE_COLOR GColorIcterine 
 
 /*
  * Convert minutes into an angle

@@ -164,7 +164,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
      menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, menu_icons[icon]);
   #else
      menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, NULL);
-     if (menu_icons[icon] != NULL) {
+     if (menu_icons[icon] != NULL && menu_layer_get_selected_index(menu_layer).row == cell_index->row) {
         graphics_draw_bitmap_in_rect(ctx, menu_icons[icon], GRect(10, 7, 24, 28));
      }
   #endif
