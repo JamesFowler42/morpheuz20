@@ -229,6 +229,10 @@ static void window_load(Window *window) {
   width = bounds.size.w;
 
   menu_layer = menu_layer_create(bounds);
+  
+  #ifdef PBL_ROUND
+  menu_layer_set_center_focused(menu_layer, true);
+  #endif
 
   menu_layer_set_callbacks(menu_layer, NULL, (MenuLayerCallbacks ) { .get_num_sections = menu_get_num_sections_callback, .get_num_rows = menu_get_num_rows_callback, .get_header_height = menu_get_header_height_callback, .draw_header = menu_draw_header_callback, .draw_row = menu_draw_row_callback, .select_click = menu_select_callback, });
 

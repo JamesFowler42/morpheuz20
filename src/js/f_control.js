@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, sendAnonymousUsageData, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
 
 /*
  * Reset log
@@ -288,7 +288,6 @@ function transmitMethods() {
   // Sends
   pushoverTransmit();
   smartwatchProTransmit();
-  sendAnonymousUsageData();
   iftttMakerInterfaceData();
 
   // Protect and report time
