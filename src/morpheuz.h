@@ -84,12 +84,8 @@
 #define MENU_ACTION_MS 750
 #define MENU_ACTION_HIDE_MS 500
 
-
-
 #define ICON_PAD 5
 #define ICON_PAD_BATTERY 4
-
-
   
 #define PRE_ANIMATE_DELAY 1683
   

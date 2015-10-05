@@ -61,36 +61,44 @@ extern TextLayer *version_text;
 /*
  * Not currently supporting a base time indicator on the chalk clockface. Might do in the future hence this dummy function.
  */
-void analogue_set_base(time_t base) {
+EXTFN void analogue_set_base(time_t base) {
 }
 
 /*
  * Not currently supporting a radial progress indicator on the chalk clockface. Might do in the future hence this dummy function.
  */
-void analogue_set_progress(uint8_t progress_level_in) {
+EXTFN void analogue_set_progress(uint8_t progress_level_in) {
 }
 
 /*
  * Only one real face on the chalk version, so this isn't used. Might change in the future
  */
-void analogue_visible(bool visible, bool call_post_init) {
+EXTFN void analogue_visible(bool visible, bool call_post_init) {
 }
 
 /*
  * Don't currently show smart times radially on the chalk watchface
  */
-void analogue_set_smart_times() {
+EXTFN void analogue_set_smart_times() {
 }
 
 /*
  * Process analogue clock tick
  */
-void analogue_minute_tick() {
+EXTFN void analogue_minute_tick() {
   time_t now = time(NULL);
   struct tm *t = localtime(&now);
   current_hour = t->tm_hour;
   current_minutes = t->tm_min;
   layer_mark_dirty(analogue_time_layer);
+}
+
+/*
+ * Loading of screen complete
+ */
+static void load_complete(void *data) {
+   text_layer_destroy(version_text);
+   app_timer_register(250, post_init_hook, NULL);
 }
 
 /*
@@ -126,14 +134,6 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, MINUTE_COLOR);
   graphics_fill_circle(ctx, posm, MINUTE_RADIUS);
 
-}
-
-/*
- * Loading of screen complete
- */
-static void load_complete(void *data) {
-   text_layer_destroy(version_text);
-   app_timer_register(250, post_init_hook, NULL);
 }
 
 /*
@@ -187,7 +187,7 @@ EXTFN void morpheuz_load(Window *window) {
 
   macro_bitmap_layer_create(&alarm_button_top, GRect(138, 39, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
   macro_bitmap_layer_create(&alarm_button_button, GRect(138, 108, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
-    
+ 
   read_internal_data();
   read_config_data();
 
@@ -200,7 +200,8 @@ EXTFN void morpheuz_load(Window *window) {
   init_morpheuz();
 
   set_icon(get_internal_data()->transmit_sent, IS_EXPORT);
-  
+
+  // Wait for version display
   app_timer_register(PRE_ANIMATE_DELAY, load_complete, NULL);
   
 }
@@ -219,7 +220,7 @@ EXTFN void morpheuz_unload(Window *window) {
 
   save_config_data(NULL);
   save_internal_data();
- 
+
   layer_destroy(progress_layer);
   layer_destroy(icon_bar);
   

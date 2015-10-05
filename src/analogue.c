@@ -34,7 +34,7 @@ const GPathInfo MINUTE_HAND_POINTS = HAND_MACRO(49);
 
 const GPathInfo HOUR_HAND_POINTS = HAND_MACRO(35);
 
-static Layer *analgue_layer;
+static Layer *analogue_layer;
 
 static GPath *minute_arrow;
 static GPath *hour_arrow;
@@ -140,7 +140,7 @@ EXTFN void analogue_set_smart_times() {
   from_time = (get_config_data()->fromhr > 12 ? get_config_data()->fromhr - 12 : get_config_data()->fromhr) * 120 + get_config_data()->frommin * 2;
   to_time = (get_config_data()->tohr > 12 ? get_config_data()->tohr - 12 : get_config_data()->tohr) * 120 + get_config_data()->tomin * 2;
   if (is_visible)
-    layer_mark_dirty(analgue_layer);
+    layer_mark_dirty(analogue_layer);
 }
 
 /*
@@ -156,7 +156,7 @@ EXTFN void analogue_set_base(time_t base) {
     start_time_round = start_time - (start_time % 24);
   }
   if (is_visible)
-    layer_mark_dirty(analgue_layer);
+    layer_mark_dirty(analogue_layer);
 }
 
 /*
@@ -171,7 +171,7 @@ EXTFN void analogue_set_progress(uint8_t progress_level_in) {
     progress_2 = -1;
   }
   if (is_visible)
-    layer_mark_dirty(analgue_layer);
+    layer_mark_dirty(analogue_layer);
 }
 
 /*
@@ -232,9 +232,9 @@ EXTFN void analogue_window_load(Window *window) {
   progress_2 = -1;
 
   // init layers
-  analgue_layer = layer_create(ANALOGUE_START);
-  layer_set_update_proc(analgue_layer, bg_update_proc);
-  layer_add_child(window_layer, analgue_layer);
+  analogue_layer = layer_create(ANALOGUE_START);
+  layer_set_update_proc(analogue_layer, bg_update_proc);
+  layer_add_child(window_layer, analogue_layer);
 
   // init hands
   // init hand paths
@@ -248,7 +248,7 @@ EXTFN void analogue_window_load(Window *window) {
   gpath_move_to(hour_arrow, center);
 
   layer_set_update_proc(hands_layer, hands_update_proc);
-  layer_add_child(analgue_layer, hands_layer);
+  layer_add_child(analogue_layer, hands_layer);
 
 }
 
@@ -272,7 +272,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
  * Build and start an animation used when making the face visible or invisible
  */
 static void start_animation(GRect *start, GRect *finish) {
-  analogue_animation = property_animation_create_layer_frame(analgue_layer, start, finish);
+  analogue_animation = property_animation_create_layer_frame(analogue_layer, start, finish);
   animation_set_duration((Animation*) analogue_animation, ANIMATE_ANALOGUE_DURATION);
   animation_set_handlers((Animation*) analogue_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
   animation_schedule((Animation*) analogue_animation);
@@ -302,7 +302,7 @@ EXTFN void analogue_window_unload() {
   gpath_destroy(minute_arrow);
   gpath_destroy(hour_arrow);
   layer_destroy(hands_layer);
-  layer_destroy(analgue_layer);
+  layer_destroy(analogue_layer);
 }
 #endif
   
