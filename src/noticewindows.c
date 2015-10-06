@@ -161,7 +161,7 @@ EXTFN void show_notice(uint32_t resource_id) {
   text_layer_set_text(notice_name_layer, MORPHEUZ);
   #endif
 
-  notice_text = macro_text_layer_create(GRect(0, 68, width, 100), window_layer, fcolor, GColorClear, notice_font, GTextAlignmentCenter);
+  notice_text = macro_text_layer_create(GRect(7, 68, width - 14, 100), window_layer, fcolor, GColorClear, notice_font, GTextAlignmentCenter);
   load_resource_into_buffer(resource_id);
 
   window_set_click_config_provider(notice_window, (ClickConfigProvider) notice_click_config_provider);

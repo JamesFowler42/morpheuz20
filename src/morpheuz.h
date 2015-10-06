@@ -330,6 +330,7 @@ void icon_bar_update_callback(Layer *layer, GContext *ctx);
 void init_morpheuz();
 void invert_screen();
 void lazarus();
+void macro_bitmap_layer_change_resource(BitmapLayerComp *comp, uint32_t new_resource_id);
 void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible);
 void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
 void manual_shutdown_request();

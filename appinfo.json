@@ -19,6 +19,14 @@
     "resources": {
         "media": [
             {
+                "file": "images/round-title.png",
+                "name": "IMAGE_ROUND_TITLE",
+                "targetPlatforms": [
+                    "chalk"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/round-background.png",
                 "name": "IMAGE_ROUND_BACKGROUND",
                 "targetPlatforms": [

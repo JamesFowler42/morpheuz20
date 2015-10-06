@@ -45,9 +45,7 @@ extern Layer *icon_bar;
 extern TextLayer *text_date_smart_alarm_range_layer;
 extern uint8_t animation_count;
 extern TextLayer *powernap_layer;
-#ifdef PBL_COLOR
 extern TextLayer *text_time_shadow_layer;
-#endif 
 extern TextLayer *text_time_layer;
 extern uint8_t battery_level;
 extern bool battery_plugged;
@@ -97,7 +95,19 @@ EXTFN void analogue_minute_tick() {
  * Loading of screen complete
  */
 static void load_complete(void *data) {
-   text_layer_destroy(version_text);
+  
+  text_layer_destroy(version_text);
+  
+  macro_bitmap_layer_change_resource(&round_background, RESOURCE_ID_IMAGE_ROUND_BACKGROUND);
+
+  layer_set_hidden(text_layer_get_layer_jf(text_date_smart_alarm_range_layer), false);
+  layer_set_hidden(text_layer_get_layer_jf(text_time_shadow_layer), false);
+  layer_set_hidden(text_layer_get_layer_jf(text_time_layer), false);
+  layer_set_hidden(icon_bar, false);
+  layer_set_hidden(progress_layer, false);
+  layer_set_hidden(analogue_time_layer, false);
+  layer_set_hidden(text_layer_get_layer_jf(powernap_layer), false);
+  
    app_timer_register(250, post_init_hook, NULL);
 }
 
@@ -153,24 +163,27 @@ EXTFN void morpheuz_load(Window *window) {
   
   int16_t width = bounds.size.w;
   
-  macro_bitmap_layer_create(&round_background, bounds, window_layer, RESOURCE_ID_IMAGE_ROUND_BACKGROUND, true);
+  macro_bitmap_layer_create(&round_background, bounds, window_layer, RESOURCE_ID_IMAGE_ROUND_TITLE, true);
 
   powernap_layer = macro_text_layer_create(GRect(122, 125, 20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
-
-  version_text = macro_text_layer_create(GRect(40, 125, 20, 19), window_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(powernap_layer), true);
+  
+  version_text = macro_text_layer_create(GRect(90 - 15, 125, 30, 25), window_layer, GColorWhite, GColorClear, notice_font, GTextAlignmentCenter);
   text_layer_set_text(version_text, VERSION_TXT);
   
   text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(15, 74, 150, 25), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
- 
-  #ifdef PBL_COLOR
-      text_time_shadow_layer = macro_text_layer_create(GRect(2, 36, width, 44), window_layer, GColorOxfordBlue, GColorClear, time_font, GTextAlignmentCenter);
-  #endif
+  layer_set_hidden(text_layer_get_layer_jf(text_date_smart_alarm_range_layer), true);
+  
+  text_time_shadow_layer = macro_text_layer_create(GRect(2, 36, width, 44), window_layer, GColorOxfordBlue, GColorClear, time_font, GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(text_time_shadow_layer), true);
 
   text_time_layer = macro_text_layer_create(GRect(0, 34, width, 44), window_layer, GColorWhite, GColorClear, time_font, GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(text_time_layer), true);
   
   icon_bar = layer_create(GRect(47, ICON_TOPS, ICON_BAR_WIDTH, 12));
   layer_set_update_proc(icon_bar, &icon_bar_update_callback);
   layer_add_child(window_layer, icon_bar);
+  layer_set_hidden(icon_bar, true);
 
   BatteryChargeState initial = battery_state_service_peek();
   battery_level = initial.charge_percent;
@@ -180,10 +193,12 @@ EXTFN void morpheuz_load(Window *window) {
   progress_layer = layer_create(GRect(29, 105, 121, 9));
   layer_set_update_proc(progress_layer, &progress_layer_update_callback);
   layer_add_child(window_layer, progress_layer);
+  layer_set_hidden(progress_layer, true);
   
   analogue_time_layer = layer_create(bounds);
   layer_set_update_proc(analogue_time_layer, layer_update_proc);
   layer_add_child(window_layer, analogue_time_layer);
+  layer_set_hidden(analogue_time_layer, true);
 
   macro_bitmap_layer_create(&alarm_button_top, GRect(138, 39, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
   macro_bitmap_layer_create(&alarm_button_button, GRect(138, 108, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);

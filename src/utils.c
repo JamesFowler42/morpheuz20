@@ -58,6 +58,16 @@ EXTFN void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *
 }
 
 /*
+ * Change the resource in a bitmap layer
+ */
+EXTFN void macro_bitmap_layer_change_resource(BitmapLayerComp *comp, uint32_t new_resource_id) {
+  bitmap_layer_set_bitmap(comp->layer, NULL);
+  gbitmap_destroy(comp->bitmap);
+  comp->bitmap = gbitmap_create_with_resource(new_resource_id);
+  bitmap_layer_set_bitmap(comp->layer, comp->bitmap);
+}
+
+/*
  * Get rid of the bitmap layer in one go
  */
 EXTFN void macro_bitmap_layer_destroy(BitmapLayerComp *comp) {
