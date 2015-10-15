@@ -19,6 +19,15 @@
     "resources": {
         "media": [
             {
+                "file": "images/save.png",
+                "name": "SAVE_ICON",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/round-title.png",
                 "name": "IMAGE_ROUND_TITLE",
                 "targetPlatforms": [
@@ -35,14 +44,100 @@
                 "type": "png"
             },
             {
+                "file": "images/record.png",
+                "name": "ICON_RECORD",
+                "type": "png"
+            },
+            {
+                "file": "images/recall.png",
+                "name": "RECALL_ICON",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "png"
+            },
+            {
                 "file": "images/menu_yes.png",
                 "name": "MENU_YES",
                 "type": "png"
             },
             {
-                "file": "data/timer-reset-noalarm.txt",
-                "name": "NOTICE_TIMER_RESET_NOALARM",
-                "type": "raw"
+                "file": "images/menu_no.png",
+                "name": "MENU_NO",
+                "type": "png"
+            },
+            {
+                "file": "images/logo-text.png",
+                "name": "IMAGE_LOGO_TEXT",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/logo-sleeper.png",
+                "name": "IMAGE_LOGO_SLEEPER",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/logo-head.png",
+                "name": "IMAGE_LOGO_HEAD",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/logo-bed.png",
+                "name": "IMAGE_LOGO_BED",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "png"
+            },
+            {
+                "file": "images/keyboard-white.png",
+                "name": "KEYBOARD_BG_WHITE",
+                "type": "png"
+            },
+            {
+                "file": "images/keyboard-black.png",
+                "name": "KEYBOARD_BG",
+                "type": "png"
+            },
+            {
+                "file": "images/ignore.png",
+                "name": "IGNORE",
+                "type": "png"
+            },
+            {
+                "file": "images/icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/export.png",
+                "name": "EXPORT",
+                "type": "png"
+            },
+            {
+                "file": "images/comms.png",
+                "name": "COMMS_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/button-alarm-top.png",
+                "name": "BUTTON_ALARM_TOP",
+                "type": "png"
             },
             {
                 "file": "images/button-alarm-bottom.png",
@@ -50,9 +145,46 @@
                 "type": "png"
             },
             {
-                "file": "images/keyboard-white.png",
-                "name": "KEYBOARD_BG_WHITE",
+                "file": "images/bluetooth.png",
+                "name": "BLUETOOTH_ICON",
                 "type": "png"
+            },
+            {
+                "file": "images/battery_icon.png",
+                "name": "BATTERY_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/battery_charge.png",
+                "name": "BATTERY_CHARGE",
+                "type": "png"
+            },
+            {
+                "file": "images/alarm-ring-icon.png",
+                "name": "ALARM_RING_ICON",
+                "type": "png"
+            },
+            {
+                "file": "images/alarm-icon.png",
+                "name": "ALARM_ICON",
+                "type": "png"
+            },
+            {
+                "characterRegex": "[0-9:]",
+                "file": "fonts/axaxax-bd-38.ttf",
+                "name": "FONT_DIGITAL_38",
+                "type": "font"
+            },
+            {
+                "characterRegex": "[!:.'a-zA-Z0-9() \\xA9\\x2D]",
+                "file": "fonts/axaxax-bd-16.ttf",
+                "name": "FONT_DIGITAL_16",
+                "type": "font"
+            },
+            {
+                "file": "data/timer-reset-noalarm.txt",
+                "name": "NOTICE_TIMER_RESET_NOALARM",
+                "type": "raw"
             },
             {
                 "file": "data/timer-reset-alarm.txt",
@@ -75,141 +207,9 @@
                 "type": "raw"
             },
             {
-                "file": "images/recall.png",
-                "name": "RECALL_ICON",
-                "targetPlatforms": [
-                    "basalt",
-                    "chalk"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/logo-head.png",
-                "name": "IMAGE_LOGO_HEAD",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/battery_charge.png",
-                "name": "BATTERY_CHARGE",
-                "type": "png"
-            },
-            {
-                "file": "images/save.png",
-                "name": "SAVE_ICON",
-                "targetPlatforms": [
-                    "basalt",
-                    "chalk"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/logo-sleeper.png",
-                "name": "IMAGE_LOGO_SLEEPER",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/logo-bed.png",
-                "name": "IMAGE_LOGO_BED",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/export.png",
-                "name": "EXPORT",
-                "type": "png"
-            },
-            {
-                "file": "images/battery_icon.png",
-                "name": "BATTERY_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/alarm-ring-icon.png",
-                "name": "ALARM_RING_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/logo-text.png",
-                "name": "IMAGE_LOGO_TEXT",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
                 "file": "data/data-will-be-resent-shortly.txt",
                 "name": "NOTICE_DATA_WILL_BE_RESENT_SHORTLY",
                 "type": "raw"
-            },
-            {
-                "file": "images/bluetooth.png",
-                "name": "BLUETOOTH_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/record.png",
-                "name": "ICON_RECORD",
-                "type": "png"
-            },
-            {
-                "file": "images/icon.png",
-                "menuIcon": true,
-                "name": "IMAGE_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/ignore.png",
-                "name": "IGNORE",
-                "type": "png"
-            },
-            {
-                "file": "images/alarm-icon.png",
-                "name": "ALARM_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/keyboard-black.png",
-                "name": "KEYBOARD_BG",
-                "type": "png"
-            },
-            {
-                "file": "images/comms.png",
-                "name": "COMMS_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/button-alarm-top.png",
-                "name": "BUTTON_ALARM_TOP",
-                "type": "png"
-            },
-            {
-                "file": "images/menu_no.png",
-                "name": "MENU_NO",
-                "type": "png"
-            },
-            {
-                "characterRegex": "[!:.'a-zA-Z0-9() \\xA9\\x2D]",
-                "file": "fonts/axaxax-bd-16.ttf",
-                "name": "FONT_DIGITAL_16",
-                "type": "font"
-            },
-            {
-                "characterRegex": "[0-9:]",
-                "file": "fonts/axaxax-bd-38.ttf",
-                "name": "FONT_DIGITAL_38",
-                "type": "font"
             }
         ]
     },
