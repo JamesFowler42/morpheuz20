@@ -253,6 +253,10 @@ EXTFN void morpheuz_unload(Window *window) {
   fonts_unload_custom_font(time_font);
   fonts_unload_custom_font(notice_font);
   
+  #ifdef VOICE_SUPPORTED
+    tidy_voice();
+  #endif
+  
 }
 
 #endif

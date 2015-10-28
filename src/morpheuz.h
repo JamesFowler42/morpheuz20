@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 36
-#define VERSION_TXT "3.6"
+#define VERSION 37
+#define VERSION_TXT "3.7"
 
 // Comment out for production build - leaves errors on BASALT/CHALK and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -47,6 +47,10 @@
   #define LOG_WARN(fmt, args...) 
   #define LOG_INFO(fmt, args...) 
   #define LOG_DEBUG(fmt, args...) 
+#endif
+
+#ifndef PBL_PLATFORM_APLITE
+  #define VOICE_SUPPORTED
 #endif
   
 // Read clock mode from OS
@@ -366,5 +370,12 @@ void toggle_power_nap();
 void trigger_config_save();
 void wakeup_init();
 void wakeup_toggle();
+
+#ifdef VOICE_SUPPORTED
+void set_using_preset(uint8_t no);
+void voice_control();
+void tidy_voice();
+bool is_voice_system_active();
+#endif
 
 #endif /* MORPHEUZ_H_ */

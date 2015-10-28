@@ -41,8 +41,6 @@ static int16_t selected_row;
 static int16_t centre;
 static int16_t width;
 
-
-
 // Define a menu item
 typedef struct {
   char *title;
@@ -265,6 +263,19 @@ EXTFN void show_preset_menu() {
   // Setup the window handlers
   window_set_window_handlers(window, (WindowHandlers ) { .load = window_load, .unload = window_unload, });
   window_stack_push(window, true /* Animated */);
+}
+
+EXTFN void set_using_preset(uint8_t no) {
+  read_preset_data();
+  get_config_data()->fromhr = preset_data.fromhr[no];
+  get_config_data()->frommin = preset_data.frommin[no];
+  get_config_data()->tohr = preset_data.tohr[no];
+  get_config_data()->tomin = preset_data.tomin[no];
+  get_config_data()->from = preset_data.from[no];
+  get_config_data()->to = preset_data.to[no];    
+  get_config_data()->smart = true;
+  trigger_config_save();
+  set_smart_status();
 }
 
 #endif

@@ -522,6 +522,13 @@ static void transmit_data() {
     previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
     return;
   }
+  
+  #ifdef VOICE_SUPPORTED
+  if (is_voice_system_active()) {
+    previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
+    return;
+  }
+  #endif
 
   // No comms if the last request went unanswered (out failed handler doesn't seem to spot too much)
   if (last_request > last_response) {
@@ -541,6 +548,12 @@ static void transmit_next_data(void *data) {
   // No need for timer here
   if (!bluetooth_connection_service_peek())
     return;
+  
+  #ifdef VOICE_SUPPORTED
+  if (is_voice_system_active()) {
+    return;
+  }
+  #endif
 
   // Have we already caught up - if so then finish with the gone off time, if present
   if (internal_data.last_sent >= internal_data.highest_entry) {

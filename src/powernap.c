@@ -154,6 +154,15 @@ static void up_single_click_handler(ClickRecognizerRef recognizer, void *context
   revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }
 
+#ifdef VOICE_SUPPORTED
+/*
+ * Long click handler on select button
+ */
+static void select_click_handler_long(ClickRecognizerRef recognizer, void *context) {
+  voice_control();
+}
+#endif
+
 /*
  * Button config
  */
@@ -162,4 +171,7 @@ EXTFN void click_config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
+  #ifdef VOICE_SUPPORTED
+    window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_click_handler_long, NULL);
+  #endif
 }
