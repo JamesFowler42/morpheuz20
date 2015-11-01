@@ -44,11 +44,14 @@ static void do_alarm(void *data) {
     return;
   }
 
-  // Vibrate
-  if (alarm_count < 10)
-    vibes_short_pulse();
-  else
-    vibes_long_pulse();
+  // Don't vibe if waiting for voice
+  if (!is_voice_system_active()) {
+    // Vibrate
+    if (alarm_count < 10)
+      vibes_short_pulse();
+    else
+      vibes_long_pulse();
+  }
 
   // Prepare the time for the next buzz (this gives progressing and phasing)
   alarm_timer = app_timer_register(((uint16_t) alarm_pattern[alarm_count % (ARRAY_LENGTH(alarm_pattern))]) * 1000, do_alarm, NULL);

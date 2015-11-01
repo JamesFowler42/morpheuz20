@@ -51,6 +51,8 @@
 
 #ifndef PBL_PLATFORM_APLITE
   #define VOICE_SUPPORTED
+#else 
+  #define is_voice_system_active() (false)
 #endif
   
 // Read clock mode from OS
@@ -100,7 +102,6 @@
   #define ICON_TOPS 26
   #define ICON_BAR_WIDTH 88
 #endif
-  
   
 #ifdef PBL_COLOR 
   #define BACKGROUND_COLOR GColorDukeBlue

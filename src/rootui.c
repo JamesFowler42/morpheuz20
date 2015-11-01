@@ -119,10 +119,12 @@ EXTFN bool is_monitoring_sleep() {
  */
 EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
   set_icon(smart_alarm_on, IS_ALARM);
+  #ifndef TESTING_BUILD
   if (smart_alarm_on)
     text_layer_set_text(text_date_smart_alarm_range_layer, special_text);
   else
     text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+  #endif
 }
 
 /*
@@ -275,13 +277,19 @@ static void update_clock() {
  */
 EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
-  // Only update the date if the day has changed
-  if (tick_time->tm_mday != previous_mday) {
-    strftime(date_text, sizeof(date_text), DATE_FORMAT, tick_time);
-    if (!icon_state[IS_ALARM])
-      text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
-    previous_mday = tick_time->tm_mday;
-  }
+  #ifndef TESTING_BUILD
+    // Only update the date if the day has changed
+    if (tick_time->tm_mday != previous_mday) {
+      strftime(date_text, sizeof(date_text), DATE_FORMAT, tick_time);
+      if (!icon_state[IS_ALARM])
+        text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+      previous_mday = tick_time->tm_mday;
+    }
+  #else
+    // Use the line to show heap space in testing mode
+    snprintf(date_text, sizeof(date_text), "%d", heap_bytes_free());
+    text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+  #endif
 
   // Perform all background processing
   uint16_t last_movement;

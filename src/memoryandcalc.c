@@ -67,9 +67,9 @@ static void send_to_phone(const uint32_t key, int32_t tophone) {
   dict_write_tuplet(iter, &tuplet);
   dict_write_end(iter);
 
-  app_message_outbox_send();
-
-  last_request = time(NULL);
+  if (app_message_outbox_send() == APP_MSG_OK) {
+    last_request = time(NULL);
+  }
 
 }
 
@@ -518,18 +518,12 @@ static void transmit_data() {
   
   // Retry will occur on the next minute, so no connection, no sweat
   // Also don't bother if initial state or we haven't done the version handshake yet
-  if (!version_sent || !internal_data.has_been_reset || !bluetooth_connection_service_peek()) {
+  // Or some talking is going on
+  if (!version_sent || !internal_data.has_been_reset || !bluetooth_connection_service_peek() || is_voice_system_active()) {
     previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
     return;
   }
   
-  #ifdef VOICE_SUPPORTED
-  if (is_voice_system_active()) {
-    previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
-    return;
-  }
-  #endif
-
   // No comms if the last request went unanswered (out failed handler doesn't seem to spot too much)
   if (last_request > last_response) {
     set_icon(false, IS_COMMS);
@@ -546,15 +540,9 @@ static void transmit_next_data(void *data) {
 
   // Retry will occur when we get a data sample set again
   // No need for timer here
-  if (!bluetooth_connection_service_peek())
+  if (!bluetooth_connection_service_peek() || is_voice_system_active())
     return;
   
-  #ifdef VOICE_SUPPORTED
-  if (is_voice_system_active()) {
-    return;
-  }
-  #endif
-
   // Have we already caught up - if so then finish with the gone off time, if present
   if (internal_data.last_sent >= internal_data.highest_entry) {
     if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {

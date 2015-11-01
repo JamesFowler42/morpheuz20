@@ -32,11 +32,22 @@
                       
 // Phrases
 #define VOICE_BED_TIME "bedtime"
+#define VOICE_BED_TIME_WITH_ALARM "bedtimewithalarm"
 #define VOICE_BED_TIME_ALARM "bedtimealarm"
+#define VOICE_BED_TIME_WITHOUT_ALARM "bedtimewithoutalarm"
 #define VOICE_BED_TIME_NO_ALARM "bedtimenoalarm"
 #define VOICE_BED_TIME_PRESET_ONE "bedtimepresetone"
-#define VOICE_BED_TIME_PRESET_TWO "bedtimepresettwo"
+#define VOICE_BED_TIME_PRESET_TWO "bedtimepresetto"
 #define VOICE_BED_TIME_PRESET_THREE "bedtimepresetthre"
+#define VOICE_BED_TIME_ALARM_ONE "bedtimealarmone"
+#define VOICE_BED_TIME_ALARM_TWO "bedtimealarmto"
+#define VOICE_BED_TIME_ALARM_THREE "bedtimealarmthre"
+#define VOICE_BED_TIME_WITH_PRESET_ONE "bedtimewithpresetone"
+#define VOICE_BED_TIME_WITH_PRESET_TWO "bedtimewithpresetto"
+#define VOICE_BED_TIME_WITH_PRESET_THREE "bedtimewithpresetthre"
+#define VOICE_BED_TIME_WITH_ALARM_ONE "bedtimewithalarmone"
+#define VOICE_BED_TIME_WITH_ALARM_TWO "bedtimewithalarmto"
+#define VOICE_BED_TIME_WITH_ALARM_THREE "bedtimewithalarmthre"
 #define VOICE_POWER_NAP "powernap"
 #define VOICE_SNOOZE "snoozealarm"
 #define VOICE_CANCEL "stopalarm"
@@ -61,10 +72,21 @@ typedef struct {
 static VoiceDef voice_def[] = { 
   { VOICE_BED_TIME, reset_sleep_period },
   { VOICE_BED_TIME_ALARM, reset_with_alarm_on },
+  { VOICE_BED_TIME_WITH_ALARM, reset_with_alarm_on },
+  { VOICE_BED_TIME_WITHOUT_ALARM, reset_with_alarm_off },
   { VOICE_BED_TIME_NO_ALARM, reset_with_alarm_off },
   { VOICE_BED_TIME_PRESET_ONE, reset_with_preset_one },
   { VOICE_BED_TIME_PRESET_TWO, reset_with_preset_two },   
   { VOICE_BED_TIME_PRESET_THREE, reset_with_preset_three },
+  { VOICE_BED_TIME_ALARM_ONE, reset_with_preset_one },
+  { VOICE_BED_TIME_ALARM_TWO, reset_with_preset_two },   
+  { VOICE_BED_TIME_ALARM_THREE, reset_with_preset_three },
+  { VOICE_BED_TIME_WITH_PRESET_ONE, reset_with_preset_one },
+  { VOICE_BED_TIME_WITH_PRESET_TWO, reset_with_preset_two },   
+  { VOICE_BED_TIME_WITH_PRESET_THREE, reset_with_preset_three },
+  { VOICE_BED_TIME_WITH_ALARM_ONE, reset_with_preset_one },
+  { VOICE_BED_TIME_WITH_ALARM_TWO, reset_with_preset_two },   
+  { VOICE_BED_TIME_WITH_ALARM_THREE, reset_with_preset_three },
   { VOICE_POWER_NAP, toggle_power_nap },
   { VOICE_SNOOZE, snooze_alarm},
   { VOICE_CANCEL, cancel_alarm} };
@@ -125,11 +147,7 @@ static void build_compare_string(char *out, char *in, size_t n) {
  * Does a case, duplicate blind and space blind comparision
  */
 static int strncmp_ignore_spaces_and_case (char *s1, char *s2, size_t n) {
-  if (n == 0)
-    return 0;
-  
   build_compare_string(s2buff, s2, n);
-  
   return strncmp(s1, s2buff, n);
 }
 
@@ -183,7 +201,9 @@ EXTFN void voice_control() {
   voice_system_active = true;
   if (ds == NULL) {
     ds = dictation_session_create(PHRASE_BUFFER_LEN, voice_callback, NULL);
-    dictation_session_enable_confirmation(ds, false);
+    #ifndef TESTING_BUILD
+      dictation_session_enable_confirmation(ds, false);
+    #endif
     dictation_session_enable_error_dialogs(ds, false);
   }
   if (ds != NULL) {

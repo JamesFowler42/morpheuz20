@@ -265,6 +265,9 @@ EXTFN void show_preset_menu() {
   window_stack_push(window, true /* Animated */);
 }
 
+/*
+ * Set the preset to number picked
+ */
 EXTFN void set_using_preset(uint8_t no) {
   read_preset_data();
   get_config_data()->fromhr = preset_data.fromhr[no];
