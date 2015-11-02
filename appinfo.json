@@ -19,8 +19,8 @@
     "resources": {
         "media": [
             {
-                "file": "data/voice-unavailable.txt",
-                "name": "NOTICE_VOICE_UNAVAILABLE",
+                "file": "data/voice-didnt-understand.txt",
+                "name": "VOICE_DIDNT_UNDERSTAND",
                 "targetPlatforms": [
                     "basalt",
                     "chalk"
@@ -28,8 +28,17 @@
                 "type": "raw"
             },
             {
-                "file": "data/sorry-didnt-understand.txt",
-                "name": "NOTICE_SORRY_DIDNT_UNDERSTAND",
+                "file": "data/voice-recognition-failed.txt",
+                "name": "NOTICE_VOICE_FAILED",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/voice-unavailable.txt",
+                "name": "NOTICE_VOICE_UNAVAILABLE",
                 "targetPlatforms": [
                     "basalt",
                     "chalk"

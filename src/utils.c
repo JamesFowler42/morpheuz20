@@ -76,6 +76,16 @@ EXTFN void macro_bitmap_layer_destroy(BitmapLayerComp *comp) {
 }
 
 /*
+ * Updatable layer creation in one call
+ */
+EXTFN Layer * macro_layer_create(GRect frame, Layer *parent, LayerUpdateProc update_proc) {
+  Layer *layer = layer_create(frame);
+  layer_set_update_proc(layer, update_proc);
+  layer_add_child(parent, layer);
+  return layer;
+}
+
+/*
  * Combine two ints as a long
  */
 EXTFN int32_t join_value(int16_t top, int16_t bottom) {

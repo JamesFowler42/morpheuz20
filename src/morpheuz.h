@@ -183,6 +183,21 @@
 
 #define to_mins(h,m) (((h) * 60) + (m))
 
+#define tolower(a) ((('A' <= a) && (a <= 'Z')) ? ('a' + (a - 'A')) : (a))
+
+// SDK2 routines
+#ifdef PBL_SDK_2
+  #define animation_unschedule_sdk2(a) animation_unschedule(a)
+  #define animation_destroy_sdk2(a) animation_destroy(a)
+  #define window_set_fullscreen_sdk2(a,b) window_set_fullscreen(a, b)
+  #define inverter_layer_destroy_sdk2(a) inverter_layer_destroy(a)
+#else
+  #define animation_unschedule_sdk2(a)
+  #define animation_destroy_sdk2(a)
+  #define window_set_fullscreen_sdk2(a,b) 
+  #define inverter_layer_destroy_sdk2(a) 
+#endif
+
 enum MorpKey {
   KEY_POINT = 1,
   KEY_CTRL = 2,
@@ -295,6 +310,7 @@ typedef struct {
 // Externals
 ConfigData *get_config_data();
 InternalData *get_internal_data();
+Layer * macro_layer_create(GRect frame, Layer *parent, LayerUpdateProc update_proc);
 TextLayer* macro_text_layer_create(GRect frame, Layer *parent, GColor tcolor, GColor bcolor, GFont font, GTextAlignment text_alignment);
 bool get_icon(IconState icon);
 bool is_animation_complete();
@@ -377,6 +393,8 @@ void set_using_preset(uint8_t no);
 void voice_control();
 void tidy_voice();
 bool is_voice_system_active();
+unsigned int levenshtein (const char *word1, const char *word2);
+void show_notice_with_message(uint32_t resource_id, char *message);
 #endif
 
 #endif /* MORPHEUZ_H_ */

@@ -26,9 +26,10 @@
 #include "morpheuz.h"
 #include "language.h"
 #include "analogue.h"
+#include "rootui.h"
 
-// Shared with rootui
-extern Window *primary_window;
+// Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
+extern UiCommon ui;
 
 /*
  * Create main window
@@ -62,14 +63,12 @@ static void handle_init() {
   #ifdef PBL_RECT
   LOG_INFO("PBL_RECT");
   #endif
-    
+   
   // Create primary window
-  primary_window = window_create();
-#ifdef PBL_SDK_2
-  window_set_fullscreen(primary_window, true);
-#endif
-  window_set_window_handlers(primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, });
-  window_stack_push(primary_window, true);
+  ui.primary_window = window_create();
+  window_set_fullscreen_sdk2(ui.primary_window, true);
+  window_set_window_handlers(ui.primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, });
+  window_stack_push(ui.primary_window, true);
 }
 
 /**
@@ -77,8 +76,8 @@ static void handle_init() {
  */
 EXTFN void close_morpheuz() {
   manual_shutdown_request();
-  window_stack_remove(primary_window, true);
-  window_destroy(primary_window);
+  window_stack_remove(ui.primary_window, true);
+  window_destroy(ui.primary_window);
 }
 
 /*

@@ -25,6 +25,7 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+#include "rootui.h"
  
 // Private  
 static bool icon_state[MAX_ICON_STATE];
@@ -32,24 +33,8 @@ static uint8_t previous_mday = 255;
 static time_t last_clock_update;
 static char powernap_text[3];
 
-// Shared with rootui, rectui, roundui and primary_window with main
-Window *primary_window;
-Layer *icon_bar;
-TextLayer *text_date_smart_alarm_range_layer;
-uint8_t animation_count;
-TextLayer *powernap_layer;
-#ifdef PBL_COLOR
-TextLayer *text_time_shadow_layer;
-#endif 
-TextLayer *text_time_layer;
-uint8_t battery_level;
-bool battery_plugged;
-BitmapLayerComp alarm_button_top;
-BitmapLayerComp alarm_button_button;
-Layer *progress_layer;
-GFont notice_font;
-GFont time_font;
-TextLayer *version_text;
+// Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
+UiCommon ui;
 
 // Shared with menu, rootui and presets 
 char date_text[DATE_FORMAT_LEN] = "";
@@ -58,7 +43,7 @@ char date_text[DATE_FORMAT_LEN] = "";
  * Indicate if title animation complete
  */
 EXTFN bool is_animation_complete() {
-  return animation_count == 6;
+  return ui.animation_count == 6;
 }
 
 /*
@@ -66,11 +51,11 @@ EXTFN bool is_animation_complete() {
  */
 EXTFN void post_init_hook(void *data) {
   wakeup_init();
-  animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
-  layer_mark_dirty(icon_bar);
+  ui.animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
+  layer_mark_dirty(ui.icon_bar);
   
   // Set click provider
-  window_set_click_config_provider(primary_window, (ClickConfigProvider) click_config_provider);
+  window_set_click_config_provider(ui.primary_window, (ClickConfigProvider) click_config_provider);
 }
 
 /*
@@ -96,7 +81,7 @@ EXTFN GColor bar_color(uint16_t height) {
 EXTFN void set_icon(bool enabled, IconState icon) {
   if (enabled != icon_state[icon]) {
     icon_state[icon] = enabled;
-    layer_mark_dirty(icon_bar);
+    layer_mark_dirty(ui.icon_bar);
   }
 }
 
@@ -121,9 +106,9 @@ EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
   set_icon(smart_alarm_on, IS_ALARM);
   #ifndef TESTING_BUILD
   if (smart_alarm_on)
-    text_layer_set_text(text_date_smart_alarm_range_layer, special_text);
+    text_layer_set_text(ui.text_date_smart_alarm_range_layer, special_text);
   else
-    text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+    text_layer_set_text(ui.text_date_smart_alarm_range_layer, date_text);
   #endif
 }
 
@@ -148,21 +133,21 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *runn
     graphics_context_set_compositing_mode(ctx, GCompOpAssign);
   #endif
 
-  if (!battery_plugged) {
+  if (!ui.battery_plugged) {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
     graphics_context_set_stroke_color(ctx, BACKGROUND_COLOR);
     #ifdef PBL_COLOR
       GColor b_color = BATTERY_BAR_COLOR;
-      if (battery_level <= 20) {
+      if (ui.battery_level <= 20) {
         b_color = BATTERY_BAR_COLOR_CRITICAL;
-      } else if (battery_level <= 40) {
+      } else if (ui.battery_level <= 40) {
         b_color = BATTERY_BAR_COLOR_WARN;
       }
       graphics_context_set_fill_color(ctx, b_color);
     #else
       graphics_context_set_fill_color(ctx, BATTERY_BAR_COLOR);
     #endif
-    graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, battery_level / 9, 4), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, ui.battery_level / 9, 4), 0, GCornerNone);
   } else {
     paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
   }
@@ -223,9 +208,9 @@ EXTFN void icon_bar_update_callback(Layer *layer, GContext *ctx) {
  * Battery state change
  */
 EXTFN void battery_state_handler(BatteryChargeState charge) {
-  battery_level = charge.charge_percent;
-  battery_plugged = charge.is_plugged;
-  layer_mark_dirty(icon_bar);
+  ui.battery_level = charge.charge_percent;
+  ui.battery_plugged = charge.is_plugged;
+  layer_mark_dirty(ui.icon_bar);
 }
 
 /*
@@ -264,9 +249,9 @@ static void update_clock() {
   clock_copy_time_string(time_text, sizeof(time_text));
   if (time_text[4] == ' ')
     time_text[4] = '\0';
-  text_layer_set_text(text_time_layer, time_text);
+  text_layer_set_text(ui.text_time_layer, time_text);
   #ifdef PBL_COLOR
-     text_layer_set_text(text_time_shadow_layer, time_text); 
+     text_layer_set_text(ui.text_time_shadow_layer, time_text); 
   #endif
   analogue_minute_tick();
   last_clock_update = time(NULL);
@@ -282,7 +267,7 @@ EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
     if (tick_time->tm_mday != previous_mday) {
       strftime(date_text, sizeof(date_text), DATE_FORMAT, tick_time);
       if (!icon_state[IS_ALARM])
-        text_layer_set_text(text_date_smart_alarm_range_layer, date_text);
+        text_layer_set_text(ui.text_date_smart_alarm_range_layer, date_text);
       previous_mday = tick_time->tm_mday;
     }
   #else
@@ -337,7 +322,7 @@ EXTFN void bluetooth_state_handler(bool connected) {
  */
 EXTFN void set_progress() {
   if (!get_config_data()->analogue)
-    layer_mark_dirty(progress_layer);
+    layer_mark_dirty(ui.progress_layer);
 }
 
 /*
@@ -345,7 +330,7 @@ EXTFN void set_progress() {
  */
 EXTFN void analogue_powernap_text(char *text) {
   strncpy(powernap_text, text, sizeof(powernap_text));
-  text_layer_set_text(powernap_layer, powernap_text);
+  text_layer_set_text(ui.powernap_layer, powernap_text);
 }
 
 /*
@@ -353,6 +338,6 @@ EXTFN void analogue_powernap_text(char *text) {
  */
 EXTFN void show_alarm_visuals(bool value) {
   set_icon(value, IS_ALARM_RING);
-  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_top.layer), !value);
-  layer_set_hidden(bitmap_layer_get_layer_jf(alarm_button_button.layer), !value);
+  layer_set_hidden(bitmap_layer_get_layer_jf(ui.alarm_button_top.layer), !value);
+  layer_set_hidden(bitmap_layer_get_layer_jf(ui.alarm_button_button.layer), !value);
 }

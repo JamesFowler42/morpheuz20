@@ -25,6 +25,7 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+#include "rootui.h"
 
 #ifdef PBL_ROUND
 
@@ -39,22 +40,8 @@ static BitmapLayerComp round_background;
 static Layer *analogue_time_layer;
 static int current_hour, current_minutes; 
 
-// Shared with rootui, rectui, roundui and primary_window with main
-extern Window *primary_window;
-extern Layer *icon_bar;
-extern TextLayer *text_date_smart_alarm_range_layer;
-extern uint8_t animation_count;
-extern TextLayer *powernap_layer;
-extern TextLayer *text_time_shadow_layer;
-extern TextLayer *text_time_layer;
-extern uint8_t battery_level;
-extern bool battery_plugged;
-extern BitmapLayerComp alarm_button_top;
-extern BitmapLayerComp alarm_button_button;
-extern Layer *progress_layer;
-extern GFont notice_font;
-extern GFont time_font;
-extern TextLayer *version_text;
+// Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
+extern UiCommon ui;
 
 /*
  * Not currently supporting a base time indicator on the chalk clockface. Might do in the future hence this dummy function.
@@ -96,17 +83,17 @@ EXTFN void analogue_minute_tick() {
  */
 static void load_complete(void *data) {
   
-  text_layer_destroy(version_text);
+  text_layer_destroy(ui.version_text);
   
   macro_bitmap_layer_change_resource(&round_background, RESOURCE_ID_IMAGE_ROUND_BACKGROUND);
 
-  layer_set_hidden(text_layer_get_layer_jf(text_date_smart_alarm_range_layer), false);
-  layer_set_hidden(text_layer_get_layer_jf(text_time_shadow_layer), false);
-  layer_set_hidden(text_layer_get_layer_jf(text_time_layer), false);
-  layer_set_hidden(icon_bar, false);
-  layer_set_hidden(progress_layer, false);
+  layer_set_hidden(text_layer_get_layer_jf(ui.text_date_smart_alarm_range_layer), false);
+  layer_set_hidden(text_layer_get_layer_jf(ui.text_time_shadow_layer), false);
+  layer_set_hidden(text_layer_get_layer_jf(ui.text_time_layer), false);
+  layer_set_hidden(ui.icon_bar, false);
+  layer_set_hidden(ui.progress_layer, false);
   layer_set_hidden(analogue_time_layer, false);
-  layer_set_hidden(text_layer_get_layer_jf(powernap_layer), false);
+  layer_set_hidden(text_layer_get_layer_jf(ui.powernap_layer), false);
   
    app_timer_register(250, post_init_hook, NULL);
 }
@@ -151,12 +138,12 @@ static void layer_update_proc(Layer *layer, GContext *ctx) {
  */
 EXTFN void morpheuz_load(Window *window) {
   
-  animation_count = 0;
+  ui.animation_count = 0;
   
   window_set_background_color(window, BACKGROUND_COLOR);
 
-  notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
-  time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
+  ui.notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+  ui.time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
 
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_bounds(window_layer);
@@ -165,43 +152,37 @@ EXTFN void morpheuz_load(Window *window) {
   
   macro_bitmap_layer_create(&round_background, bounds, window_layer, RESOURCE_ID_IMAGE_ROUND_TITLE, true);
 
-  powernap_layer = macro_text_layer_create(GRect(122, 125, 20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
-  layer_set_hidden(text_layer_get_layer_jf(powernap_layer), true);
+  ui.powernap_layer = macro_text_layer_create(GRect(122, 125, 20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(ui.powernap_layer), true);
   
-  version_text = macro_text_layer_create(GRect(90 - 15, 125, 30, 25), window_layer, GColorWhite, GColorClear, notice_font, GTextAlignmentCenter);
-  text_layer_set_text(version_text, VERSION_TXT);
+  ui.version_text = macro_text_layer_create(GRect(90 - 15, 125, 30, 25), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentCenter);
+  text_layer_set_text(ui.version_text, VERSION_TXT);
   
-  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(15, 74, 150, 25), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
-  layer_set_hidden(text_layer_get_layer_jf(text_date_smart_alarm_range_layer), true);
+  ui.text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(15, 74, 150, 25), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(ui.text_date_smart_alarm_range_layer), true);
   
-  text_time_shadow_layer = macro_text_layer_create(GRect(2, 36, width, 44), window_layer, GColorOxfordBlue, GColorClear, time_font, GTextAlignmentCenter);
-  layer_set_hidden(text_layer_get_layer_jf(text_time_shadow_layer), true);
+  ui.text_time_shadow_layer = macro_text_layer_create(GRect(2, 36, width, 44), window_layer, GColorOxfordBlue, GColorClear, ui.time_font, GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(ui.text_time_shadow_layer), true);
 
-  text_time_layer = macro_text_layer_create(GRect(0, 34, width, 44), window_layer, GColorWhite, GColorClear, time_font, GTextAlignmentCenter);
-  layer_set_hidden(text_layer_get_layer_jf(text_time_layer), true);
+  ui.text_time_layer = macro_text_layer_create(GRect(0, 34, width, 44), window_layer, GColorWhite, GColorClear, ui.time_font, GTextAlignmentCenter);
+  layer_set_hidden(text_layer_get_layer_jf(ui.text_time_layer), true);
   
-  icon_bar = layer_create(GRect(47, ICON_TOPS, ICON_BAR_WIDTH, 12));
-  layer_set_update_proc(icon_bar, &icon_bar_update_callback);
-  layer_add_child(window_layer, icon_bar);
-  layer_set_hidden(icon_bar, true);
+  ui.icon_bar = macro_layer_create(GRect(47, ICON_TOPS, ICON_BAR_WIDTH, 12), window_layer, &icon_bar_update_callback);
+  layer_set_hidden(ui.icon_bar, true);
 
   BatteryChargeState initial = battery_state_service_peek();
-  battery_level = initial.charge_percent;
-  battery_plugged = initial.is_plugged;
+  ui.battery_level = initial.charge_percent;
+  ui.battery_plugged = initial.is_plugged;
   bluetooth_state_handler(bluetooth_connection_service_peek());
 
-  progress_layer = layer_create(GRect(29, 105, 121, 9));
-  layer_set_update_proc(progress_layer, &progress_layer_update_callback);
-  layer_add_child(window_layer, progress_layer);
-  layer_set_hidden(progress_layer, true);
+  ui.progress_layer = macro_layer_create(GRect(29, 105, 121, 9), window_layer, &progress_layer_update_callback);
+  layer_set_hidden(ui.progress_layer, true);
   
-  analogue_time_layer = layer_create(bounds);
-  layer_set_update_proc(analogue_time_layer, layer_update_proc);
-  layer_add_child(window_layer, analogue_time_layer);
+  analogue_time_layer = macro_layer_create(bounds, window_layer, layer_update_proc);
   layer_set_hidden(analogue_time_layer, true);
 
-  macro_bitmap_layer_create(&alarm_button_top, GRect(138, 39, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
-  macro_bitmap_layer_create(&alarm_button_button, GRect(138, 108, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
+  macro_bitmap_layer_create(&ui.alarm_button_top, GRect(138, 39, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
+  macro_bitmap_layer_create(&ui.alarm_button_button, GRect(138, 108, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
  
   read_internal_data();
   read_config_data();
@@ -236,22 +217,22 @@ EXTFN void morpheuz_unload(Window *window) {
   save_config_data(NULL);
   save_internal_data();
 
-  layer_destroy(progress_layer);
-  layer_destroy(icon_bar);
+  layer_destroy(ui.progress_layer);
+  layer_destroy(ui.icon_bar);
   
   layer_destroy(analogue_time_layer);
 
-  text_layer_destroy(text_time_layer);
-  text_layer_destroy(text_date_smart_alarm_range_layer);
-  text_layer_destroy(powernap_layer);
+  text_layer_destroy(ui.text_time_layer);
+  text_layer_destroy(ui.text_date_smart_alarm_range_layer);
+  text_layer_destroy(ui.powernap_layer);
   
-  text_layer_destroy(text_time_shadow_layer);
+  text_layer_destroy(ui.text_time_shadow_layer);
 
-  macro_bitmap_layer_destroy(&alarm_button_top);
-  macro_bitmap_layer_destroy(&alarm_button_button);
+  macro_bitmap_layer_destroy(&ui.alarm_button_top);
+  macro_bitmap_layer_destroy(&ui.alarm_button_button);
 
-  fonts_unload_custom_font(time_font);
-  fonts_unload_custom_font(notice_font);
+  fonts_unload_custom_font(ui.time_font);
+  fonts_unload_custom_font(ui.notice_font);
   
   #ifdef VOICE_SUPPORTED
     tidy_voice();

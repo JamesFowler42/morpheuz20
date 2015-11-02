@@ -27,8 +27,6 @@
 #include "morpheuz.h"
   
 #ifdef PBL_RECT
-  
-#define HAND_MACRO(x) { 13, (GPoint[] ) { { -1, 0 }, { -1, -8 }, { -3, -10 }, { -4, -12 }, { -4, -(x) }, { -3, -((x)+2) }, { 0, -((x)+4) },  { 3, -((x)+2) }, { 4, -(x) }, { 4, -12 }, { 3, -10 }, { 1, -8 }, { 1, 0 },} }
 
 const GPathInfo MINUTE_HAND_POINTS = HAND_MACRO(49);
 
@@ -232,34 +230,26 @@ EXTFN void analogue_window_load(Window *window) {
   progress_2 = -1;
 
   // init layers
-  analogue_layer = layer_create(ANALOGUE_START);
-  layer_set_update_proc(analogue_layer, bg_update_proc);
-  layer_add_child(window_layer, analogue_layer);
+  analogue_layer = macro_layer_create(ANALOGUE_START, window_layer, bg_update_proc);
 
   // init hands
   // init hand paths
   minute_arrow = gpath_create(&MINUTE_HAND_POINTS);
   hour_arrow = gpath_create(&HOUR_HAND_POINTS);
 
-  hands_layer = layer_create(GRect(0, 0, 144, 144));
-
   GPoint center = grect_center_point(&GRect(0, 0, 144, 144));
   gpath_move_to(minute_arrow, center);
   gpath_move_to(hour_arrow, center);
 
-  layer_set_update_proc(hands_layer, hands_update_proc);
-  layer_add_child(analogue_layer, hands_layer);
-
+  hands_layer = macro_layer_create(GRect(0, 0, 144, 144), analogue_layer, hands_update_proc);
 }
 
 /*
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-#ifdef PBL_SDK_2
-  animation_unschedule(animation);
-  animation_destroy(animation);
-#endif
+  animation_unschedule_sdk2(animation);
+  animation_destroy_sdk2(animation);
   if (is_visible) {
     bed_visible(false);
   }

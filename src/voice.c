@@ -24,11 +24,14 @@
 
 #include "pebble.h"
 #include "morpheuz.h"
+#include "language.h"
 
 #ifdef VOICE_SUPPORTED
 
 // Phrase buffer
 #define PHRASE_BUFFER_LEN 30 
+
+#define MAX_LEVENSHTEIN_DISTANCE 5
                       
 // Phrases
 #define VOICE_BED_TIME "bedtime"
@@ -66,30 +69,31 @@ typedef void (*VoiceSelectAction)(void);
 typedef struct {
   char *phrase;
   VoiceSelectAction action;
+  bool vibe;
 } VoiceDef;
 
 // Phrases definitions
 static VoiceDef voice_def[] = { 
-  { VOICE_BED_TIME, reset_sleep_period },
-  { VOICE_BED_TIME_ALARM, reset_with_alarm_on },
-  { VOICE_BED_TIME_WITH_ALARM, reset_with_alarm_on },
-  { VOICE_BED_TIME_WITHOUT_ALARM, reset_with_alarm_off },
-  { VOICE_BED_TIME_NO_ALARM, reset_with_alarm_off },
-  { VOICE_BED_TIME_PRESET_ONE, reset_with_preset_one },
-  { VOICE_BED_TIME_PRESET_TWO, reset_with_preset_two },   
-  { VOICE_BED_TIME_PRESET_THREE, reset_with_preset_three },
-  { VOICE_BED_TIME_ALARM_ONE, reset_with_preset_one },
-  { VOICE_BED_TIME_ALARM_TWO, reset_with_preset_two },   
-  { VOICE_BED_TIME_ALARM_THREE, reset_with_preset_three },
-  { VOICE_BED_TIME_WITH_PRESET_ONE, reset_with_preset_one },
-  { VOICE_BED_TIME_WITH_PRESET_TWO, reset_with_preset_two },   
-  { VOICE_BED_TIME_WITH_PRESET_THREE, reset_with_preset_three },
-  { VOICE_BED_TIME_WITH_ALARM_ONE, reset_with_preset_one },
-  { VOICE_BED_TIME_WITH_ALARM_TWO, reset_with_preset_two },   
-  { VOICE_BED_TIME_WITH_ALARM_THREE, reset_with_preset_three },
-  { VOICE_POWER_NAP, toggle_power_nap },
-  { VOICE_SNOOZE, snooze_alarm},
-  { VOICE_CANCEL, cancel_alarm} };
+  { VOICE_BED_TIME, reset_sleep_period, false },
+  { VOICE_BED_TIME_ALARM, reset_with_alarm_on, false },
+  { VOICE_BED_TIME_WITH_ALARM, reset_with_alarm_on, false },
+  { VOICE_BED_TIME_WITHOUT_ALARM, reset_with_alarm_off, false },
+  { VOICE_BED_TIME_NO_ALARM, reset_with_alarm_off, false },
+  { VOICE_BED_TIME_PRESET_ONE, reset_with_preset_one, false },
+  { VOICE_BED_TIME_PRESET_TWO, reset_with_preset_two, false },   
+  { VOICE_BED_TIME_PRESET_THREE, reset_with_preset_three, false },
+  { VOICE_BED_TIME_ALARM_ONE, reset_with_preset_one, false },
+  { VOICE_BED_TIME_ALARM_TWO, reset_with_preset_two, false },   
+  { VOICE_BED_TIME_ALARM_THREE, reset_with_preset_three, false },
+  { VOICE_BED_TIME_WITH_PRESET_ONE, reset_with_preset_one, false },
+  { VOICE_BED_TIME_WITH_PRESET_TWO, reset_with_preset_two, false },   
+  { VOICE_BED_TIME_WITH_PRESET_THREE, reset_with_preset_three, false },
+  { VOICE_BED_TIME_WITH_ALARM_ONE, reset_with_preset_one, false },
+  { VOICE_BED_TIME_WITH_ALARM_TWO, reset_with_preset_two, false },   
+  { VOICE_BED_TIME_WITH_ALARM_THREE, reset_with_preset_three, false },
+  { VOICE_POWER_NAP, toggle_power_nap, true },
+  { VOICE_SNOOZE, snooze_alarm, true},
+  { VOICE_CANCEL, cancel_alarm, true} };
 
 static bool voice_system_active = false;
 static DictationSession *ds = NULL;
@@ -137,18 +141,16 @@ static void build_compare_string(char *out, char *in, size_t n) {
       continue;
     if (a == '\0')
       break;
-    if (('A' <= a) && (a <= 'Z')) 
-      a = 'a' + (a - 'A');
-    *ob++ = a;
+    *ob++ = tolower(a);
   }
 }
 
 /*
  * Does a case, duplicate blind and space blind comparision
  */
-static int strncmp_ignore_spaces_and_case (char *s1, char *s2, size_t n) {
+static uint32_t fuzzy_compare (char *s1, char *s2, size_t n) {
   build_compare_string(s2buff, s2, n);
-  return strncmp(s1, s2buff, n);
+  return levenshtein(s1, s2buff);
 }
 
 /*
@@ -162,7 +164,7 @@ static void voice_callback(DictationSession *session, DictationSessionStatus sta
     dictation_session_stop(session);
     voice_system_active = false;
     respond_with_vibe(false);
-    show_notice(RESOURCE_ID_NOTICE_SORRY_DIDNT_UNDERSTAND);
+    show_notice(RESOURCE_ID_NOTICE_VOICE_FAILED);
     return;
   }
   
@@ -170,23 +172,28 @@ static void voice_callback(DictationSession *session, DictationSessionStatus sta
   dictation_session_stop(session);
   
   LOG_INFO("dictation got %s", transcription);
-  bool found = false;
+  uint8_t best_i = 99;
+  uint32_t best_match = 99;
   for (uint8_t i = 0; i < ARRAY_LENGTH(voice_def); i++) {
-      if (strncmp_ignore_spaces_and_case(voice_def[i].phrase, transcription, PHRASE_BUFFER_LEN) == 0) {
-        
-        // If we get a match then fire the action
-        LOG_INFO("Invoking phrase %s", voice_def[i].phrase);
-        respond_with_vibe(true);
-        voice_def[i].action();
-        found = true;
-        break;
+      uint32_t match = fuzzy_compare(voice_def[i].phrase, transcription, PHRASE_BUFFER_LEN);
+      if (match < MAX_LEVENSHTEIN_DISTANCE) {
+        if (match < best_match) {
+          best_match = match;
+          best_i = i;
+        }
       }
   }
   
-  // Feedback if we didn't find anything
-  if (!found) {
+  if (best_i != 99) {
+    // If we get a match then fire the action
+    LOG_INFO("Invoking phrase %s", voice_def[best_i].phrase);
+    if (voice_def[best_i].vibe)
+      respond_with_vibe(true);
+    voice_def[best_i].action();
+  } else {
+    // Feedback we didn't find anything
     respond_with_vibe(false);
-    show_notice(RESOURCE_ID_NOTICE_SORRY_DIDNT_UNDERSTAND);
+    show_notice_with_message(RESOURCE_ID_VOICE_DIDNT_UNDERSTAND, transcription);
   }
   
   // Allow comms

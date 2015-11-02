@@ -22,20 +22,32 @@
  * THE SOFTWARE.
  */
 
-#ifndef ANALOGUE_H_
-#define ANALOGUE_H_
+#ifndef ROOT_UI_H_
+#define ROOT_UI_H_
 
 #include "pebble.h"
+#include "morpheuz.h"
 
-#define ANALOGUE_FINISH GRect(0, 24, 144, 144)
-#define ANALOGUE_START GRect(0, 169, 144, 144)
+// Shared structure with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
+typedef struct {
+  Window *primary_window;
+  Layer *icon_bar;
+  TextLayer *text_date_smart_alarm_range_layer;
+  uint8_t animation_count;
+  TextLayer *powernap_layer;
+  #ifdef PBL_COLOR
+  TextLayer *text_time_shadow_layer;
+  #endif 
+  TextLayer *text_time_layer;
+  uint8_t battery_level;
+  bool battery_plugged;
+  BitmapLayerComp alarm_button_top;
+  BitmapLayerComp alarm_button_button;
+  Layer *progress_layer;
+  GFont notice_font;
+  GFont time_font;
+  TextLayer *version_text;
+} UiCommon;
 
-#define OUTER 0
-#define OUTER_STOP (OUTER + 4)
-#define CLOCK (OUTER_STOP + 2)
-#define HOUR (CLOCK + 8)
-#define MIN (CLOCK + 4)
+#endif
 
-#define HAND_MACRO(x) { 13, (GPoint[] ) { { -1, 0 }, { -1, -8 }, { -3, -10 }, { -4, -12 }, { -4, -(x) }, { -3, -((x)+2) }, { 0, -((x)+4) },  { 3, -((x)+2) }, { 4, -(x) }, { 4, -12 }, { 3, -10 }, { 1, -8 }, { 1, 0 },} }
-
-#endif /* ANALOGUE_H_ */

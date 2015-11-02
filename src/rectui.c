@@ -25,6 +25,7 @@
 #include "pebble.h"
 #include "morpheuz.h"
 #include "language.h"
+#include "rootui.h"
 
 #ifdef PBL_RECT
 
@@ -55,25 +56,8 @@ static uint8_t text_color_count = 0;
 static InverterLayer *full_inverse_layer;
 #endif
 
-// Shared with rootui, rectui, roundui and primary_window with main
-extern Window *primary_window;
-extern Layer *icon_bar;
-extern TextLayer *text_date_smart_alarm_range_layer;
-extern uint8_t animation_count;
-extern TextLayer *powernap_layer;
-#ifdef PBL_COLOR
-extern TextLayer *text_time_shadow_layer;
-#endif 
-extern TextLayer *text_time_layer;
-extern uint8_t battery_level;
-extern bool battery_plugged;
-extern BitmapLayerComp alarm_button_top;
-extern BitmapLayerComp alarm_button_button;
-extern Layer *progress_layer;
-extern GFont notice_font;
-extern GFont time_font;
-extern TextLayer *version_text;
-  
+// Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
+extern UiCommon ui;
 
 static void animation_stopped(Animation *animation, bool finished, void *data);
 
@@ -91,15 +75,13 @@ static void build_an_animate(Layer *layer, GRect *start, GRect *finish, uint32_t
  * End of initial animation sequence - occurs 4 then 5 times
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-#ifdef PBL_SDK_2
-  animation_unschedule(animation);
-  animation_destroy(animation);
-#endif
-  animation_count++;
-  if (animation_count == 4) {
+  animation_unschedule_sdk2(animation);
+  animation_destroy_sdk2(animation);
+  ui.animation_count++;
+  if (ui.animation_count == 4) {
     light_enable_interaction();
     build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, ANIMATE_HEAD_DURATION, LOGO_HEAD_ANIMATION);
-  } else if (animation_count == 5) {
+  } else if (ui.animation_count == 5) {
     analogue_visible(get_config_data()->analogue, true);
   }
 }
@@ -114,7 +96,7 @@ static void start_animate(void *data) {
   build_an_animate(bitmap_layer_get_layer_jf(logo_sleeper.layer), &SLEEPER_START, &SLEEPER_FINISH, ANIMATE_MAIN_DURATION, LOGO_SLEEPER_ANIMATION);
   build_an_animate(bitmap_layer_get_layer_jf(logo_text.layer), &TEXT_START, &TEXT_FINISH, ANIMATE_MAIN_DURATION, LOGO_TEXT_ANIMATION);
   build_an_animate(text_layer_get_layer_jf(block_layer), &BLOCK_START, &BLOCK_FINISH, ANIMATE_MAIN_DURATION, BLOCK_ANIMATION);
-  text_layer_destroy(version_text);
+  text_layer_destroy(ui.version_text);
   text_layer_set_text(block_layer, "");
 }
 
@@ -138,16 +120,16 @@ static void text_color_cycle(void *data) {
  */
 EXTFN void morpheuz_load(Window *window) {
   
-  animation_count = 0;
+  ui.animation_count = 0;
   
   window_set_background_color(window, BACKGROUND_COLOR);
 
-  notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
-  time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
+  ui.notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+  ui.time_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_38));
 
   Layer *window_layer = window_get_root_layer(window);
 
-  powernap_layer = macro_text_layer_create(GRect(5, -3, 20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
+  ui.powernap_layer = macro_text_layer_create(GRect(5, -3, 20, 19), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_14), GTextAlignmentCenter);
 
   macro_bitmap_layer_create(&logo_bed, BED_START, window_layer, RESOURCE_ID_IMAGE_LOGO_BED, true);
 
@@ -157,37 +139,33 @@ EXTFN void morpheuz_load(Window *window) {
 
   macro_bitmap_layer_create(&logo_head, HEAD_START, window_layer, RESOURCE_ID_IMAGE_LOGO_HEAD, true);
 
-  version_text = macro_text_layer_create(GRect(26, 43, 92, 30), window_layer, GColorWhite, GColorClear, notice_font, GTextAlignmentCenter);
-  text_layer_set_text(version_text, VERSION_TXT);
+  ui.version_text = macro_text_layer_create(GRect(26, 43, 92, 30), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentCenter);
+  text_layer_set_text(ui.version_text, VERSION_TXT);
   
   #ifdef PBL_COLOR
-      text_time_shadow_layer = macro_text_layer_create(GRect(4, 113, 144, 42), window_layer, GColorOxfordBlue, BACKGROUND_COLOR, time_font, GTextAlignmentCenter);
+      ui.text_time_shadow_layer = macro_text_layer_create(GRect(4, 113, 144, 42), window_layer, GColorOxfordBlue, BACKGROUND_COLOR, ui.time_font, GTextAlignmentCenter);
   #endif
 
-  text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, GColorClear, time_font, GTextAlignmentCenter);
+  ui.text_time_layer = macro_text_layer_create(GRect(0, 109, 144, 42), window_layer, GColorWhite, GColorClear, ui.time_font, GTextAlignmentCenter);
 
-  text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(0, 86, 144, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+  ui.text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(0, 86, 144, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
-  icon_bar = layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12));
-  layer_set_update_proc(icon_bar, &icon_bar_update_callback);
-  layer_add_child(window_layer, icon_bar);
+  ui.icon_bar = macro_layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12), window_layer, &icon_bar_update_callback);
 
   BatteryChargeState initial = battery_state_service_peek();
-  battery_level = initial.charge_percent;
-  battery_plugged = initial.is_plugged;
+  ui.battery_level = initial.charge_percent;
+  ui.battery_plugged = initial.is_plugged;
   bluetooth_state_handler(bluetooth_connection_service_peek());
 
-  progress_layer = layer_create(GRect(11, 157, 121, 9));
-  layer_set_update_proc(progress_layer, &progress_layer_update_callback);
-  layer_add_child(window_layer, progress_layer);
+  ui.progress_layer = macro_layer_create(GRect(11, 157, 121, 9), window_layer, &progress_layer_update_callback);
 
-  block_layer = macro_text_layer_create(BLOCK_START, window_layer, COPYRIGHT_COLOR, BACKGROUND_COLOR, notice_font, GTextAlignmentCenter);
+  block_layer = macro_text_layer_create(BLOCK_START, window_layer, COPYRIGHT_COLOR, BACKGROUND_COLOR, ui.notice_font, GTextAlignmentCenter);
   text_layer_set_text(block_layer, COPYRIGHT);
 
   analogue_window_load(window);
   
-  macro_bitmap_layer_create(&alarm_button_top, GRect(114, 17, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
-  macro_bitmap_layer_create(&alarm_button_button, GRect(114, 120, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
+  macro_bitmap_layer_create(&ui.alarm_button_top, GRect(114, 17, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
+  macro_bitmap_layer_create(&ui.alarm_button_button, GRect(114, 120, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
   
 #ifdef PBL_SDK_2
   full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
@@ -204,7 +182,7 @@ EXTFN void morpheuz_load(Window *window) {
 
   bluetooth_connection_service_subscribe(bluetooth_state_handler);
 
-#ifndef PBL_COLOR
+#ifdef PBL_SDK_2
   invert_screen();
 #endif
 
@@ -238,36 +216,34 @@ EXTFN void morpheuz_unload(Window *window) {
 
   // Save space by not clearing up on close on aplite. Feels bad, but so do crashes for no heap.
   #ifndef PBL_PLATFORM_APLITE 
-  #ifdef PBL_SDK_2
-    inverter_layer_destroy(full_inverse_layer);
-  #endif
+  inverter_layer_destroy_sdk2(full_inverse_layer);
   
   analogue_window_unload();
 
-  layer_destroy(progress_layer);
-  layer_destroy(icon_bar);
+  layer_destroy(ui.progress_layer);
+  layer_destroy(ui.icon_bar);
 
-  text_layer_destroy(text_time_layer);
-  text_layer_destroy(text_date_smart_alarm_range_layer);
-  text_layer_destroy(powernap_layer);
+  text_layer_destroy(ui.text_time_layer);
+  text_layer_destroy(ui.text_date_smart_alarm_range_layer);
+  text_layer_destroy(ui.powernap_layer);
   
   #ifdef PBL_COLOR
-    text_layer_destroy(text_time_shadow_layer);
+    text_layer_destroy(ui.text_time_shadow_layer);
   #endif
 
   macro_bitmap_layer_destroy(&logo_bed);
   macro_bitmap_layer_destroy(&logo_sleeper);
   macro_bitmap_layer_destroy(&logo_text);
   macro_bitmap_layer_destroy(&logo_head);
-  macro_bitmap_layer_destroy(&alarm_button_top);
-  macro_bitmap_layer_destroy(&alarm_button_button);
+  macro_bitmap_layer_destroy(&ui.alarm_button_top);
+  macro_bitmap_layer_destroy(&ui.alarm_button_button);
 
-  fonts_unload_custom_font(time_font);
-  fonts_unload_custom_font(notice_font);
+  fonts_unload_custom_font(ui.time_font);
+  fonts_unload_custom_font(ui.notice_font);
   
-    #ifdef VOICE_SUPPORTED
-      tidy_voice();
-    #endif
+  #ifdef VOICE_SUPPORTED
+    tidy_voice();
+  #endif
   
   #endif
 }
