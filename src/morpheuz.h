@@ -33,6 +33,9 @@
 // Comment out for production build - leaves errors on BASALT/CHALK and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
 
+// Comment out for production build - shows heap where date or smart alarm times show
+//#define TESTING_MEMORY_LEAK
+
 #ifdef TESTING_BUILD
   #define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)
   #define LOG_WARN(fmt, args...) app_log(APP_LOG_LEVEL_WARNING, "", 0, fmt, ## args)
@@ -393,8 +396,8 @@ void set_using_preset(uint8_t no);
 void voice_control();
 void tidy_voice();
 bool is_voice_system_active();
-unsigned int levenshtein (const char *word1, const char *word2);
 void show_notice_with_message(uint32_t resource_id, char *message);
+void voice_system_inactive();
 #endif
 
 #endif /* MORPHEUZ_H_ */

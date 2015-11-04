@@ -31,6 +31,14 @@
 // Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
 extern UiCommon ui;
 
+// Make sure the voice is considered dead - we suspect vital processing for this, make sure it isn't in error
+// this may be belt and braces, but testing suggests this can happen
+static void show_main(Window *window) {
+  #ifdef VOICE_SUPPORTED
+    voice_system_inactive();
+  #endif
+}
+
 /*
  * Create main window
  */
@@ -67,7 +75,7 @@ static void handle_init() {
   // Create primary window
   ui.primary_window = window_create();
   window_set_fullscreen_sdk2(ui.primary_window, true);
-  window_set_window_handlers(ui.primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, });
+  window_set_window_handlers(ui.primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, .appear = show_main });
   window_stack_push(ui.primary_window, true);
 }
 

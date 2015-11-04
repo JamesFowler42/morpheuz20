@@ -104,7 +104,7 @@ EXTFN bool is_monitoring_sleep() {
  */
 EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
   set_icon(smart_alarm_on, IS_ALARM);
-  #ifndef TESTING_BUILD
+  #ifndef TESTING_MEMORY_LEAK
   if (smart_alarm_on)
     text_layer_set_text(ui.text_date_smart_alarm_range_layer, special_text);
   else
@@ -262,7 +262,7 @@ static void update_clock() {
  */
 EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
-  #ifndef TESTING_BUILD
+  #ifndef TESTING_MEMORY_LEAK
     // Only update the date if the day has changed
     if (tick_time->tm_mday != previous_mday) {
       strftime(date_text, sizeof(date_text), DATE_FORMAT, tick_time);

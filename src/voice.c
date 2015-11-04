@@ -31,30 +31,6 @@
 // Phrase buffer
 #define PHRASE_BUFFER_LEN 30 
 
-#define MAX_LEVENSHTEIN_DISTANCE 5
-                      
-// Phrases
-#define VOICE_BED_TIME "bedtime"
-#define VOICE_BED_TIME_WITH_ALARM "bedtimewithalarm"
-#define VOICE_BED_TIME_ALARM "bedtimealarm"
-#define VOICE_BED_TIME_WITHOUT_ALARM "bedtimewithoutalarm"
-#define VOICE_BED_TIME_NO_ALARM "bedtimenoalarm"
-#define VOICE_BED_TIME_PRESET_ONE "bedtimepresetone"
-#define VOICE_BED_TIME_PRESET_TWO "bedtimepresetto"
-#define VOICE_BED_TIME_PRESET_THREE "bedtimepresetthre"
-#define VOICE_BED_TIME_ALARM_ONE "bedtimealarmone"
-#define VOICE_BED_TIME_ALARM_TWO "bedtimealarmto"
-#define VOICE_BED_TIME_ALARM_THREE "bedtimealarmthre"
-#define VOICE_BED_TIME_WITH_PRESET_ONE "bedtimewithpresetone"
-#define VOICE_BED_TIME_WITH_PRESET_TWO "bedtimewithpresetto"
-#define VOICE_BED_TIME_WITH_PRESET_THREE "bedtimewithpresetthre"
-#define VOICE_BED_TIME_WITH_ALARM_ONE "bedtimewithalarmone"
-#define VOICE_BED_TIME_WITH_ALARM_TWO "bedtimewithalarmto"
-#define VOICE_BED_TIME_WITH_ALARM_THREE "bedtimewithalarmthre"
-#define VOICE_POWER_NAP "powernap"
-#define VOICE_SNOOZE "snoozealarm"
-#define VOICE_CANCEL "stopalarm"
-
 // Local actions
 static void reset_with_alarm_on();
 static void reset_with_alarm_off();
@@ -65,49 +41,18 @@ static void reset_with_preset_three();
 // Invoke a voice item
 typedef void (*VoiceSelectAction)(void);
 
-// Define a voice item
-typedef struct {
-  char *phrase;
-  VoiceSelectAction action;
-  bool vibe;
-} VoiceDef;
-
-// Phrases definitions
-static VoiceDef voice_def[] = { 
-  { VOICE_BED_TIME, reset_sleep_period, false },
-  { VOICE_BED_TIME_ALARM, reset_with_alarm_on, false },
-  { VOICE_BED_TIME_WITH_ALARM, reset_with_alarm_on, false },
-  { VOICE_BED_TIME_WITHOUT_ALARM, reset_with_alarm_off, false },
-  { VOICE_BED_TIME_NO_ALARM, reset_with_alarm_off, false },
-  { VOICE_BED_TIME_PRESET_ONE, reset_with_preset_one, false },
-  { VOICE_BED_TIME_PRESET_TWO, reset_with_preset_two, false },   
-  { VOICE_BED_TIME_PRESET_THREE, reset_with_preset_three, false },
-  { VOICE_BED_TIME_ALARM_ONE, reset_with_preset_one, false },
-  { VOICE_BED_TIME_ALARM_TWO, reset_with_preset_two, false },   
-  { VOICE_BED_TIME_ALARM_THREE, reset_with_preset_three, false },
-  { VOICE_BED_TIME_WITH_PRESET_ONE, reset_with_preset_one, false },
-  { VOICE_BED_TIME_WITH_PRESET_TWO, reset_with_preset_two, false },   
-  { VOICE_BED_TIME_WITH_PRESET_THREE, reset_with_preset_three, false },
-  { VOICE_BED_TIME_WITH_ALARM_ONE, reset_with_preset_one, false },
-  { VOICE_BED_TIME_WITH_ALARM_TWO, reset_with_preset_two, false },   
-  { VOICE_BED_TIME_WITH_ALARM_THREE, reset_with_preset_three, false },
-  { VOICE_POWER_NAP, toggle_power_nap, true },
-  { VOICE_SNOOZE, snooze_alarm, true},
-  { VOICE_CANCEL, cancel_alarm, true} };
-
 static bool voice_system_active = false;
 static DictationSession *ds = NULL;
-static char s2buff[PHRASE_BUFFER_LEN];
 
 // Vibe back good
-static const uint32_t const good_segments[] = { 80, 100, 80, 100, 80 };
+static uint32_t const good_segments[] = { 80, 100, 80, 100, 80 };
 VibePattern good_pat = {
   .durations = good_segments,
   .num_segments = ARRAY_LENGTH(good_segments),
 };
 
 // Vibe back bad
-static const uint32_t const bad_segments[] = { 200, 100, 200, 100, 200 };
+static uint32_t const bad_segments[] = { 200, 100, 200, 100, 200 };
 VibePattern bad_pat = {
   .durations = bad_segments,
   .num_segments = ARRAY_LENGTH(bad_segments),
@@ -121,36 +66,129 @@ static void respond_with_vibe(bool good) {
 }
 
 /*
- * Generate a compare string, ignoring duplicate letters, spaces and switches to lowercase
+ * Determines if the transscript contains a word or not
  */
-static void build_compare_string(char *out, char *in, size_t n) {
-  // Clear buffer
-  memset(out, 0, n);
+static bool contains(char *trans, char *match, size_t n, int8_t *calc_length) {
   
-  // Copy ignoring spaces and turning uppercase to lower. Ignores duplicate letters too.
-  char *ob = out;
-  char *ib = in;
-  char l = '$';
+  // Find first matching letter
+  char *tp = trans;
+  char *mp = match;
+  
+  char pret = ' ';
   for (uint8_t i = 0; i < n; i++) {
-    char a = *ib++;
-    if (a == l) {
-      continue;
+    char t = *tp++;
+    char m = *mp++;
+    // If we've reached the end of trans string, or the end of the word and we've reached the end of the match
+    // Then we've matched all letters. This is a good thing
+    if ( m == '\0' && (t == '\0' || t == ' ') && pret == ' ') {
+      *calc_length += strlen(match) + 1;
+      LOG_DEBUG("matched %s", match);
+      return true;
     }
-    l = a;
-    if (a == ' ')
-      continue;
-    if (a == '\0')
+    // End of transcript - stop
+    if ( t == '\0')
       break;
-    *ob++ = tolower(a);
+    // Letter mismatch is time to reset the match string. Remember the character before. Has to be a space to exit.
+    if (tolower(t) != m) {
+      mp = match;
+      pret = *(tp - 1);
+    } 
   }
+  return false;
 }
 
 /*
- * Does a case, duplicate blind and space blind comparision
+ * Work out what the phrase means
  */
-static uint32_t fuzzy_compare (char *s1, char *s2, size_t n) {
-  build_compare_string(s2buff, s2, n);
-  return levenshtein(s1, s2buff);
+static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
+  VoiceSelectAction action = NULL;
+  *vibe = false;
+  
+  // Locate key words
+  int8_t calc_length = -1;
+  bool b_bed = contains(transcription, "bed", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_time = contains(transcription, "time", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_bedtime = contains(transcription, "bedtime", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_alarm = contains(transcription, "alarm", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_with = contains(transcription, "with", PHRASE_BUFFER_LEN, &calc_length); // Noise word
+  bool b_without = contains(transcription, "without", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_no = contains(transcription, "no", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_preset = contains(transcription, "preset", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_presets = contains(transcription, "presets", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_one = contains(transcription, "one", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_two = contains(transcription, "to", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_three = contains(transcription, "three", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_powernap = contains(transcription, "powernap", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_power = contains(transcription, "power", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_nap = contains(transcription, "nap", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_snooze = contains(transcription, "snooze", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_stop = contains(transcription, "stop", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_cancel = contains(transcription, "cancel", PHRASE_BUFFER_LEN, &calc_length);
+  
+  // Length cross check - make sure there are not loads more words than we recognise
+  int8_t true_length = strlen(transcription);
+  if (true_length != calc_length) {
+    LOG_DEBUG("Calc length = %d, true length = %d", calc_length, true_length);
+    return action;
+  }
+  
+  // Handle compound words or misheard words
+  b_bedtime = b_bedtime || (b_bed && b_time);
+  b_powernap = b_powernap || (b_power && b_nap);
+  b_preset = b_preset || b_presets;
+  
+  // Allocate meaning based on word appearance
+  if (b_bedtime) {
+    if (b_alarm) {
+      if (b_without || b_no) {
+        LOG_DEBUG("Invoking action for 'bedtime without|no alarm'");
+        action = reset_with_alarm_off;
+      } else if (b_one) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] alarm one'");
+        action = reset_with_preset_one;
+      } else if (b_two) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] alarm two'");
+        action = reset_with_preset_two;
+      } else if (b_three) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] alarm three'");
+        action = reset_with_preset_three;
+      } else {
+        LOG_DEBUG("Invoking action for 'bedtime [with] alarm'");
+        action = reset_with_alarm_on;
+      }
+    } else if (b_preset) {
+      if (b_one) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] preset one'");
+        action = reset_with_preset_one;
+      } else if (b_two) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] preset two'");
+        action = reset_with_preset_two;
+      } else if (b_three) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] preset three'");
+        action = reset_with_preset_three;
+      }
+    } else {
+      LOG_DEBUG("Invoking action for 'bedtime'");
+      action = reset_sleep_period;
+    }
+  } else if (b_powernap) {
+     LOG_DEBUG("Invoking action for 'powernap'");
+     action = toggle_power_nap;
+     *vibe = true;
+  } else if (b_alarm) {
+    if (b_snooze) {
+      LOG_DEBUG("Invoking action for 'snooze alarm'");
+      action = snooze_alarm;
+      *vibe = true;
+    } else if (b_stop || b_cancel) {
+      LOG_DEBUG("Invoking action for 'stop|cancel alarm'");
+      action = cancel_alarm;
+      *vibe = true;
+    }
+  }
+  
+  // Return the action
+  return action;
 }
 
 /*
@@ -172,24 +210,14 @@ static void voice_callback(DictationSession *session, DictationSessionStatus sta
   dictation_session_stop(session);
   
   LOG_INFO("dictation got %s", transcription);
-  uint8_t best_i = 99;
-  uint32_t best_match = 99;
-  for (uint8_t i = 0; i < ARRAY_LENGTH(voice_def); i++) {
-      uint32_t match = fuzzy_compare(voice_def[i].phrase, transcription, PHRASE_BUFFER_LEN);
-      if (match < MAX_LEVENSHTEIN_DISTANCE) {
-        if (match < best_match) {
-          best_match = match;
-          best_i = i;
-        }
-      }
-  }
+  bool vibe;
+  VoiceSelectAction action = determine_action(transcription, &vibe);
   
-  if (best_i != 99) {
+  if (action != NULL) {
     // If we get a match then fire the action
-    LOG_INFO("Invoking phrase %s", voice_def[best_i].phrase);
-    if (voice_def[best_i].vibe)
+    if (vibe)
       respond_with_vibe(true);
-    voice_def[best_i].action();
+    action();
   } else {
     // Feedback we didn't find anything
     respond_with_vibe(false);
@@ -285,6 +313,13 @@ static void reset_with_preset_two() {
 static void reset_with_preset_three() {
   set_using_preset(2);
   reset_sleep_period();
+}
+
+/*
+ * Turn off voice
+ */
+EXTFN void voice_system_inactive() {
+    voice_system_active = false; 
 }
 
 #endif
