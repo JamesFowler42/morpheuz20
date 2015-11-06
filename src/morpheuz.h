@@ -98,85 +98,55 @@
   
 #define PRE_ANIMATE_DELAY 1683
   
-#ifdef PBL_RECT
-  #define ICON_TOPS 1 
-  #define ICON_BAR_WIDTH 118
-#else
-  #define ICON_TOPS 26
-  #define ICON_BAR_WIDTH 88
-#endif
-  
+#define ICON_TOPS                    PBL_IF_RECT_ELSE(1, 26) 
+#define ICON_BAR_WIDTH               PBL_IF_RECT_ELSE(118,88)
+
+// Colours
+#define BACKGROUND_COLOR             PBL_IF_COLOR_ELSE(GColorDukeBlue, GColorBlack)
+#define SETTING_BACKGROUND_COLOR     BACKGROUND_COLOR
+#define ACTION_BAR_BACKGROUND_COLOR  PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack)
+#define HIGHLIGHT_BG_COLOR           PBL_IF_COLOR_ELSE(GColorBlack, GColorWhite)
+#define NON_HIGHLIGHT_BG_COLOR       PBL_IF_COLOR_ELSE(GColorBlue, GColorBlack)
+#define HIGHLIGHT_FG_COLOR           PBL_IF_COLOR_ELSE(GColorWhite, GColorBlack)
+#define NON_HIGHLIGHT_FG_COLOR       PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite)
+#define FROM_TIME_COLOR              PBL_IF_COLOR_ELSE(GColorGreen, GColorWhite)
+#define TO_TIME_COLOR                PBL_IF_COLOR_ELSE(GColorRed, GColorWhite)
+#define START_TIME_COLOR             PBL_IF_COLOR_ELSE(GColorYellow, GColorWhite)
+#define PROGRESS_COLOR               PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite)
+#define ANALOGUE_COLOR               PBL_IF_COLOR_ELSE(GColorWhite, GColorWhite)
+#define BATTERY_BAR_COLOR            PBL_IF_COLOR_ELSE(GColorYellow, GColorWhite)
+#define BAR_CHART_MARKS              PBL_IF_COLOR_ELSE(GColorLightGray, GColorWhite)
+#define COPYRIGHT_COLOR              PBL_IF_COLOR_ELSE(BACKGROUND_COLOR, GColorWhite)
+#define MENU_HEAD_COLOR              PBL_IF_COLOR_ELSE(GColorWhite,GColorBlack)
+#define MINUTE_HAND_COLOR            PBL_IF_COLOR_ELSE(GColorWhite,GColorWhite)
+#define HOUR_HAND_COLOR              PBL_IF_COLOR_ELSE(GColorPictonBlue,GColorWhite)
+#define MINUTE_HAND_OUTLINE          PBL_IF_COLOR_ELSE(GColorWhite,GColorBlack)
+#define HOUR_HAND_OUTLINE            PBL_IF_COLOR_ELSE(GColorPictonBlue,GColorBlack)
+#define CENTRE_OUTLINE               PBL_IF_COLOR_ELSE(GColorWhite,GColorBlack)
+#define CENTRE_COLOR                 PBL_IF_COLOR_ELSE(GColorPictonBlue,GColorWhite)
+#define MINUTE_MARK_COLOR            PBL_IF_COLOR_ELSE(GColorDarkGray,GColorWhite)
+#define HOUR_MARK_COLOR              PBL_IF_COLOR_ELSE(GColorWhite,GColorWhite)
+
+// Colour only colours
 #ifdef PBL_COLOR 
-  #define BACKGROUND_COLOR GColorDukeBlue
-  #define SETTING_BACKGROUND_COLOR BACKGROUND_COLOR
-  #define ACTION_BAR_BACKGROUND_COLOR GColorWhite
-  #define HIGHLIGHT_BG_COLOR GColorBlack
-  #define NON_HIGHLIGHT_BG_COLOR GColorBlue
-  #define HIGHLIGHT_FG_COLOR GColorWhite
-  #define NON_HIGHLIGHT_FG_COLOR GColorWhite
-  #define FROM_TIME_COLOR GColorGreen
-  #define TO_TIME_COLOR GColorRed
-  #define START_TIME_COLOR GColorYellow
-  #define PROGRESS_COLOR GColorWhite
-  #define ANALOGUE_COLOR GColorWhite
-  #define FAILURE_COLOR GColorRed
-  #define BATTERY_BAR_COLOR GColorYellow
   #define BATTERY_BAR_COLOR_CRITICAL GColorRed
   #define BATTERY_BAR_COLOR_WARN GColorRajah
-  #define BAR_CHART_MARKS GColorLightGray
-  #define ANIMATE_MAIN_DURATION 500
-  #define ANIMATE_HEAD_DURATION 250
-  #define ANIMATE_ANALOGUE_DURATION 375
-  #define INTER_TEXT_COLOR_MS 187
   #define MENU_TEXT_COLOR GColorWhite
   #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorBlack
   #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
-  #define MENU_HEAD_COLOR GColorWhite
-  #define MINUTE_HAND_COLOR GColorWhite
-  #define HOUR_HAND_COLOR GColorPictonBlue
-  #define MINUTE_HAND_OUTLINE GColorWhite
-  #define HOUR_HAND_OUTLINE GColorPictonBlue
-  #define CENTRE_OUTLINE GColorWhite
-  #define CENTRE_COLOR GColorPictonBlue
-  #define MINUTE_MARK_COLOR GColorDarkGray
-  #define HOUR_MARK_COLOR GColorWhite
-  #define MINUTE_STEP 24
-  #define PROGRESS_STEP 24
-  #define COPYRIGHT_COLOR BACKGROUND_COLOR
-#else
-  #define BACKGROUND_COLOR GColorBlack
-  #define SETTING_BACKGROUND_COLOR GColorBlack
-  #define ACTION_BAR_BACKGROUND_COLOR GColorBlack
-  #define HIGHLIGHT_BG_COLOR GColorWhite
-  #define NON_HIGHLIGHT_BG_COLOR GColorBlack
-  #define HIGHLIGHT_FG_COLOR GColorBlack
-  #define NON_HIGHLIGHT_FG_COLOR GColorWhite
-  #define FROM_TIME_COLOR GColorWhite
-  #define TO_TIME_COLOR GColorWhite
-  #define START_TIME_COLOR GColorWhite
-  #define PROGRESS_COLOR GColorWhite
-  #define ANALOGUE_COLOR GColorWhite
-  #define FAILURE_COLOR GColorWhite
-  #define BATTERY_BAR_COLOR GColorWhite
-  #define BATTERY_BAR_COLOR_CRITICAL GColorWhite
-  #define BATTERY_BAR_COLOR_WARN GColorWhite
-  #define BAR_CHART_MARKS GColorWhite
-  #define ANIMATE_MAIN_DURATION 1000
-  #define ANIMATE_HEAD_DURATION 500
-  #define ANIMATE_ANALOGUE_DURATION 750
-  #define MENU_HEAD_COLOR GColorBlack
-  #define MINUTE_HAND_COLOR GColorWhite
-  #define HOUR_HAND_COLOR GColorWhite
-  #define MINUTE_HAND_OUTLINE GColorBlack
-  #define HOUR_HAND_OUTLINE GColorBlack
-  #define CENTRE_OUTLINE GColorBlack
-  #define CENTRE_COLOR GColorWhite
-  #define MINUTE_MARK_COLOR GColorWhite
-  #define HOUR_MARK_COLOR GColorWhite
-  #define MINUTE_STEP 24
-  #define PROGRESS_STEP 12
-  #define COPYRIGHT_COLOR GColorWhite
 #endif
+
+// Animates
+#define ANIMATE_MAIN_DURATION        PBL_IF_COLOR_ELSE(500, 1000)
+#define ANIMATE_HEAD_DURATION        PBL_IF_COLOR_ELSE(250, 500)
+#define ANIMATE_ANALOGUE_DURATION    PBL_IF_COLOR_ELSE(375, 750)
+
+// Colour only animates
+#define INTER_TEXT_COLOR_MS 187
+
+// General
+#define MINUTE_STEP 24
+#define PROGRESS_STEP                PBL_IF_COLOR_ELSE(24,12)
 
 // These save space and time to run and a direct cast is claimed to be supported in the documentation
 #define bitmap_layer_get_layer_jf(x) ((Layer *)(x))
@@ -341,9 +311,8 @@ void battery_state_handler(BatteryChargeState charge);
 void bed_visible(bool value);
 void bluetooth_state_handler(bool connected);
 void cancel_alarm();
-void click_config_provider(Window *window);
 void close_morpheuz();
-#ifdef PBL_COLOR
+#ifndef PBL_PLATFORM_APLITE
 void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin);
 #endif
 void copy_alarm_time_range_into_field(char *field, size_t fsize);
@@ -398,6 +367,7 @@ void tidy_voice();
 bool is_voice_system_active();
 void show_notice_with_message(uint32_t resource_id, char *message);
 void voice_system_inactive();
+void copy_end_time_into_field(char *field, size_t fsize);
 #endif
 
 #endif /* MORPHEUZ_H_ */

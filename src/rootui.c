@@ -39,6 +39,111 @@ UiCommon ui;
 // Shared with menu, rootui and presets 
 char date_text[DATE_FORMAT_LEN] = "";
 
+/*
+ * Perform the clock update
+ */
+static void update_clock() {
+  static char time_text[6];
+  clock_copy_time_string(time_text, sizeof(time_text));
+  if (time_text[4] == ' ')
+    time_text[4] = '\0';
+  text_layer_set_text(ui.text_time_layer, time_text);
+  #ifdef PBL_COLOR
+     text_layer_set_text(ui.text_time_shadow_layer, time_text); 
+  #endif
+  analogue_minute_tick();
+  last_clock_update = time(NULL);
+}
+
+/*
+ * Display the clock on movement (ensures if you start moving the clock is up to date)
+ * Also fired from button press
+ */
+EXTFN void revive_clock_on_movement(uint16_t last_movement) {
+
+  if (last_movement >= CLOCK_UPDATE_THRESHOLD) {
+    time_t now = time(NULL);
+    if ((now - last_clock_update) > 60) {
+      update_clock();
+    }
+  }
+}
+
+/**
+ * Back button single click handler
+ */
+static void back_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Stop accidental closure of Morpheuz by defining this
+  // Bring clock up to date if a button is pressed
+  // Only if we're recording or running powernap
+  if (is_monitoring_sleep()) {
+    manual_shutdown_request();
+    revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
+  } else {
+    close_morpheuz();  
+  }
+}
+
+/*
+ * Single click handler on down button
+ */
+static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Make the snooze and the cancel buttons the same way around as the default alarm app
+  #ifdef PBL_COLOR
+    cancel_alarm();
+  #else
+    snooze_alarm();
+  #endif
+  // Bring clock up to date if a button is pressed
+  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
+}
+
+/*
+ * Single click handler on select button
+ */
+static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Bring clock up to date if a button is pressed
+  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
+  if (!is_notice_showing())
+    show_menu();
+}
+
+/*
+ * Single click handler on up button
+ */
+static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
+  // Make the snooze and the cancel buttons the same way around as the default alarm app
+  #ifdef PBL_COLOR
+    snooze_alarm();
+  #else
+    cancel_alarm();
+  #endif
+  // Bring clock up to date if a button is pressed
+  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
+}
+
+#ifdef VOICE_SUPPORTED
+/*
+ * Long click handler on select button
+ */
+static void select_click_handler_long(ClickRecognizerRef recognizer, void *context) {
+  voice_control();
+}
+#endif
+
+/*
+ * Button config
+ */
+static void click_config_provider(Window *window) {
+  window_single_click_subscribe(BUTTON_ID_BACK, back_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
+  window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
+  #ifdef VOICE_SUPPORTED
+    window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_click_handler_long, NULL);
+  #endif
+}
+
 /**
  * Indicate if title animation complete
  */
@@ -241,21 +346,7 @@ EXTFN void progress_layer_update_callback(Layer *layer, GContext *ctx) {
   }
 }
 
-/*
- * Perform the clock update
- */
-static void update_clock() {
-  static char time_text[6];
-  clock_copy_time_string(time_text, sizeof(time_text));
-  if (time_text[4] == ' ')
-    time_text[4] = '\0';
-  text_layer_set_text(ui.text_time_layer, time_text);
-  #ifdef PBL_COLOR
-     text_layer_set_text(ui.text_time_shadow_layer, time_text); 
-  #endif
-  analogue_minute_tick();
-  last_clock_update = time(NULL);
-}
+
 
 /*
  * Process clockface
@@ -291,21 +382,6 @@ EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   if (last_movement >= CLOCK_UPDATE_THRESHOLD || (tick_time->tm_min % 5 == 0)) {
     update_clock();
   }
-}
-
-/*
- * Display the clock on movement (ensures if you start moving the clock is up to date)
- * Also fired from button press
- */
-EXTFN void revive_clock_on_movement(uint16_t last_movement) {
-
-  if (last_movement >= CLOCK_UPDATE_THRESHOLD) {
-    time_t now = time(NULL);
-    if ((now - last_clock_update) > 60) {
-      update_clock();
-    }
-  }
-
 }
 
 /*

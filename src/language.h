@@ -54,6 +54,7 @@
 #define MENU_TOGGLE_ALARM_DES "Turn alarm on/off"
   
 #define MENU_SMART_ALARM_TIME_FORMAT "%d:%02d%s - %d:%02d%s"
+#define MENU_SMART_ALARM_END_TIME_FORMAT "%d:%02d%s"
 #define TIME_RANGE_LEN 20
   
 #define DATE_FORMAT "%a, %b %e"
@@ -78,12 +79,5 @@
 #define COPYRIGHT "\n© 2015\nJames Fowler"
 
 #define MORPHEUZ "Morpheuz"
-
-#define PRESET_RECALL_1 "Recall One"
-#define PRESET_RECALL_2 "Recall Two"
-#define PRESET_RECALL_3 "Recall Three"
-#define PRESET_STORE_1 "Store One"
-#define PRESET_STORE_2 "Store Two"
-#define PRESET_STORE_3 "Store Three"
 
 #endif /* LANGUAGE_H_ */

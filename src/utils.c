@@ -135,7 +135,7 @@ EXTFN char* am_pm_text(uint8_t hour) {
 /*
  * Copy time range into field
  */
-#ifdef PBL_COLOR
+#ifndef PBL_PLATFORM_APLITE
 EXTFN void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8_t frommin, uint8_t tohr, uint8_t tomin ) {
   snprintf(field, fsize, MENU_SMART_ALARM_TIME_FORMAT, twenty_four_to_twelve(fromhr), frommin, am_pm_text(fromhr), twenty_four_to_twelve(tohr), tomin, am_pm_text(tohr));
 }
@@ -151,6 +151,12 @@ static void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr
 EXTFN void copy_alarm_time_range_into_field(char *field, size_t fsize) {
     copy_time_range_into_field(field,fsize, get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
 }
+
+#ifdef VOICE_SUPPORTED
+EXTFN void copy_end_time_into_field(char *field, size_t fsize) {
+  snprintf(field, fsize, MENU_SMART_ALARM_END_TIME_FORMAT, twenty_four_to_twelve(get_config_data()->tohr), get_config_data()->tomin, am_pm_text(get_config_data()->tohr));
+}
+#endif
 
 
 

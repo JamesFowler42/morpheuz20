@@ -34,9 +34,9 @@
 // Local actions
 static void reset_with_alarm_on();
 static void reset_with_alarm_off();
-static void reset_with_preset_one();
-static void reset_with_preset_two();
-static void reset_with_preset_three();
+static void reset_with_preset_early();
+static void reset_with_preset_medium();
+static void reset_with_preset_late();
 
 // Invoke a voice item
 typedef void (*VoiceSelectAction)(void);
@@ -110,14 +110,14 @@ static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
   bool b_time = contains(transcription, "time", PHRASE_BUFFER_LEN, &calc_length);
   bool b_bedtime = contains(transcription, "bedtime", PHRASE_BUFFER_LEN, &calc_length);
   bool b_alarm = contains(transcription, "alarm", PHRASE_BUFFER_LEN, &calc_length);
-  bool b_with = contains(transcription, "with", PHRASE_BUFFER_LEN, &calc_length); // Noise word
+  contains(transcription, "with", PHRASE_BUFFER_LEN, &calc_length); // Noise word
   bool b_without = contains(transcription, "without", PHRASE_BUFFER_LEN, &calc_length);
   bool b_no = contains(transcription, "no", PHRASE_BUFFER_LEN, &calc_length);
   bool b_preset = contains(transcription, "preset", PHRASE_BUFFER_LEN, &calc_length);
   bool b_presets = contains(transcription, "presets", PHRASE_BUFFER_LEN, &calc_length);
-  bool b_one = contains(transcription, "one", PHRASE_BUFFER_LEN, &calc_length);
-  bool b_two = contains(transcription, "to", PHRASE_BUFFER_LEN, &calc_length);
-  bool b_three = contains(transcription, "three", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_early = contains(transcription, "early", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_medium = contains(transcription, "medium", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_late = contains(transcription, "late", PHRASE_BUFFER_LEN, &calc_length);
   bool b_powernap = contains(transcription, "powernap", PHRASE_BUFFER_LEN, &calc_length);
   bool b_power = contains(transcription, "power", PHRASE_BUFFER_LEN, &calc_length);
   bool b_nap = contains(transcription, "nap", PHRASE_BUFFER_LEN, &calc_length);
@@ -143,29 +143,29 @@ static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
       if (b_without || b_no) {
         LOG_DEBUG("Invoking action for 'bedtime without|no alarm'");
         action = reset_with_alarm_off;
-      } else if (b_one) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] alarm one'");
-        action = reset_with_preset_one;
-      } else if (b_two) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] alarm two'");
-        action = reset_with_preset_two;
-      } else if (b_three) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] alarm three'");
-        action = reset_with_preset_three;
+      } else if (b_early) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] early alarm'");
+        action = reset_with_preset_early;
+      } else if (b_medium) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] medium alarm'");
+        action = reset_with_preset_medium;
+      } else if (b_late) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] late alarm'");
+        action = reset_with_preset_late;
       } else {
         LOG_DEBUG("Invoking action for 'bedtime [with] alarm'");
         action = reset_with_alarm_on;
       }
     } else if (b_preset) {
-      if (b_one) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] preset one'");
-        action = reset_with_preset_one;
-      } else if (b_two) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] preset two'");
-        action = reset_with_preset_two;
-      } else if (b_three) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] preset three'");
-        action = reset_with_preset_three;
+      if (b_early) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] early preset'");
+        action = reset_with_preset_early;
+      } else if (b_medium) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] medium preset'");
+        action = reset_with_preset_medium;
+      } else if (b_late) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] late preset'");
+        action = reset_with_preset_late;
       }
     } else {
       LOG_DEBUG("Invoking action for 'bedtime'");
@@ -202,9 +202,9 @@ static void voice_callback(DictationSession *session, DictationSessionStatus sta
     dictation_session_stop(session);
     voice_system_active = false;
     respond_with_vibe(false);
-    show_notice(RESOURCE_ID_NOTICE_VOICE_FAILED);
+    show_notice(status == DictationSessionStatusFailureTranscriptionRejected ? RESOURCE_ID_NOTICE_VOICE_STOPPED : RESOURCE_ID_NOTICE_VOICE_FAILED);
     return;
-  }
+  } 
   
   // If we were lucky then we try to match the transcription to a menu item
   dictation_session_stop(session);
@@ -294,7 +294,7 @@ static void reset_with_alarm_off() {
 /*
  * Bed time using preset one alarm settings
  */
-static void reset_with_preset_one() {
+static void reset_with_preset_early() {
   set_using_preset(0);
   reset_sleep_period();
 }
@@ -302,7 +302,7 @@ static void reset_with_preset_one() {
 /*
  * Bed time using preset two alarm settings
  */
-static void reset_with_preset_two() {
+static void reset_with_preset_medium() {
   set_using_preset(1);
   reset_sleep_period();
 }
@@ -310,7 +310,7 @@ static void reset_with_preset_two() {
 /*
  * Bed time using preset three alarm settings
  */
-static void reset_with_preset_three() {
+static void reset_with_preset_late() {
   set_using_preset(2);
   reset_sleep_period();
 }

@@ -94,45 +94,6 @@ EXTFN void toggle_power_nap() {
   }
 }
 
-/**
- * Back button single click handler
- */
-static void back_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Stop accidental closure of Morpheuz by defining this
-  // Bring clock up to date if a button is pressed
-  // Only if we're recording or running powernap
-  if (is_monitoring_sleep()) {
-    manual_shutdown_request();
-    revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
-  } else {
-    close_morpheuz();  
-  }
-}
-
-/*
- * Single click handler on down button
- */
-static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Make the snooze and the cancel buttons the same way around as the default alarm app
-  #ifdef PBL_COLOR
-    cancel_alarm();
-  #else
-    snooze_alarm();
-  #endif
-  // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
-}
-
-/*
- * Single click handler on select button
- */
-static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
-  if (!is_notice_showing())
-    show_menu();
-}
-
 /*
  * Are we doing a powernap?
  */
@@ -140,38 +101,4 @@ EXTFN bool is_doing_powernap() {
   return power_nap_mode;
 }
 
-/*
- * Single click handler on up button
- */
-static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  // Make the snooze and the cancel buttons the same way around as the default alarm app
-  #ifdef PBL_COLOR
-    snooze_alarm();
-  #else
-    cancel_alarm();
-  #endif
-  // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
-}
 
-#ifdef VOICE_SUPPORTED
-/*
- * Long click handler on select button
- */
-static void select_click_handler_long(ClickRecognizerRef recognizer, void *context) {
-  voice_control();
-}
-#endif
-
-/*
- * Button config
- */
-EXTFN void click_config_provider(Window *window) {
-  window_single_click_subscribe(BUTTON_ID_BACK, back_single_click_handler);
-  window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
-  window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
-  window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
-  #ifdef VOICE_SUPPORTED
-    window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_click_handler_long, NULL);
-  #endif
-}

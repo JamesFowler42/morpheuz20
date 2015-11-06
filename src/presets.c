@@ -30,31 +30,14 @@
 
 #define NUM_MENU_SECTIONS 1
 #define NO_PRESETS 3
-#define NUM_MENU_ICONS 2
 
 // Private
 static Window *window;
 static MenuLayer *menu_layer;
-static GBitmap *menu_icons[NUM_MENU_ICONS];
 static char menu_text[TIME_RANGE_LEN];
 static int16_t selected_row;
 static int16_t centre;
 static int16_t width;
-
-// Define a menu item
-typedef struct {
-  char *title;
-  uint8_t no;
-  bool set;
-} PresetDef;
-
-// Define the menu
-static PresetDef menu_def[] = { { PRESET_RECALL_1, 0, false }, 
-{ PRESET_RECALL_2, 1, false }, 
-{ PRESET_RECALL_3, 2, false },
-{ PRESET_STORE_1, 0, true}, 
-  { PRESET_STORE_2, 1, true}, 
-{ PRESET_STORE_3, 2, true} };
 
 // Change the version only if the PresetData structure changes
 #define PRESET_VER 42
@@ -67,6 +50,9 @@ typedef struct {
   uint32_t from[NO_PRESETS];
   uint32_t to[NO_PRESETS];
 } PresetData;
+
+uint32_t sort_to[NO_PRESETS];
+uint8_t sort_no[NO_PRESETS];
 
 static PresetData preset_data;
 
@@ -123,7 +109,7 @@ static uint16_t menu_get_num_sections_callback(MenuLayer *menu_layer, void *data
  * You can also dynamically add and remove items using this
  */
 static uint16_t menu_get_num_rows_callback(MenuLayer *menu_layer, uint16_t section_index, void *data) {
-  return ARRAY_LENGTH(menu_def);
+  return NO_PRESETS;
 }
 
 /*
@@ -149,23 +135,12 @@ static void menu_draw_header_callback(GContext* ctx, const Layer *cell_layer, ui
 static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuIndex *cell_index, void *data) {
 
   int16_t index = cell_index->row;
+ 
+  copy_time_range_into_field(menu_text, sizeof(menu_text), preset_data.fromhr[index], preset_data.frommin[index], preset_data.tohr[index], preset_data.tomin[index]);
   
-  uint8_t no = menu_def[index].no;
-  
-  uint8_t icon = menu_def[index].set ? 1 : 0;
-  
-  copy_time_range_into_field(menu_text, sizeof(menu_text), preset_data.fromhr[no], preset_data.frommin[no], preset_data.tohr[no], preset_data.tomin[no]);
-
   graphics_context_set_compositing_mode(ctx, GCompOpSet);
   
-  #ifndef PBL_ROUND
-     menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, menu_icons[icon]);
-  #else
-     menu_cell_basic_draw(ctx, cell_layer, menu_def[index].title, menu_text, NULL);
-     if (menu_icons[icon] != NULL && menu_layer_get_selected_index(menu_layer).row == cell_index->row) {
-        graphics_draw_bitmap_in_rect(ctx, menu_icons[icon], GRect(10, 7, 24, 28));
-     }
-  #endif
+  menu_cell_basic_draw(ctx, cell_layer, menu_text, NULL , NULL);
 
 }
 
@@ -173,27 +148,29 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
  * Do menu action after shutting the menu and allowing time for the animations to complete
  */
 static void do_menu_action(void *data) {
-  uint8_t no = menu_def[selected_row].no;
-  if (menu_def[selected_row].set) {
-    preset_data.fromhr[no] = get_config_data()->fromhr;
-    preset_data.frommin[no] = get_config_data()->frommin;
-    preset_data.tohr[no] = get_config_data()->tohr;
-    preset_data.tomin[no] = get_config_data()->tomin;
-    preset_data.from[no] = get_config_data()->from;
-    preset_data.to[no] = get_config_data()->to;
-    save_preset_data();
-  } else {
-    get_config_data()->fromhr = preset_data.fromhr[no];
-    get_config_data()->frommin = preset_data.frommin[no];
-    get_config_data()->tohr = preset_data.tohr[no];
-    get_config_data()->tomin = preset_data.tomin[no];
-    get_config_data()->from = preset_data.from[no];
-    get_config_data()->to = preset_data.to[no];    
-    get_config_data()->smart = true;
-    resend_all_data(true); // Force resend - we've fiddled with the times
-    trigger_config_save();
-    set_smart_status();
-  }
+  get_config_data()->fromhr = preset_data.fromhr[selected_row];
+  get_config_data()->frommin = preset_data.frommin[selected_row];
+  get_config_data()->tohr = preset_data.tohr[selected_row];
+  get_config_data()->tomin = preset_data.tomin[selected_row];
+  get_config_data()->from = preset_data.from[selected_row];
+  get_config_data()->to = preset_data.to[selected_row];    
+  get_config_data()->smart = true;
+  resend_all_data(true); // Force resend - we've fiddled with the times
+  trigger_config_save();
+  set_smart_status();
+}
+
+/*
+ * Do menu action after shutting the menu and allowing time for the animations to complete
+ */
+static void do_long_menu_action(void *data) {
+  preset_data.fromhr[selected_row] = get_config_data()->fromhr;
+  preset_data.frommin[selected_row] = get_config_data()->frommin;
+  preset_data.tohr[selected_row] = get_config_data()->tohr;
+  preset_data.tomin[selected_row] = get_config_data()->tomin;
+  preset_data.from[selected_row] = get_config_data()->from;
+  preset_data.to[selected_row] = get_config_data()->to;
+  save_preset_data();
 }
 
 /*
@@ -215,12 +192,20 @@ static void menu_select_callback(MenuLayer *menu_layer, MenuIndex *cell_index, v
 }
 
 /*
+ * Here we capture when a user selects a menu item
+ */
+static void menu_select_long_click(MenuLayer *menu_layer, MenuIndex *cell_index, void *data) {
+  // Use the row to specify which item will receive the select action
+  selected_row = cell_index->row;
+  hide_preset_menu();
+  app_timer_register(MENU_ACTION_MS, do_long_menu_action, NULL);
+}
+
+/*
  * This initializes the menu upon window load
  */
 static void window_load(Window *window) {
-  menu_icons[0] = gbitmap_create_with_resource(RESOURCE_ID_RECALL_ICON);
-  menu_icons[1] = gbitmap_create_with_resource(RESOURCE_ID_SAVE_ICON);
- 
+
   Layer *window_layer = window_get_root_layer(window);
   GRect bounds = layer_get_frame(window_layer);
   centre = bounds.size.w / 2;
@@ -232,7 +217,14 @@ static void window_load(Window *window) {
   menu_layer_set_center_focused(menu_layer, true);
   #endif
 
-  menu_layer_set_callbacks(menu_layer, NULL, (MenuLayerCallbacks ) { .get_num_sections = menu_get_num_sections_callback, .get_num_rows = menu_get_num_rows_callback, .get_header_height = menu_get_header_height_callback, .draw_header = menu_draw_header_callback, .draw_row = menu_draw_row_callback, .select_click = menu_select_callback, });
+  menu_layer_set_callbacks(menu_layer, NULL, (MenuLayerCallbacks ) 
+                           { .get_num_sections = menu_get_num_sections_callback, 
+                            .get_num_rows = menu_get_num_rows_callback, 
+                            .get_header_height = menu_get_header_height_callback, 
+                            .draw_header = menu_draw_header_callback, 
+                            .draw_row = menu_draw_row_callback, 
+                            .select_click = menu_select_callback,
+                            .select_long_click = menu_select_long_click,});
 
   menu_layer_set_click_config_onto_window(menu_layer, window);
 
@@ -248,8 +240,6 @@ static void window_load(Window *window) {
  */
 static void window_unload(Window *window) {
   menu_layer_destroy(menu_layer);
-  gbitmap_destroy(menu_icons[0]);
-  gbitmap_destroy(menu_icons[1]);
 }
 
 /*
@@ -266,10 +256,41 @@ EXTFN void show_preset_menu() {
 }
 
 /*
- * Set the preset to number picked
+ * Set the preset to number picked 0 = early, 1 = medium, 2 = late
  */
-EXTFN void set_using_preset(uint8_t no) {
-  read_preset_data();
+EXTFN void set_using_preset(uint8_t eml) {
+  
+  // Ensure we've loaded the preset data (should we need to)
+  if (preset_data.preset_ver != PRESET_VER) {
+    read_preset_data();
+  }
+  
+  // Load a sort array with the to field and the index number
+  for (uint8_t i = 0; i < NO_PRESETS; i++) {
+    sort_to[i] = preset_data.to[i]; 
+    sort_no[i] = i;
+  }
+  
+  // Perform a bubble sort
+  uint32_t temp_to;
+  uint8_t temp_no;
+  for (uint8_t write = 0; write < NO_PRESETS; write++) {
+    for (uint8_t sort = 0; sort < NO_PRESETS - 1; sort++) {
+        if (sort_to[sort] > sort_to[sort + 1]) {
+            temp_to = sort_to[sort + 1];
+            sort_to[sort + 1] = sort_to[sort];
+            sort_to[sort] = temp_to;
+            temp_no = sort_no[sort + 1];
+            sort_no[sort + 1] = sort_no[sort];
+            sort_no[sort] = temp_no;
+        }
+    }
+  }
+  
+  // Pick the number - element 0 will contain the index to the earliest, 1 to the medium and 2 to the latest
+  uint8_t no = sort_no[eml];
+  
+  // Set the preset and run away
   get_config_data()->fromhr = preset_data.fromhr[no];
   get_config_data()->frommin = preset_data.frommin[no];
   get_config_data()->tohr = preset_data.tohr[no];

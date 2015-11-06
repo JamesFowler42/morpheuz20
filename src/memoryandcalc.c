@@ -323,7 +323,13 @@ static void reset_sleep_period_action(void *data) {
   set_progress_based_on_persist();
   set_next_wakeup();
   if (config_data.smart) {
-    show_notice(RESOURCE_ID_NOTICE_TIMER_RESET_ALARM);
+    #ifdef VOICE_SUPPORTED
+      char end_time[TIME_RANGE_LEN];
+      copy_end_time_into_field(end_time, TIME_RANGE_LEN);
+      show_notice_with_message(RESOURCE_ID_NOTICE_TIMER_RESET_ALARM_FOR, end_time);
+    #else
+      show_notice(RESOURCE_ID_NOTICE_TIMER_RESET_ALARM);
+    #endif
     vibes_double_pulse();
   } else {
     show_notice(RESOURCE_ID_NOTICE_TIMER_RESET_NOALARM);

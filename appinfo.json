@@ -19,6 +19,24 @@
     "resources": {
         "media": [
             {
+                "file": "data/timer-reset-alarm-for.txt",
+                "name": "NOTICE_TIMER_RESET_ALARM_FOR",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "raw"
+            },
+            {
+                "file": "data/voice-recognition-stopped.txt",
+                "name": "NOTICE_VOICE_STOPPED",
+                "targetPlatforms": [
+                    "basalt",
+                    "chalk"
+                ],
+                "type": "raw"
+            },
+            {
                 "file": "data/voice-didnt-understand.txt",
                 "name": "VOICE_DIDNT_UNDERSTAND",
                 "targetPlatforms": [
@@ -68,6 +86,9 @@
             {
                 "file": "data/timer-reset-alarm.txt",
                 "name": "NOTICE_TIMER_RESET_ALARM",
+                "targetPlatforms": [
+                    "aplite"
+                ],
                 "type": "raw"
             },
             {
@@ -76,7 +97,7 @@
                 "type": "raw"
             },
             {
-                "characterRegex": "[!:.'a-zA-Z0-9() \\xA9\\x2D,]",
+                "characterRegex": "[MorpheuzJamsFwl0-9. \\xA9\\x2D]",
                 "file": "fonts/axaxax-bd-16.ttf",
                 "name": "FONT_DIGITAL_16",
                 "type": "font"
@@ -200,15 +221,6 @@
                 "type": "png"
             },
             {
-                "file": "images/recall.png",
-                "name": "RECALL_ICON",
-                "targetPlatforms": [
-                    "basalt",
-                    "chalk"
-                ],
-                "type": "png"
-            },
-            {
                 "file": "images/record.png",
                 "name": "ICON_RECORD",
                 "type": "png"
@@ -225,15 +237,6 @@
                 "file": "images/round-title.png",
                 "name": "IMAGE_ROUND_TITLE",
                 "targetPlatforms": [
-                    "chalk"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/save.png",
-                "name": "SAVE_ICON",
-                "targetPlatforms": [
-                    "basalt",
                     "chalk"
                 ],
                 "type": "png"
