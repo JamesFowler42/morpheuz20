@@ -223,21 +223,16 @@ typedef enum {
 #define LIMIT 60
 #define DIVISOR 600
 
-#define LOGO_BED_ANIMATION 0
-#define LOGO_SLEEPER_ANIMATION 1
-#define LOGO_HEAD_ANIMATION 2
-#define LOGO_TEXT_ANIMATION 3
-#define BLOCK_ANIMATION 4
-#define MAX_ANIMATIONS 5
-
-#define BUFFER_SIZE 50
-  
 #define TWENTY_FOUR_HOURS_IN_SECONDS (24*60*60)
 #define ELEVEN_HOURS_IN_SECONDS (11*60*60)
 #define WAKEUP_AUTO_RESTART 1
 #define WAKEUP_FOR_TRANSMIT 2
 #define WAKEUP_LAZARUS 3
 #define ONE_MINUTE 60
+
+#define EARLY_PRESET 0
+#define MEDIUM_PRESET 1
+#define LATE_PRESET 2
 
 // Change INTERNAL_VER only if the InternalData struct changes
 #define INTERNAL_VER 42

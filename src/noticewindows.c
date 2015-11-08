@@ -28,10 +28,12 @@
 #include "rootui.h"
   
 #define MOON_START GRect(width+6, 72, 58, 46)  
-#ifdef PBL_ROUND
-  #define MOON_FINISH GRect(centre - 29, 5, 58, 46)
+#define MOON_FINISH PBL_IF_ROUND_ELSE(GRect(centre - 29, 5, 58, 46), GRect(6, 5, 58, 46))
+
+#ifdef VOICE_SUPPORTED
+  #define BUFFER_SIZE 60
 #else
-  #define MOON_FINISH GRect(6, 5, 58, 46)
+  #define BUFFER_SIZE 50
 #endif
 
 static AppTimer *notice_timer;
@@ -121,7 +123,7 @@ static void notice_click_config_provider(Window *window) {
 EXTFN void show_notice_with_message(uint32_t resource_id, char *message) {
   
   // If the menu or voice is showing then it is rude to interup
-  if (menu_live) {
+  if (menu_live || is_voice_system_active()) {
     return;
   }
 

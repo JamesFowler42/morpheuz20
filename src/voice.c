@@ -29,7 +29,7 @@
 #ifdef VOICE_SUPPORTED
 
 // Phrase buffer
-#define PHRASE_BUFFER_LEN 30 
+#define PHRASE_BUFFER_LEN 35 
 
 // Local actions
 static void reset_with_alarm_on();
@@ -110,7 +110,6 @@ static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
   bool b_time = contains(transcription, "time", PHRASE_BUFFER_LEN, &calc_length);
   bool b_bedtime = contains(transcription, "bedtime", PHRASE_BUFFER_LEN, &calc_length);
   bool b_alarm = contains(transcription, "alarm", PHRASE_BUFFER_LEN, &calc_length);
-  contains(transcription, "with", PHRASE_BUFFER_LEN, &calc_length); // Noise word
   bool b_without = contains(transcription, "without", PHRASE_BUFFER_LEN, &calc_length);
   bool b_no = contains(transcription, "no", PHRASE_BUFFER_LEN, &calc_length);
   bool b_preset = contains(transcription, "preset", PHRASE_BUFFER_LEN, &calc_length);
@@ -124,6 +123,14 @@ static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
   bool b_snooze = contains(transcription, "snooze", PHRASE_BUFFER_LEN, &calc_length);
   bool b_stop = contains(transcription, "stop", PHRASE_BUFFER_LEN, &calc_length);
   bool b_cancel = contains(transcription, "cancel", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_on = contains(transcription, "on", PHRASE_BUFFER_LEN, &calc_length);
+  bool b_off = contains(transcription, "off", PHRASE_BUFFER_LEN, &calc_length);
+  
+  // Gather words that are 'noise' words
+  contains(transcription, "with", PHRASE_BUFFER_LEN, &calc_length);
+  contains(transcription, "the", PHRASE_BUFFER_LEN, &calc_length);
+  contains(transcription, "a", PHRASE_BUFFER_LEN, &calc_length);
+  contains(transcription, "an", PHRASE_BUFFER_LEN, &calc_length);
   
   // Length cross check - make sure there are not loads more words than we recognise
   int8_t true_length = strlen(transcription);
@@ -140,34 +147,34 @@ static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
   // Allocate meaning based on word appearance
   if (b_bedtime) {
     if (b_alarm) {
-      if (b_without || b_no) {
-        LOG_DEBUG("Invoking action for 'bedtime without|no alarm'");
+      if (b_without || b_no || b_off) {
+        LOG_DEBUG("Invoking action for 'bedtime without|no alarm' or 'bedtime [with] alarm off");
         action = reset_with_alarm_off;
-      } else if (b_early) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] early alarm'");
+      } else if (b_early && !b_on) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|an] early alarm'");
         action = reset_with_preset_early;
-      } else if (b_medium) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] medium alarm'");
+      } else if (b_medium && !b_on) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|a] medium alarm'");
         action = reset_with_preset_medium;
-      } else if (b_late) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] late alarm'");
+      } else if (b_late && !b_on) {
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|a] late alarm'");
         action = reset_with_preset_late;
       } else {
-        LOG_DEBUG("Invoking action for 'bedtime [with] alarm'");
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|a] alarm [on]'");
         action = reset_with_alarm_on;
       }
-    } else if (b_preset) {
+    } else if (b_preset && !b_on) {
       if (b_early) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] early preset'");
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|an] early preset'");
         action = reset_with_preset_early;
       } else if (b_medium) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] medium preset'");
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|a] medium preset'");
         action = reset_with_preset_medium;
       } else if (b_late) {
-        LOG_DEBUG("Invoking action for 'bedtime [with] late preset'");
+        LOG_DEBUG("Invoking action for 'bedtime [with] [the|an] late preset'");
         action = reset_with_preset_late;
       }
-    } else {
+    } else if (!b_on) {
       LOG_DEBUG("Invoking action for 'bedtime'");
       action = reset_sleep_period;
     }
@@ -180,8 +187,8 @@ static VoiceSelectAction determine_action(char *transcription, bool *vibe) {
       LOG_DEBUG("Invoking action for 'snooze alarm'");
       action = snooze_alarm;
       *vibe = true;
-    } else if (b_stop || b_cancel) {
-      LOG_DEBUG("Invoking action for 'stop|cancel alarm'");
+    } else if (b_stop || b_cancel || b_off) {
+      LOG_DEBUG("Invoking action for 'stop|cancel alarm' or 'alarm off'");
       action = cancel_alarm;
       *vibe = true;
     }
@@ -213,6 +220,9 @@ static void voice_callback(DictationSession *session, DictationSessionStatus sta
   bool vibe;
   VoiceSelectAction action = determine_action(transcription, &vibe);
   
+  // Allow comms and notices
+  voice_system_active = false; 
+  
   if (action != NULL) {
     // If we get a match then fire the action
     if (vibe)
@@ -223,9 +233,6 @@ static void voice_callback(DictationSession *session, DictationSessionStatus sta
     respond_with_vibe(false);
     show_notice_with_message(RESOURCE_ID_VOICE_DIDNT_UNDERSTAND, transcription);
   }
-  
-  // Allow comms
-  voice_system_active = false; 
 }
 
 /*
@@ -261,7 +268,7 @@ EXTFN void tidy_voice() {
 }
 
 /* 
- * Let the comms system know the voice system is active
+ * Let the comms/notice system know the voice system is active
  */
 EXTFN bool is_voice_system_active() {
   return voice_system_active;
@@ -295,7 +302,7 @@ static void reset_with_alarm_off() {
  * Bed time using preset one alarm settings
  */
 static void reset_with_preset_early() {
-  set_using_preset(0);
+  set_using_preset(EARLY_PRESET);
   reset_sleep_period();
 }
 
@@ -303,7 +310,7 @@ static void reset_with_preset_early() {
  * Bed time using preset two alarm settings
  */
 static void reset_with_preset_medium() {
-  set_using_preset(1);
+  set_using_preset(MEDIUM_PRESET);
   reset_sleep_period();
 }
 
@@ -311,12 +318,12 @@ static void reset_with_preset_medium() {
  * Bed time using preset three alarm settings
  */
 static void reset_with_preset_late() {
-  set_using_preset(2);
+  set_using_preset(LATE_PRESET);
   reset_sleep_period();
 }
 
 /*
- * Turn off voice
+ * Turn off voice (Allow comms and notices)
  */
 EXTFN void voice_system_inactive() {
     voice_system_active = false; 

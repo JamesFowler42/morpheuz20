@@ -152,6 +152,9 @@ EXTFN void copy_alarm_time_range_into_field(char *field, size_t fsize) {
     copy_time_range_into_field(field,fsize, get_config_data()->fromhr, get_config_data()->frommin, get_config_data()->tohr, get_config_data()->tomin);
 }
 
+/*
+ * Copy end alarm time into field
+ */
 #ifdef VOICE_SUPPORTED
 EXTFN void copy_end_time_into_field(char *field, size_t fsize) {
   snprintf(field, fsize, MENU_SMART_ALARM_END_TIME_FORMAT, twenty_four_to_twelve(get_config_data()->tohr), get_config_data()->tomin, am_pm_text(get_config_data()->tohr));

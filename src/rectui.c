@@ -41,6 +41,13 @@
 #define TEXT_START GRect(26, 25, 92, 15)
 #define BLOCK_START GRect(0,91,144,78)
 
+#define LOGO_BED_ANIMATION 0
+#define LOGO_SLEEPER_ANIMATION 1
+#define LOGO_HEAD_ANIMATION 2
+#define LOGO_TEXT_ANIMATION 3
+#define BLOCK_ANIMATION 4
+#define MAX_ANIMATIONS 5
+
 // Private
 static BitmapLayerComp logo_bed;
 static BitmapLayerComp logo_sleeper;
@@ -248,7 +255,7 @@ EXTFN void morpheuz_unload(Window *window) {
   #endif
 }
 
-#ifndef PBL_COLOR
+#ifdef PBL_SDK_2
 /*
  * Invert screen
  */
