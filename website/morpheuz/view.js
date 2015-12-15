@@ -356,6 +356,7 @@ $("document").ready(function() {
   var hueusername = getParameterByName("hueuser");
   var hueid = getParameterByName("hueid");
   var ifkey = decodeURIComponent(getParameterByName("ifkey"));
+  var ifserver = decodeURIComponent(getParameterByName("ifserver"));
   var ifstat = decodeURIComponent(getParameterByName("ifstat"));
 
   var smartOn = smart === "Y";
@@ -380,6 +381,7 @@ $("document").ready(function() {
   $("#hueid").val(hueid);
   $("#lazarus").prop("checked", lazarus !== "N");
   $("#ifkey").val(ifkey);
+  $("#ifserver").val(ifserver);
   $("#ifstat").text(ifstat);
 
   // Set the status bullets for pushover
@@ -642,7 +644,8 @@ $("document").ready(function() {
       hueid : safeTrim($("#hueid").val()),
       lazarus : $("#lazarus").is(':checked') ? "Y" : "N",
       testsettings : $("#testsettings").is(':checked') ? "Y" : "N",
-      ifkey :safeTrim( $("#ifkey").val())
+      ifkey : safeTrim($("#ifkey").val()),
+      ifserver : safeTrim($("#ifserver").val())
     };
     document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
   });

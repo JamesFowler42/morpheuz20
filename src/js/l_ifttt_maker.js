@@ -44,7 +44,17 @@ function iftttMakerInterfaceAlarm() {
   
     var payload = { "value1" : "", "value2" : "", "value3" : "" };
 
-    var url = mConst().makerAlarmUrl + ifkey;
+    var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
+    var url;
+    if (ifserver == "") {
+      url = mConst().makerDefaultServer;
+    } else {
+      url = ifserver;
+      if (ifserver.charAt(ifserver.length - 1) != '/') {
+        url += '/';
+      }
+    }
+    url += mConst().makerAlarmUrl + ifkey;
     
     console.log("iftttMakerInterfaceAlarm: url=" + url);
     window.localStorage.setItem("ifstat", mLang().sending);
@@ -85,8 +95,18 @@ function iftttMakerInterfaceData() {
     var csvData = generateCopyLinkData();
   
     var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData };
-  
-    var url = mConst().makerDataUrl + ifkey;
+
+    var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
+    var url;
+    if (ifserver == "") {
+      url = mConst().makerDefaultServer;
+    } else {
+      url = ifserver;
+      if (ifserver.charAt(ifserver.length - 1) != '/') {
+        url += '/';
+      }
+    }
+    url += mConst().makerDataUrl + ifkey;
     
     console.log("iftttMakerInterfaceData: url=" + url);
     window.localStorage.setItem("ifstat", mLang().sending);
@@ -123,7 +143,17 @@ function iftttMakerInterfaceBedtime() {
   
     var payload = { "value1" : "", "value2" : "", "value3" : "" };
 
-    var url = mConst().makerBedtimeUrl + ifkey;
+    var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
+    var url;
+    if (ifserver == "") {
+      url = mConst().makerDefaultServer;
+    } else {
+      url = ifserver;
+      if (ifserver.charAt(ifserver.length - 1) != '/') {
+        url += '/';
+      }
+    }
+    url += mConst().makerBedtimeUrl + ifkey;
     
     console.log("iftttMakerInterfaceBedtime: url=" + url);
     window.localStorage.setItem("ifstat", mLang().sending);

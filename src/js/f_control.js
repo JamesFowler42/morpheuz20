@@ -52,6 +52,7 @@ function resetWithPreserve() {
   var hueusername =  window.localStorage.getItem("hueusername");
   var hueid = window.localStorage.getItem("hueid");
   var ifkey = window.localStorage.getItem("ifkey");
+  var ifserver = window.localStorage.getItem("ifserver");
   var ifstat = window.localStorage.getItem("ifstat");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
@@ -77,6 +78,7 @@ function resetWithPreserve() {
   window.localStorage.setItem("hueusername", nvl(hueusername, ""));
   window.localStorage.setItem("hueid", nvl(hueid, ""));
   window.localStorage.setItem("ifkey", nvl(ifkey, ""));
+  window.localStorage.setItem("ifserver", nvl(ifserver, ""));
   window.localStorage.setItem("ifstat", nvl(ifstat, ""));
 }
 
@@ -331,7 +333,8 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("hueusername", configData.hueuser);
     window.localStorage.setItem("hueid", configData.hueid);
     window.localStorage.setItem("ifkey", configData.ifkey);
-    
+    window.localStorage.setItem("ifserver", configData.ifserver);
+
     // Test if requested
     if (configData.testsettings === "Y") {
       console.log("Test settings requested");
@@ -396,13 +399,14 @@ function buildUrl(noset) {
     var hueusername =  nvl(window.localStorage.getItem("hueusername"), "");
     var hueid = nvl(window.localStorage.getItem("hueid"), "");
     var ifkey = nvl(window.localStorage.getItem("ifkey"), "");
+    var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
     var ifstat = nvl(window.localStorage.getItem("ifstat"), "");
     extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
            "&potoken=" + encodeURIComponent(potoken) + "&token=" + token + 
            "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
            "&usage=" + usage + "&lazarus=" + lazarus + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime +
            "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid +
-           "&ifkey=" + ifkey + "&ifstat=" + encodeURIComponent(ifstat);
+           "&ifkey=" + ifkey + "&ifserver=" + encodeURIComponent(ifserver) + "&ifstat=" + encodeURIComponent(ifstat);
   }
   
   var url = mConst().url + version + ".html" + 
