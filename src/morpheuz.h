@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 37
-#define VERSION_TXT "3.7"
+#define VERSION 38
+#define VERSION_TXT "3.8"
 
 // Comment out for production build - leaves errors on BASALT/CHALK and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -58,10 +58,6 @@
   #define is_voice_system_active() (false)
 #endif
   
-// Read clock mode from OS
-#define IS_24_HOUR_MODE clock_is_24h_style()
-//#define IS_24_HOUR_MODE false
-
 // Only do this to make greping for external functions easier (lot of space to be saved with statics)
 #define EXTFN
 
@@ -86,7 +82,6 @@
 // #define POWER_NAP_MINUTES 1 
   
 #define POWER_NAP_SETTLE 2
-#define POWER_NAP_SETTLE_THRESHOLD 1000
 #define CLOCK_UPDATE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
 #define POST_MENU_ACTION_DISPLAY_UPDATE_MS 900
@@ -158,19 +153,6 @@
 
 #define tolower(a) ((('A' <= a) && (a <= 'Z')) ? ('a' + (a - 'A')) : (a))
 
-// SDK2 routines
-#ifdef PBL_SDK_2
-  #define animation_unschedule_sdk2(a) animation_unschedule(a)
-  #define animation_destroy_sdk2(a) animation_destroy(a)
-  #define window_set_fullscreen_sdk2(a,b) window_set_fullscreen(a, b)
-  #define inverter_layer_destroy_sdk2(a) inverter_layer_destroy(a)
-#else
-  #define animation_unschedule_sdk2(a)
-  #define animation_destroy_sdk2(a)
-  #define window_set_fullscreen_sdk2(a,b) 
-  #define inverter_layer_destroy_sdk2(a) 
-#endif
-
 enum MorpKey {
   KEY_POINT = 1,
   KEY_CTRL = 2,
@@ -201,6 +183,14 @@ typedef enum {
   IS_BLUETOOTH,
   IS_EXPORT
 } IconState;
+
+/*
+ * Thresholds
+ */
+enum Thresholds {
+    AWAKE_ABOVE = 1000,
+    LIGHT_ABOVE = 120 
+};
 
 #define MAX_ICON_STATE 8
 
@@ -253,7 +243,7 @@ typedef struct {
 #define CONFIG_VER 42
 typedef struct {
   uint8_t config_ver;
-  bool invert;
+  bool unusedA;
   bool analogue;
   bool smart;
   bool auto_reset;
@@ -266,7 +256,7 @@ typedef struct {
   uint8_t tomin;
   uint32_t from;
   uint32_t to;
-  time_t unused;
+  time_t unusedB;
 } ConfigData;
 
 typedef struct {
@@ -316,7 +306,6 @@ void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed);
 void hide_notice_layer(void *data);
 void icon_bar_update_callback(Layer *layer, GContext *ctx);
 void init_morpheuz();
-void invert_screen();
 void lazarus();
 void macro_bitmap_layer_change_resource(BitmapLayerComp *comp, uint32_t new_resource_id);
 void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent, uint32_t resource_id, bool visible);

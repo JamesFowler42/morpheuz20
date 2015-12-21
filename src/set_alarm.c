@@ -237,7 +237,7 @@ static void create_settings_window(void) {
 
   window_set_background_color(setting_window, SETTING_BACKGROUND_COLOR);
   
-  is24hr = IS_24_HOUR_MODE;
+  is24hr = clock_is_24h_style();
 
   // Get the resources we need
   large_font = fonts_get_system_font(FONT_KEY_GOTHIC_28_BOLD);

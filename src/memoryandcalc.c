@@ -446,10 +446,6 @@ static bool smart_alarm(uint16_t point) {
   if (!config_data.smart)
     return false;
 
-  // Now has the alarm been sounded yet
-  if (internal_data.gone_off != 0)
-    return false;
-
   // Are we in the right timeframe
   time_t timeNow = time(NULL);
   struct tm *time = localtime(&timeNow);
@@ -458,17 +454,25 @@ static bool smart_alarm(uint16_t point) {
   if (now >= config_data.from && now < config_data.to) {
 
     // Work out the average
+    bool sleeping = false;
     int32_t total = 0;
     int32_t novals = 0;
     for (uint8_t i = 0; i <= internal_data.highest_entry; i++) {
       if (!internal_data.ignore[i]) {
-        novals++;
-        total += internal_data.points[i];
+        // Ignore points until we have one where we are not moving for 10 minutes and it is a point we have finished with (points in progress can built up
+        // value over the 10 minute period)
+        if (!sleeping && internal_data.points[i] <= AWAKE_ABOVE && i < internal_data.highest_entry) {
+          sleeping = true;
+        }
+        if (sleeping) {
+          novals++;
+          total += internal_data.points[i];
+        } 
       }
     }
-    if (novals == 0)
-      novals = 1;
-    int32_t threshold = total / novals;
+
+    // Avoid a divide by zero. If this happens then it will trigger the alarm immediately.
+    int32_t threshold = novals > 0 ? total / novals : 0;
 
     // Has the current point exceeded the threshold value
     if (point > threshold) {
@@ -568,15 +572,23 @@ static void transmit_next_data(void *data) {
  * Storage of points, raising of smart alarm and transmission to phone
  */
 EXTFN void server_processing(uint16_t biggest) {
+  // Provide an information message
   if (!internal_data.has_been_reset) {
     if (no_record_warning) {
       show_notice(RESOURCE_ID_NOTICE_RESET_TO_START_USING);
       no_record_warning = false;
     }
   }
-  store_point_info(biggest);
-  if (smart_alarm(biggest)) {
-    fire_alarm();
+  // Record data and keep checking until alarm goes off
+  if (internal_data.gone_off == 0) {
+    // Store data
+    store_point_info(biggest);
+    
+    // Check smart alarm
+    if (smart_alarm(biggest)) {
+      fire_alarm();
+    }
   }
+  // Check to see if we need to transmit data
   transmit_data();
 }

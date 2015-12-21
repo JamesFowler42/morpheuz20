@@ -22,16 +22,8 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, getPlatform */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, hrsmin */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin */
-
-/*
- * Which platform support timeline - all except aplite at the moment
- */
-function isTimeline() {
-   return (getPlatform() !== "aplite" );
-}
-
 
 /*
  * Ensure that we only insert one pin per day for each type and they move if we reset
@@ -45,9 +37,6 @@ function getPinId(base, type) {
  * Add a smart alarm pin when wakeup occurs
  */
 function addSmartAlarmPin() {
-  if (!isTimeline()) {
-    return;
-  }
 
   var stats = calculateStats();
   if (stats.tends === null) {
@@ -67,8 +56,11 @@ function addSmartAlarmPin() {
   var frommin = window.localStorage.getItem("frommin");
   var tomin = window.localStorage.getItem("tomin");
   
-  var body = mLang().earliest + fromhr + ":" + frommin + "\n" + 
-             mLang().latest + tohr + ":" + tomin + "\n\n" + 
+  var body = mLang().sleepStatsTotal + hrsmin((stats.deep + stats.light + stats.awake + stats.ignore) * mConst().sampleIntervalMins)+ "\n" +
+             mLang().sleepStatsAwake + hrsmin(stats.awake * mConst().sampleIntervalMins)+ "\n" +
+             mLang().sleepStatsLight + hrsmin(stats.light * mConst().sampleIntervalMins)+ "\n" +
+             mLang().sleepStatsDeep + hrsmin(stats.deep * mConst().sampleIntervalMins)+ "\n" +
+             mLang().sleepStatsIgnore + hrsmin(stats.ignore * mConst().sampleIntervalMins)+ "\n\n" +
              quote;
 
   var pin = {
@@ -77,6 +69,7 @@ function addSmartAlarmPin() {
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().sa,
+      "subtitle" : fromhr + ":" + frommin + " - " + tohr + ":" + tomin,
       "tinyIcon" : "system://images/ALARM_CLOCK",
       "backgroundColor" : "#00AAFF",
       "body" : body
@@ -100,9 +93,6 @@ function addSmartAlarmPin() {
  * Add a bed time pin when we're due to go to sleep
  */
 function addBedTimePin(base) {
-  if (!isTimeline()) {
-    return;
-  }
 
   var auto = window.localStorage.getItem("autoReset");
   if (auto === null || auto === "0") {
@@ -120,6 +110,7 @@ function addBedTimePin(base) {
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().bedTime,
+      "subtitle" : mLang().byMorpheuz,
       "tinyIcon" : "system://images/SCHEDULED_EVENT",
       "backgroundColor" : "#00AAFF",
       "body" : quote
@@ -147,9 +138,7 @@ function addBedTimePin(base) {
  * Get some interesting body text
  */
 function getQuoteOfTheDay() {
-  if (!isTimeline()) {
-    return;
-  }
+
   makeGetAjaxCall(mConst().quotesUrl + "?v=" + new Date().getTime(), function(resp) {
     if (resp && resp.status === 1) {
       var obj = JSON.parse(resp.data);

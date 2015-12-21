@@ -80,8 +80,6 @@ EXTFN void hide_notice_layer(void *data) {
  * End of notice window animation
  */
 static void moon_animation_stopped(Animation *animation, bool finished, void *data) {
-  animation_unschedule_sdk2(animation);
-  animation_destroy_sdk2(animation);
 }
 
 static void load_resource_into_buffer(uint32_t resource_id, char *message) {
@@ -142,13 +140,9 @@ EXTFN void show_notice_with_message(uint32_t resource_id, char *message) {
   // Bring up notice
   notice_showing = true;
   notice_window = window_create();
-  window_set_fullscreen_sdk2(notice_window, true);
   window_stack_push(notice_window, true);
 
-  bool invert = get_config_data()->invert;
-  GColor fcolor = invert ? GColorBlack : GColorWhite;
-
-  window_set_background_color(notice_window, invert ? GColorWhite : BACKGROUND_COLOR);
+  window_set_background_color(notice_window, BACKGROUND_COLOR);
 
   Layer *window_layer = window_get_root_layer(notice_window);
   
@@ -158,14 +152,14 @@ EXTFN void show_notice_with_message(uint32_t resource_id, char *message) {
   #endif
   int16_t width = bounds.size.w;
 
-  macro_bitmap_layer_create(&notice_moon, MOON_START, window_layer, invert ? RESOURCE_ID_KEYBOARD_BG_WHITE : RESOURCE_ID_KEYBOARD_BG, true);
+  macro_bitmap_layer_create(&notice_moon, MOON_START, window_layer, RESOURCE_ID_KEYBOARD_BG, true);
 
   #ifndef PBL_ROUND
-  notice_name_layer = macro_text_layer_create(GRect(5, 15, 134, 30), window_layer, fcolor, GColorClear, ui.notice_font, GTextAlignmentRight);
+  notice_name_layer = macro_text_layer_create(GRect(5, 15, 134, 30), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentRight);
   text_layer_set_text(notice_name_layer, MORPHEUZ);
   #endif
 
-  notice_text = macro_text_layer_create(GRect(7, 55, width - 14, 110), window_layer, fcolor, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GTextAlignmentCenter);
+  notice_text = macro_text_layer_create(GRect(7, 55, width - 14, 110), window_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GTextAlignmentCenter);
   load_resource_into_buffer(resource_id, message);
 
   window_set_click_config_provider(notice_window, (ClickConfigProvider) notice_click_config_provider);

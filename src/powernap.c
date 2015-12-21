@@ -49,7 +49,7 @@ EXTFN void power_nap_check(uint16_t biggest) {
   if (power_nap_settle_count == 0)
     return;
 
-  if (biggest < POWER_NAP_SETTLE_THRESHOLD)
+  if (biggest < AWAKE_ABOVE)
     power_nap_settle_count--;
 }
 

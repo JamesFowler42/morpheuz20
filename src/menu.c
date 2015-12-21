@@ -41,7 +41,6 @@ static MenuLayer *menu_layer = NULL;
 static GBitmap *menu_icons[NUM_MENU_ICONS];
 static uint8_t smart_alarm = 0;
 static uint8_t ignore_state = 0;
-static uint8_t inverse_state = 0;
 static uint8_t analogue_state = 0;
 static uint8_t power_nap_state = 0;
 static uint8_t auto_reset_state = 0;
@@ -53,10 +52,6 @@ bool menu_live = false;
 static bool menu_act;
 static int16_t centre;
 static int16_t width;
-
-#ifndef PBL_COLOR
-static void menu_invert();
-#endif
 
 #ifdef PBL_RECT
 static void menu_analogue();
@@ -90,9 +85,6 @@ static MenuDef menu_def[] = {
 #endif
   { MENU_AUTO_RESET, MENU_AUTO_RESET_DES_OFF, &auto_reset_state, wakeup_toggle, FEATURE_AUTO_HIDE | FEATURE_WAKEUP},
   { MENU_POWER_NAP, MENU_POWER_NAP_DES, &power_nap_state, toggle_power_nap, FEATURE_AUTO_HIDE},
-#ifdef PBL_SDK_2
-  { MENU_INVERSE, MENU_INVERSE_DES, &inverse_state, menu_invert, FEATURE_AUTO_HIDE }, 
-#endif
 #ifdef PBL_RECT
   { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, FEATURE_AUTO_HIDE},
 #endif
@@ -173,17 +165,6 @@ static void do_menu_action(void *data) {
   menu_def[selected_row].action();
   menu_act = false;
 }
-
-#ifndef PBL_COLOR
-/*
- * Invert option
- */
-static void menu_invert() {
-  get_config_data()->invert = !get_config_data()->invert;
-  trigger_config_save();
-  invert_screen();
-}
-#endif
 
 /*
  * Toggle the smart alarm
@@ -310,7 +291,6 @@ EXTFN void show_menu() {
   menu_act = false;
   smart_alarm = get_config_data()->smart;
   ignore_state = get_icon(IS_IGNORE);
-  inverse_state = get_config_data()->invert;
   analogue_state = get_config_data()->analogue;
   power_nap_state = is_doing_powernap();
   auto_reset_state = get_config_data()->auto_reset;

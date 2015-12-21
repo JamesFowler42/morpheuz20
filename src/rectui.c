@@ -59,10 +59,6 @@ static struct PropertyAnimation *animations[MAX_ANIMATIONS];
 static uint8_t text_color_count = 0;
 #endif
 
-#ifdef PBL_SDK_2
-static InverterLayer *full_inverse_layer;
-#endif
-
 // Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
 extern UiCommon ui;
 
@@ -82,8 +78,6 @@ static void build_an_animate(Layer *layer, GRect *start, GRect *finish, uint32_t
  * End of initial animation sequence - occurs 4 then 5 times
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-  animation_unschedule_sdk2(animation);
-  animation_destroy_sdk2(animation);
   ui.animation_count++;
   if (ui.animation_count == 4) {
     light_enable_interaction();
@@ -174,12 +168,6 @@ EXTFN void morpheuz_load(Window *window) {
   macro_bitmap_layer_create(&ui.alarm_button_top, GRect(114, 17, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
   macro_bitmap_layer_create(&ui.alarm_button_button, GRect(114, 120, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
   
-#ifdef PBL_SDK_2
-  full_inverse_layer = inverter_layer_create(GRect(0, 0, 144, 168));
-  layer_add_child(window_layer, inverter_layer_get_layer_jf(full_inverse_layer));
-  layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), true);
-#endif
-
   read_internal_data();
   read_config_data();
 
@@ -188,10 +176,6 @@ EXTFN void morpheuz_load(Window *window) {
   battery_state_service_subscribe(&battery_state_handler);
 
   bluetooth_connection_service_subscribe(bluetooth_state_handler);
-
-#ifdef PBL_SDK_2
-  invert_screen();
-#endif
 
   init_morpheuz();
 
@@ -223,7 +207,6 @@ EXTFN void morpheuz_unload(Window *window) {
 
   // Save space by not clearing up on close on aplite. Feels bad, but so do crashes for no heap.
   #ifndef PBL_PLATFORM_APLITE 
-  inverter_layer_destroy_sdk2(full_inverse_layer);
   
   analogue_window_unload();
 
@@ -254,15 +237,6 @@ EXTFN void morpheuz_unload(Window *window) {
   
   #endif
 }
-
-#ifdef PBL_SDK_2
-/*
- * Invert screen
- */
-EXTFN void invert_screen() {
-  layer_set_hidden(inverter_layer_get_layer_jf(full_inverse_layer), !get_config_data()->invert);
-}
-#endif
 
 /*
  * Hide the bed when making the analogue face visible

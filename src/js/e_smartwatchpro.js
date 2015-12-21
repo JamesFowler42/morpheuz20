@@ -23,7 +23,7 @@
  */
 
 /*global window, nvl, mLang, mConst, makeGetAjaxCall */
-/*exported smartwatchProConfigured, smartwatchProTransmit, calculateStats, generateCopyLinkData */
+/*exported smartwatchProConfigured, smartwatchProTransmit, calculateStats, generateCopyLinkData, mThres */
 
 /*
  * Is Smartwatch Pro configured?
@@ -84,6 +84,9 @@ function calculateStats() {
   var tbegin = null;
   var tends = null;
   var tendsStop = null;
+  var ibegin = null;
+  var iends = null;
+  var iendsStop = null;
   for (var i = 0; i < splitup.length; i++) {
     if (splitup[i] === "") {
       continue;
@@ -95,13 +98,16 @@ function calculateStats() {
     var teststr2 = timeStartPoint.format("hhmm");
     if (goneoff != "N" && goneoff >= teststr1 && goneoff <= teststr2) {
       tends = returnAbsoluteMatch(timeStartPoint1, timeStartPoint, goneoff);
+      iends = i;
       break;
-    } else if (data != -1 && data != -2 && data <= mConst().awakeAbove) {
+    } else if (data != -1 && data != -2 && data <= mThres().awakeAbove) {
       if (firstSleep) {
         tbegin = timeStartPoint1;
+        ibegin = i;
         firstSleep = false;
       }
       tendsStop = timeStartPoint;
+      iendsStop = i;
     }
   }
 
@@ -109,11 +115,39 @@ function calculateStats() {
   // the last time they were below waking levels of movement
   if (tends === null && tendsStop !== null) {
     tends = tendsStop;
+    iends = iendsStop;
+  }
+  
+    // Compute the stats within the bounds of the start and stop times
+  var awake = 0;
+  var deep = 0;
+  var light = 0;
+  var ignore = 0;
+  if (ibegin !== null && iends !== null) {
+    for (var j = ibegin; j <= iends; j++) {
+      if (splitup[j] === "") {
+        continue;
+      }
+      var data2 = parseInt(splitup[j], 10);
+      if (data2 == -1 || data2 == -2) {
+        ignore++;
+      } else if (data2 > mThres().awakeAbove) {
+        awake++;
+      } else if (data2 > mThres().lightAbove) {
+        light++;
+      } else {
+        deep++;
+      }
+    }
   }
 
   return {
     "tbegin" : tbegin,
-    "tends" : tends
+    "tends" : tends, 
+    "deep" : deep,
+    "light" : light,
+    "awake" : awake,
+    "ignore" : ignore
   };
 }
 

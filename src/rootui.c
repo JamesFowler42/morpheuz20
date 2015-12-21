@@ -89,11 +89,7 @@ static void back_single_click_handler(ClickRecognizerRef recognizer, void *conte
  */
 static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Make the snooze and the cancel buttons the same way around as the default alarm app
-  #ifdef PBL_COLOR
-    cancel_alarm();
-  #else
-    snooze_alarm();
-  #endif
+  cancel_alarm();
   // Bring clock up to date if a button is pressed
   revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }
@@ -113,11 +109,7 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, void *con
  */
 static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Make the snooze and the cancel buttons the same way around as the default alarm app
-  #ifdef PBL_COLOR
-    snooze_alarm();
-  #else
-    cancel_alarm();
-  #endif
+  snooze_alarm();
   // Bring clock up to date if a button is pressed
   revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }

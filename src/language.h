@@ -36,8 +36,6 @@
 #define MENU_POWER_NAP_DES "A 27 min nap"
 #define MENU_RESEND "Resend"
 #define MENU_RESEND_DES "Resend data to phone"
-#define MENU_INVERSE "Inverse"
-#define MENU_INVERSE_DES "Black on white?"
 #define MENU_ANALOGUE "Analogue"
 #define MENU_ANALOGUE_DES "Hands or classic?"
 #define MENU_QUIT "Quit"

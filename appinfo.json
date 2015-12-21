@@ -19,6 +19,138 @@
     "resources": {
         "media": [
             {
+                "file": "images/alarm-icon.png",
+                "name": "ALARM_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/alarm-ring-icon.png",
+                "name": "ALARM_RING_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/battery_charge.png",
+                "name": "BATTERY_CHARGE",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/battery_icon.png",
+                "name": "BATTERY_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/bluetooth.png",
+                "name": "BLUETOOTH_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/button-alarm-bottom.png",
+                "name": "BUTTON_ALARM_BOTTOM",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/button-alarm-top.png",
+                "name": "BUTTON_ALARM_TOP",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/comms.png",
+                "name": "COMMS_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/export.png",
+                "name": "EXPORT",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/ignore.png",
+                "name": "IGNORE",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/keyboard-black.png",
+                "name": "KEYBOARD_BG",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/logo-bed.png",
+                "name": "IMAGE_LOGO_BED",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/logo-head.png",
+                "name": "IMAGE_LOGO_HEAD",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/logo-sleeper.png",
+                "name": "IMAGE_LOGO_SLEEPER",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/logo-text.png",
+                "name": "IMAGE_LOGO_TEXT",
+                "targetPlatforms": [
+                    "aplite",
+                    "basalt"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/menu_no.png",
+                "name": "MENU_NO",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/menu_yes.png",
+                "name": "MENU_YES",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
+                "file": "images/record.png",
+                "name": "ICON_RECORD",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_ICON",
+                "type": "bitmap"
+            },
+            {
+                "file": "images/round-background.png",
+                "name": "IMAGE_ROUND_BACKGROUND",
+                "targetPlatforms": [
+                    "chalk"
+                ],
+                "type": "bitmap"
+            },
+            {
+                "file": "images/round-title.png",
+                "name": "IMAGE_ROUND_TITLE",
+                "targetPlatforms": [
+                    "chalk"
+                ],
+                "type": "bitmap"
+            },
+            {
                 "file": "data/timer-reset-alarm-for.txt",
                 "name": "NOTICE_TIMER_RESET_ALARM_FOR",
                 "targetPlatforms": [
@@ -107,139 +239,6 @@
                 "file": "fonts/axaxax-bd-38.ttf",
                 "name": "FONT_DIGITAL_38",
                 "type": "font"
-            },
-            {
-                "file": "images/alarm-icon.png",
-                "name": "ALARM_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/alarm-ring-icon.png",
-                "name": "ALARM_RING_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/battery_charge.png",
-                "name": "BATTERY_CHARGE",
-                "type": "png"
-            },
-            {
-                "file": "images/battery_icon.png",
-                "name": "BATTERY_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/bluetooth.png",
-                "name": "BLUETOOTH_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/button-alarm-bottom.png",
-                "name": "BUTTON_ALARM_BOTTOM",
-                "type": "png"
-            },
-            {
-                "file": "images/button-alarm-top.png",
-                "name": "BUTTON_ALARM_TOP",
-                "type": "png"
-            },
-            {
-                "file": "images/comms.png",
-                "name": "COMMS_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/export.png",
-                "name": "EXPORT",
-                "type": "png"
-            },
-            {
-                "file": "images/icon.png",
-                "menuIcon": true,
-                "name": "IMAGE_ICON",
-                "type": "png"
-            },
-            {
-                "file": "images/ignore.png",
-                "name": "IGNORE",
-                "type": "png"
-            },
-            {
-                "file": "images/keyboard-black.png",
-                "name": "KEYBOARD_BG",
-                "type": "png"
-            },
-            {
-                "file": "images/keyboard-white.png",
-                "name": "KEYBOARD_BG_WHITE",
-                "type": "png"
-            },
-            {
-                "file": "images/logo-bed.png",
-                "name": "IMAGE_LOGO_BED",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/logo-head.png",
-                "name": "IMAGE_LOGO_HEAD",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/logo-sleeper.png",
-                "name": "IMAGE_LOGO_SLEEPER",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/logo-text.png",
-                "name": "IMAGE_LOGO_TEXT",
-                "targetPlatforms": [
-                    "aplite",
-                    "basalt"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/menu_no.png",
-                "name": "MENU_NO",
-                "type": "png"
-            },
-            {
-                "file": "images/menu_yes.png",
-                "name": "MENU_YES",
-                "type": "png"
-            },
-            {
-                "file": "images/record.png",
-                "name": "ICON_RECORD",
-                "type": "png"
-            },
-            {
-                "file": "images/round-background.png",
-                "name": "IMAGE_ROUND_BACKGROUND",
-                "targetPlatforms": [
-                    "chalk"
-                ],
-                "type": "png"
-            },
-            {
-                "file": "images/round-title.png",
-                "name": "IMAGE_ROUND_TITLE",
-                "targetPlatforms": [
-                    "chalk"
-                ],
-                "type": "png"
             }
         ]
     },
@@ -251,7 +250,7 @@
         "chalk"
     ],
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
-    "versionLabel": "3.7",
+    "versionLabel": "3.8",
     "watchapp": {
         "watchface": false
     }

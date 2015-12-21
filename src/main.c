@@ -44,9 +44,6 @@ static void show_main(Window *window) {
  */
 static void handle_init() {
   // Check which defines are defined
-  #ifdef PBL_SDK_2
-  LOG_INFO("PBL_SDK_2");
-  #endif
   #ifdef PBL_SDK_3
   LOG_INFO("PBL_SDK_3");
   #endif
@@ -74,7 +71,6 @@ static void handle_init() {
    
   // Create primary window
   ui.primary_window = window_create();
-  window_set_fullscreen_sdk2(ui.primary_window, true);
   window_set_window_handlers(ui.primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, .appear = show_main });
   window_stack_push(ui.primary_window, true);
 }

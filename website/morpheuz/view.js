@@ -29,8 +29,6 @@ function mConst() {
   return {
     chartBottom : -50,
     chartTop : 4000,
-    awakeAbove : 1000,
-    lightAbove : 120,
     sampleIntervalMins : 10,
     swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&pt=409665&ct=morpheuz_web",
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
@@ -44,6 +42,16 @@ function mConst() {
     sendingEmail : "Sending...",
     url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
     report : "Report"
+  };
+}
+
+/*
+ * Thresholds
+ */
+function mThres() {
+  return {
+    awakeAbove : 1000,
+    lightAbove : 120, 
   };
 }
 
@@ -198,7 +206,7 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
       tends = returnAbsoluteMatch(pieStartPoint1, pieStartPoint, goneoff);
       iends = i;
       break;
-    } else if (data != -1 && data != -2 && data <= mConst().awakeAbove) {
+    } else if (data != -1 && data != -2 && data <= mThres().awakeAbove) {
       if (firstSleep) {
         tbegin = pieStartPoint1;
         ibegin = i;
@@ -241,9 +249,9 @@ function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
       var data2 = parseInt(splitup[j], 10);
       if (data2 == -1 || data2 == -2) {
         ignore++;
-      } else if (data2 > mConst().awakeAbove) {
+      } else if (data2 > mThres().awakeAbove) {
         awake++;
-      } else if (data2 > mConst().lightAbove) {
+      } else if (data2 > mThres().lightAbove) {
         light++;
       } else {
         deep++;
@@ -589,7 +597,7 @@ $("document").ready(function() {
           min : new Date(base)
         },
         yaxis : {
-          ticks : [ mConst().chartBottom, mConst().lightAbove, mConst().awakeAbove, mConst().chartTop ],
+          ticks : [ mConst().chartBottom, mThres().lightAbove, mThres().awakeAbove, mConst().chartTop ],
           labelRenderer : $.jqplot.CanvasAxisLabelRenderer,
           label : "Movement",
           min : mConst().chartBottom,

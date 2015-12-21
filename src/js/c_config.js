@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*exported mConst, mLang */
+/*exported mConst, mLang, mThres */
 
 /*
  * Constants
@@ -43,7 +43,6 @@ function mConst() {
     pushoverAPI : "https://api.pushover.net/1/messages.json",
     smartwatchProAPI : "http://2hk.smartwatch.pro/?source=Morpheuz&starts=",
     sampleIntervalMins : 10,
-    awakeAbove : 1000,
     ctrlTransmitDone : 1,
     ctrlVersionDone : 2,
     ctrlGoneOffDone : 4,
@@ -64,7 +63,9 @@ function mConst() {
     lifxTimeDef: 60
   };
 }
-
+/*
+ * Language strings
+ */ 
 function mLang() {
   return {
     ok : "OK",
@@ -77,6 +78,23 @@ function mLang() {
     bedNow : "Bed Now",
     cancelBed : "Cancel bed time",
     earliest: "Earliest: ",
-    latest: "Latest: "
+    latest: "Latest: ",
+    byMorpheuz: "Morpheuz",
+    sleepStatsTotal: "Total:",
+    sleepStatsAwake: "Restless:",
+    sleepStatsLight: "Light:",
+    sleepStatsDeep: "Deep:",
+    sleepStatsIgnore: "Ignore:",
+    sleepStats: "Statistics"
+  };
+}
+
+/*
+ * Thresholds
+ */
+function mThres() {
+  return {
+    awakeAbove : 1000,
+    lightAbove : 120, 
   };
 }

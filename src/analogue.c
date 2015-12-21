@@ -248,8 +248,6 @@ EXTFN void analogue_window_load(Window *window) {
  * Triggered when the sliding in/out of the analogue face completes
  */
 static void animation_stopped(Animation *animation, bool finished, void *data) {
-  animation_unschedule_sdk2(animation);
-  animation_destroy_sdk2(animation);
   if (is_visible) {
     bed_visible(false);
   }

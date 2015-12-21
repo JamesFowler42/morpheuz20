@@ -115,7 +115,6 @@ EXTFN void wakeup_init() {
     } else if (cookie == WAKEUP_FOR_TRANSMIT) {
       auto_shutdown_timer = app_timer_register(get_internal_data()->transmit_sent ? TEN_SECONDS_MS : FIVE_MINUTES_MS, close_morpheuz_timer, NULL);
     }
-#ifdef PBL_PLATFORM_BASALT
   } else if (launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {
     switch (launch_get_args()) {
       case TIMELINE_LAUNCH_USE:
@@ -129,7 +128,6 @@ EXTFN void wakeup_init() {
       app_timer_register(TEN_SECONDS_MS, close_morpheuz_timer, NULL);
       break;
     }
-#endif
   } 
   requested_exit = time(NULL) - 100;
 }

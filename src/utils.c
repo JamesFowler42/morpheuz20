@@ -114,7 +114,7 @@ EXTFN int32_t dirty_checksum(void *data, uint8_t data_size) {
  * Display the times using the settings the user prefers
  */
 EXTFN uint8_t twenty_four_to_twelve(uint8_t hour) {
-  if (!IS_24_HOUR_MODE) {
+  if (!clock_is_24h_style()) {
     return (hour == 0) ? 12 : (hour > 12) ? hour - 12 : hour;
   } else {
     return hour;
@@ -125,7 +125,7 @@ EXTFN uint8_t twenty_four_to_twelve(uint8_t hour) {
  * AM/PM indicator
  */
 EXTFN char* am_pm_text(uint8_t hour) {
-  if (!IS_24_HOUR_MODE) {
+  if (!clock_is_24h_style()) {
     return ((hour > 11) ? text_pm_pad : text_am_pad);
   } else {
     return text_empty;

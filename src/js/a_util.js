@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*exported nvl, fixLen, getUserAgent */
+/*exported nvl, fixLen, getUserAgent, hrsmin */
 
 /*
  * Some date functions
@@ -82,6 +82,12 @@ function fixLen(inStr) {
   if (inStr === null || inStr.length > 1)
     return inStr;
   return "0" + inStr;
+}
+
+function hrsmin(value) {
+  var hours = Math.floor(value / 60);
+  var minutes = value % 60;
+  return fixLen(String(hours)) + ":" + fixLen(String(minutes));
 }
 
 /*
