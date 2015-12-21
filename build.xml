@@ -2,7 +2,7 @@
 <project name="morpheuz" basedir="." default="all">
 
 	<property name="ver" value="38"/>
-	<property name="inc" value="1"/>
+	<property name="inc" value="2"/>
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>

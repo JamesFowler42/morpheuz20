@@ -54,6 +54,9 @@
 #define SA_MIN_LEFT_12 (52 - 72 + centre)
 #define SA_MIN_LEFT_24 (74 - 72 + centre)
 
+#define AUTO_REPEAT_DELAY 500
+#define AUTO_REPEAT_INTERVAL 300
+
 static Window *setting_window;
 static GFont large_font;
 static GFont small_font;
@@ -67,6 +70,8 @@ static char value_text[5][MAX_SETTINGS_FIELDS];
 static int8_t current_field;
 
 static bool is24hr;
+
+static AppTimer *auto_repeat = NULL;
 
 /*
  * Highlight or unhighlight a field
@@ -203,12 +208,63 @@ static void down_single_click_handler(ClickRecognizerRef recognizer, void *conte
 }
 
 /*
+ * Stop the auto repeat timer
+ */
+static void cancel_auto_repeat() {
+   if (auto_repeat != NULL) {
+    app_timer_cancel(auto_repeat);
+    auto_repeat = NULL;
+  } 
+}
+
+/*
+ * Count up
+ */
+static void count_up(void *data) {
+  cancel_auto_repeat();
+  up_down_handler(1);
+  auto_repeat = app_timer_register(AUTO_REPEAT_INTERVAL, count_up, NULL);
+}
+
+/*
+ * Count down
+ */
+static void count_down(void *data) {
+  cancel_auto_repeat();
+  up_down_handler(-1);
+  auto_repeat = app_timer_register(AUTO_REPEAT_INTERVAL, count_down, NULL);
+}
+
+/*
+ * Start count up after 500ms
+ */
+static void up_button_starts_being_held_down(ClickRecognizerRef recognizer, void *context) {
+  count_up(NULL);
+}
+
+/*
+ * Start count down after 500ms
+ */
+static void up_down_button_stops_being_held_down(ClickRecognizerRef recognizer, void *context) {
+  cancel_auto_repeat();
+}
+
+/*
+ * Stop the count up or down when the button is released
+ */
+static void down_button_starts_being_held_down(ClickRecognizerRef recognizer, void *context) {
+  count_down(NULL);
+}
+
+/*
  * Button click handlers
  */
 static void setting_click_config_provider(void *context) {
   window_single_click_subscribe(BUTTON_ID_UP, up_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
+  window_long_click_subscribe(BUTTON_ID_UP, AUTO_REPEAT_DELAY, up_button_starts_being_held_down, up_down_button_stops_being_held_down);
+  window_long_click_subscribe(BUTTON_ID_DOWN, AUTO_REPEAT_DELAY, down_button_starts_being_held_down, up_down_button_stops_being_held_down);
 }
 
 /*

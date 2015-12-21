@@ -378,13 +378,13 @@ function buildUrl(noset) {
   var smart = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
   var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
   var emailto = nvl(window.localStorage.getItem("emailto"), "");
+  var token = Pebble.getAccountToken();
 
   var extra = "";
   if (noset === "N") {
     var pouser = nvl(window.localStorage.getItem("pouser"), "");
     var postat = nvl(window.localStorage.getItem("postat"), "");
     var potoken = nvl(window.localStorage.getItem("potoken"), "");
-    var token = Pebble.getAccountToken();
     var swpdo = nvl(window.localStorage.getItem("swpdo"), "");
     var swpstat = nvl(window.localStorage.getItem("swpstat"), "");
     var exptime = nvl(window.localStorage.getItem("exptime"), "");
@@ -402,7 +402,7 @@ function buildUrl(noset) {
     var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
     var ifstat = nvl(window.localStorage.getItem("ifstat"), "");
     extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
-           "&potoken=" + encodeURIComponent(potoken) + "&token=" + token + 
+           "&potoken=" + encodeURIComponent(potoken) +  
            "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
            "&usage=" + usage + "&lazarus=" + lazarus + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime +
            "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid +
@@ -411,7 +411,7 @@ function buildUrl(noset) {
   
   var url = mConst().url + version + ".html" + 
            "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
-           "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + 
+           "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token +
            "&noset=" + noset + extra;
   
   console.log("url=" + url + " (len=" + url.length + ")");
