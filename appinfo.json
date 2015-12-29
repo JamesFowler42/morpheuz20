@@ -98,12 +98,6 @@
                 "type": "bitmap"
             },
             {
-                "file": "images/icon.png",
-                "menuIcon": true,
-                "name": "IMAGE_ICON",
-                "type": "bitmap"
-            },
-            {
                 "file": "images/export.png",
                 "name": "EXPORT",
                 "type": "bitmap"

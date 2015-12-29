@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global nvl, window, mLang, makeAjaxCall, mConst, buildUrl, generateCopyLinkData */
+/*global nvl, window, mLang, makeAjaxCall, mConst, buildUrl, generateCopyLinkData, extractSplitup */
 /*exported iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
 
 /*
@@ -95,11 +95,20 @@ function iftttMakerInterfaceData() {
       window.localStorage.setItem("ifstat", mLang().disabled);
       return;
     }
-    
-    var base = window.localStorage.getItem("base");
-    var resetDate = new Date(parseInt(base, 10)).format(mConst().displayDateFmt);
+   
+    var base = parseInt(window.localStorage.getItem("base"), 10);
+    var resetDate = new Date(base).format(mConst().displayDateFmt);
     var urlToAttach = buildUrl("Y");
-    var csvData = generateCopyLinkData();
+
+    var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
+    var splitup = extractSplitup();
+    var fromhr = nvl(window.localStorage.getItem("fromhr"), mConst().fromhrDef);
+    var tohr = nvl(window.localStorage.getItem("tohr"), mConst().tohrDef);
+    var frommin = nvl(window.localStorage.getItem("frommin"), mConst().fromminDef);
+    var tomin = nvl(window.localStorage.getItem("tomin"), mConst().tominDef);
+    var smartOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
+    
+    var csvData = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
   
     var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData };
 

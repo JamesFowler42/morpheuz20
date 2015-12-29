@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -29,7 +29,6 @@ function mConst() {
   return {
     chartBottom : -50,
     chartTop : 4000,
-    sampleIntervalMins : 10,
     swpAppStoreUrl : "https://itunes.apple.com/app/smartwatch-pro-for-pebble/id673907094?mt=8&at=10lIFm&pt=409665&ct=morpheuz_web",
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
@@ -42,16 +41,6 @@ function mConst() {
     sendingEmail : "Sending...",
     url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
     report : "Report"
-  };
-}
-
-/*
- * Thresholds
- */
-function mThres() {
-  return {
-    awakeAbove : 1000,
-    lightAbove : 120, 
   };
 }
 
@@ -71,7 +60,7 @@ function buildGraphDataSet(base, splitup, more) {
       element[1] = null;
     }
     more[i] = element;
-    startPoint = startPoint.addMinutes(mConst().sampleIntervalMins);
+    startPoint = startPoint.addMinutes(mCommonConst().sampleIntervalMins);
   }
 }
 
@@ -102,23 +91,8 @@ function populateIgnore(base, canvasOverlayConf, splitup, totalWidth) {
       canvasOverlayConf.show = true;
       canvasOverlayConf.objects.push(ignoreOverlay);
     }
-    startPoint = startPoint.addMinutes(mConst().sampleIntervalMins);
+    startPoint = startPoint.addMinutes(mCommonConst().sampleIntervalMins);
   }
-}
-
-/*
- * Locate match one minute at a time
- */
-function returnAbsoluteMatch(early, late, actualstr) {
-  var point = early;
-  while (point.getTime() < late.getTime()) {
-    var teststr = point.format("hhmm");
-    if (actualstr === teststr) {
-      return point;
-    }
-    point = point.addMinutes(1);
-  }
-  return early;
 }
 
 /*
@@ -134,7 +108,7 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
     for (var i = 0; i < splitup.length; i++) {
       var teststr1 = smartStartPoint.format("hhmm");
       var smartStartPoint1 = smartStartPoint;
-      smartStartPoint = smartStartPoint.addMinutes(mConst().sampleIntervalMins);
+      smartStartPoint = smartStartPoint.addMinutes(mCommonConst().sampleIntervalMins);
       var teststr2 = smartStartPoint.format("hhmm");
       if (early === null && fromstr >= teststr1 && fromstr <= teststr2) {
         early = returnAbsoluteMatch(smartStartPoint1, smartStartPoint, fromstr);
@@ -180,138 +154,41 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
 }
 
 /*
- * Calculate stats
+ * Call standard calculateStats but add in canvas control too
  */
-function calculateStats(base, splitup, goneoff, canvasOverlayConf) {
-  // Get the full set of data up to the wake up point.
-  // Ignore nulls
-  var pieStartPoint = new Date(base);
-  var firstSleep = true;
-  var tbegin = null;
-  var ibegin = null;
-  var tends = null;
-  var iends = null;
-  var tendsStop = null;
-  var iendsStop = null;
-  for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === "") {
-      continue;
-    }
-    var data = parseInt(splitup[i], 10);
-    var teststr1 = pieStartPoint.format("hhmm");
-    var pieStartPoint1 = pieStartPoint;
-    pieStartPoint = pieStartPoint.addMinutes(mConst().sampleIntervalMins);
-    var teststr2 = pieStartPoint.format("hhmm");
-    if (goneoff != "N" && goneoff >= teststr1 && goneoff <= teststr2) {
-      tends = returnAbsoluteMatch(pieStartPoint1, pieStartPoint, goneoff);
-      iends = i;
-      break;
-    } else if (data != -1 && data != -2 && data <= mThres().awakeAbove) {
-      if (firstSleep) {
-        tbegin = pieStartPoint1;
-        ibegin = i;
-        var beginOverlay = {
-          verticalLine : {
-            name : "begin",
-            x : tbegin,
-            lineWidth : 1,
-            yOffset : 0,
-            color : "rgb(255, 149, 0)",
-            shadow : false
-          }
-        };
-        canvasOverlayConf.show = true;
-        canvasOverlayConf.objects.push(beginOverlay);
-        firstSleep = false;
-      }
-      tendsStop = pieStartPoint;
-      iendsStop = i;
-    }
+function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
+  var stats = calculateStats(base, goneoff, splitup);
+  if (stats && stats.tbegin) {
+    var beginOverlay = {
+        verticalLine : {
+          name : "begin",
+          x : stats.tbegin,
+          lineWidth : 1,
+          yOffset : 0,
+          color : "rgb(255, 149, 0)",
+          shadow : false
+        }
+      };
+      canvasOverlayConf.show = true;
+      canvasOverlayConf.objects.push(beginOverlay);
   }
-
-  // If we haven't got a regular end because of an alarm, then find
-  // the last time they were below waking levels of movement
-  if (tends === null && tendsStop !== null) {
-    tends = tendsStop;
-    iends = iendsStop;
-  }
-
-  // Compute the stats within the bounds of the start and stop times
-  var awake = 0;
-  var deep = 0;
-  var light = 0;
-  var ignore = 0;
-  if (ibegin !== null && iends !== null) {
-    for (var j = ibegin; j <= iends; j++) {
-      if (splitup[j] === "") {
-        continue;
-      }
-      var data2 = parseInt(splitup[j], 10);
-      if (data2 == -1 || data2 == -2) {
-        ignore++;
-      } else if (data2 > mThres().awakeAbove) {
-        awake++;
-      } else if (data2 > mThres().lightAbove) {
-        light++;
-      } else {
-        deep++;
-      }
-    }
-  }
-
-  // Add the end time overlay
-  if (tends !== null) {
+  if (stats && stats.tends) {
     var endsStopOverlay = {
-      verticalLine : {
-        name : "endstop",
-        x : tends,
-        lineWidth : 1,
-        yOffset : 0,
-        color : "rgb(255, 149, 0)",
-        shadow : false
-      }
+        verticalLine : {
+          name : "endstop",
+          x : stats.tends,
+          lineWidth : 1,
+          yOffset : 0,
+          color : "rgb(255, 149, 0)",
+          shadow : false
+        }
     };
     canvasOverlayConf.show = true;
     canvasOverlayConf.objects.push(endsStopOverlay);
   }
-  return {
-    "tbegin" : tbegin,
-    "tends" : tends,
-    "deep" : deep,
-    "light" : light,
-    "awake" : awake,
-    "ignore" : ignore
-  };
+  return stats;
 }
 
-/*
- * Prepare the data for the mail links
- */
-function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff) {
-
-  var timePoint = new Date(base);
-  var body = "<pre>";
-
-  for (var i = 0; i < splitup.length; i++) {
-    if (splitup[i] === "") {
-      continue;
-    }
-    body = body + timePoint.format("hh:mm") + "," + splitup[i] + "<br/>";
-    timePoint = timePoint.addMinutes(mConst().sampleIntervalMins);
-  }
-
-  // Add smart alarm info into CSV data
-  if (smartOn) {
-    body = body + fromhr + ":" + frommin + ",START<br/>" + tohr + ":" + tomin + ",END<br/>";
-    if (goneoff != "N") {
-      var goneoffstr = goneoff.substr(0, 2) + ":" + goneoff.substr(2, 2);
-      body = body + goneoffstr + ",ALARM<br/>";
-    }
-  }
-  return {
-    "body" : body + "</pre>",
-  };
-}
 
 /*******************************************************************************
  * 
@@ -366,6 +243,11 @@ $("document").ready(function() {
   var ifkey = decodeURIComponent(getParameterByName("ifkey"));
   var ifserver = decodeURIComponent(getParameterByName("ifserver"));
   var ifstat = decodeURIComponent(getParameterByName("ifstat"));
+  var age = getParameterByName("age");
+  var returnTo = getParameterByName("return_to");
+  if (returnTo === "") {
+    returnTo = "pebblejs://close#";
+  }
 
   var smartOn = smart === "Y";
   var nosetOn = noset === "Y";
@@ -391,6 +273,7 @@ $("document").ready(function() {
   $("#ifkey").val(ifkey);
   $("#ifserver").val(ifserver);
   $("#ifstat").text(ifstat);
+  $("#age").val(age);
 
   // Set the status bullets for pushover
   if (postat === "OK") {
@@ -499,14 +382,10 @@ $("document").ready(function() {
   startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverlayConf, splitup);
 
   // Return stats
-  var out = calculateStats(base, splitup, goneoff, canvasOverlayConf);
-
+  var out = calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf);
+  
   // Populate the statistics area
-  $("#ttotal").text(hrsmin((out.deep + out.light + out.awake + out.ignore) * mConst().sampleIntervalMins));
-  $("#tawake").text(hrsmin(out.awake * mConst().sampleIntervalMins));
-  $("#tlight").text(hrsmin(out.light * mConst().sampleIntervalMins));
-  $("#tdeep").text(hrsmin(out.deep * mConst().sampleIntervalMins));
-  $("#tignore").text(hrsmin(out.ignore * mConst().sampleIntervalMins));
+  $("#stats").text(buildRecommendationPhrase(age, out));
 
   // If we have a begin and an end then show this in our 'HealthKit' datapoint
   // section and
@@ -653,9 +532,10 @@ $("document").ready(function() {
       lazarus : $("#lazarus").is(':checked') ? "Y" : "N",
       testsettings : $("#testsettings").is(':checked') ? "Y" : "N",
       ifkey : safeTrim($("#ifkey").val()),
-      ifserver : safeTrim($("#ifserver").val())
+      ifserver : safeTrim($("#ifserver").val()),
+      age : safeTrim($("#age").val())
     };
-    document.location = 'pebblejs://close#' + encodeURIComponent(JSON.stringify(configData));
+    document.location = returnTo + encodeURIComponent(JSON.stringify(configData));
   });
 
   // Send an email containing CSV data
@@ -703,6 +583,14 @@ $("document").ready(function() {
     })
 
   });
+
+  // Re-populate stats if age changes
+  $("#age").keyup(function() {
+    // Populate the statistics area
+    var age = $("#age").val();
+    $("#stats").text(buildRecommendationPhrase(age, out));
+  });
+  
 
 });
 

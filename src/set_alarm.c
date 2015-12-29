@@ -1,7 +1,7 @@
 /*
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -72,6 +72,8 @@ static int8_t current_field;
 static bool is24hr;
 
 static AppTimer *auto_repeat = NULL;
+
+static int8_t auto_delta = -1;
 
 /*
  * Highlight or unhighlight a field
@@ -218,28 +220,21 @@ static void cancel_auto_repeat() {
 }
 
 /*
- * Count up
+ * Repeat
  */
-static void count_up(void *data) {
-  cancel_auto_repeat();
-  up_down_handler(1);
-  auto_repeat = app_timer_register(AUTO_REPEAT_INTERVAL, count_up, NULL);
-}
-
-/*
- * Count down
- */
-static void count_down(void *data) {
-  cancel_auto_repeat();
-  up_down_handler(-1);
-  auto_repeat = app_timer_register(AUTO_REPEAT_INTERVAL, count_down, NULL);
+static void count_repeat(void *data) {
+  auto_repeat = NULL;
+  up_down_handler(auto_delta);
+  auto_repeat = app_timer_register(AUTO_REPEAT_INTERVAL, count_repeat, NULL);
 }
 
 /*
  * Start count up after 500ms
  */
 static void up_button_starts_being_held_down(ClickRecognizerRef recognizer, void *context) {
-  count_up(NULL);
+  cancel_auto_repeat();
+  auto_delta = 1;
+  count_repeat(NULL);
 }
 
 /*
@@ -253,7 +248,9 @@ static void up_down_button_stops_being_held_down(ClickRecognizerRef recognizer, 
  * Stop the count up or down when the button is released
  */
 static void down_button_starts_being_held_down(ClickRecognizerRef recognizer, void *context) {
-  count_down(NULL);
+  cancel_auto_repeat();
+  auto_delta = -1;
+  count_repeat(NULL);
 }
 
 /*

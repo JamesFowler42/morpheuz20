@@ -8,7 +8,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -39,6 +39,7 @@
 <script type="text/javascript" src="jqplot/plugins/jqplot.canvasOverlay.min.js"></script>
 <script type="text/javascript" src="jqplot/plugins/jqplot.pieRenderer.min.js"></script>
 
+<script type="text/javascript" src="common.js?v=1"></script>
 <script type="text/javascript" src="utils.js?v=1"></script>
 <link rel="stylesheet" type="text/css" href="view.css?v=1" />
 <script type="text/javascript" src="view.js?v=1"></script>
@@ -67,35 +68,25 @@
         <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
         <h3 class="quality-head">Quality of Sleep</h3>
         <div id="chart2" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
-        <h3>Statistics</h3>
+        <h3 class="exporthead noset">Personal Information</h3>
+        <div class="exportwrap noset indent">
+          <div class="row">
+            <div class="cell">
+              <label for="age">Age:</label>
+            </div>
+            <div class="cell">
+              <input id="age" type="number" maxlength="3" class="textbox" placeholder="years"/>
+            </div>
+          </div>
+          <p class="small">This information is used to compare your sleep against the recommended amount from the National Sleep Foundation.</p>
+          <input type="button" id="save3" class="save" value="Save" />
+        </div>
+        <h3 class="summaryhead">Summary</h3>
+        <p id="stats" class="summarywrap indent"/>
+        <h3>Sleep Analysis Data Point</h3>
         <table class="statstable">
-          <col width="50%">
-          <col width="50%">
-          <tr class="stat">
-            <td>Total</td>
-            <td id="ttotal">-</td>
-          </tr>
-          <tr class="stat">
-            <td>Restless</td>
-            <td id="tawake">-</td>
-          </tr>
-          <tr class="stat">
-            <td>Light</td>
-            <td id="tlight">-</td>
-          </tr>
-          <tr class="stat">
-            <td>Deep</td>
-            <td id="tdeep">-</td>
-          </tr>
-          <tr class="stat">
-            <td>Ignore</td>
-            <td id="tignore">-</td>
-          </tr>
-        </table>
-        <h4>Sleep Analysis Data Point</h4>
-        <table class="statstable">
-          <col width="50%">
-          <col width="50%">
+          <col width="30%">
+          <col width="70%">
           <tr class="stat">
             <td>Starts</td>
             <td id="tstarts">-</td>
@@ -298,7 +289,7 @@
           <input type="button" id="save2" class="save" value="Save" />
         </div>
       </form>
-      <p class="centre small">&copy; 2013-2015 James Fowler</p>
+      <p class="centre small">&copy; 2013-2016 James Fowler</p>
     </div>
   </div>
 </body>

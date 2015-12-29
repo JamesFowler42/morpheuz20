@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, hrsmin */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin */
 
 /*
@@ -38,7 +38,7 @@ function getPinId(base, type) {
  */
 function addSmartAlarmPin() {
 
-  var stats = calculateStats();
+  var stats = calculateStats(parseInt(window.localStorage.getItem("base"), 10), nvl(window.localStorage.getItem("goneOff"), "N"), extractSplitup());
   if (stats.tends === null) {
     console.log("addSmartAlarmPin: stats couldn't be calculated");
     return;
@@ -47,21 +47,20 @@ function addSmartAlarmPin() {
   var alarmTime = stats.tends;
 
   var quote = window.localStorage.getItem("quote");
-  
   var baseStr = window.localStorage.getItem("base");
   var base = new Date(parseInt(baseStr,10));
-  
   var fromhr = window.localStorage.getItem("fromhr");
   var tohr = window.localStorage.getItem("tohr");
   var frommin = window.localStorage.getItem("frommin");
   var tomin = window.localStorage.getItem("tomin");
+  var age = nvl(window.localStorage.getItem("age"), "");
+
+  var body = "";
   
-  var body = mLang().sleepStatsTotal + hrsmin((stats.deep + stats.light + stats.awake + stats.ignore) * mConst().sampleIntervalMins)+ "\n" +
-             mLang().sleepStatsAwake + hrsmin(stats.awake * mConst().sampleIntervalMins)+ "\n" +
-             mLang().sleepStatsLight + hrsmin(stats.light * mConst().sampleIntervalMins)+ "\n" +
-             mLang().sleepStatsDeep + hrsmin(stats.deep * mConst().sampleIntervalMins)+ "\n" +
-             mLang().sleepStatsIgnore + hrsmin(stats.ignore * mConst().sampleIntervalMins)+ "\n\n" +
-             quote;
+  body += buildRecommendationPhrase(age, stats);
+    
+  body += "\n\n" +
+          quote;
 
   var pin = {
     "id" : getPinId(base,"sa"),
@@ -69,7 +68,7 @@ function addSmartAlarmPin() {
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().sa,
-      "subtitle" : fromhr + ":" + frommin + " - " + tohr + ":" + tomin,
+      "subtitle" : parseInt(fromhr,10) + ":" + frommin + " - " + parseInt(tohr,10) + ":" + tomin,
       "tinyIcon" : "system://images/ALARM_CLOCK",
       "backgroundColor" : "#00AAFF",
       "body" : body
@@ -110,7 +109,6 @@ function addBedTimePin(base) {
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().bedTime,
-      "subtitle" : mLang().byMorpheuz,
       "tinyIcon" : "system://images/SCHEDULED_EVENT",
       "backgroundColor" : "#00AAFF",
       "body" : quote
@@ -186,6 +184,7 @@ function timelineRequest(pin, type, callback) {
     // Add headers
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.setRequestHeader('X-User-Token', '' + token);
+    console.log("X-User-Token:" + token);
 
     // Send
     xhr.send(JSON.stringify(pin));
@@ -222,3 +221,5 @@ function deleteUserPin(pin, callback) {
 }
 
 /** *************************** end timeline lib ****************************** */
+
+

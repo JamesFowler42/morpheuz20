@@ -2,7 +2,7 @@
 <project name="morpheuz" basedir="." default="all">
 
 	<property name="ver" value="38"/>
-	<property name="inc" value="2"/>
+	<property name="inc" value="9"/>
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
@@ -20,6 +20,10 @@
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="utils.js" />
 			<param name="min.file" value="utils-${ver}.min.js" />
+		</antcall>
+		<antcall target="shrink" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="../../src/js/common.js" />
+			<param name="min.file" value="common-${ver}.min.js" />
 		</antcall>
 		<antcall target="copyedit" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="view.html" />
@@ -45,6 +49,9 @@
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="utils-${ver}.min.js" />
+		</antcall>
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="common-${ver}.min.js" />
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.html" />
@@ -86,6 +93,7 @@
 		<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js?v=${inc}"/>
 		<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css?v=${inc}"/>
 		<replace file="${builddir}/${out.file}" token="utils.js?v=1" value="utils-${ver}.min.js?v=${inc}"/>
+		<replace file="${builddir}/${out.file}" token="common.js?v=1" value="common-${ver}.min.js?v=${inc}"/>
 	</target>
 	
 	<target name="copyversion" description="copyversion">

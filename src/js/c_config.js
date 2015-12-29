@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -42,7 +42,6 @@ function mConst() {
     tominDef : "15",
     pushoverAPI : "https://api.pushover.net/1/messages.json",
     smartwatchProAPI : "http://2hk.smartwatch.pro/?source=Morpheuz&starts=",
-    sampleIntervalMins : 10,
     ctrlTransmitDone : 1,
     ctrlVersionDone : 2,
     ctrlGoneOffDone : 4,
@@ -52,8 +51,6 @@ function mConst() {
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
     timeout : 4000,
-    usageUrl : urlPrefix + "usage/",
-    usageSx : ".html",
     quotesUrl : urlPrefix + "quotes.json",
     hueTimeout: 3000,
     urlNotReady: urlPrefix + "view-not-ready.html",
@@ -80,22 +77,6 @@ function mLang() {
     cancelBed : "Cancel bed time",
     earliest: "Earliest: ",
     latest: "Latest: ",
-    byMorpheuz: "Morpheuz",
-    sleepStatsTotal: "Total:",
-    sleepStatsAwake: "Restless:",
-    sleepStatsLight: "Light:",
-    sleepStatsDeep: "Deep:",
-    sleepStatsIgnore: "Ignore:",
-    sleepStats: "Statistics"
-  };
-}
-
-/*
- * Thresholds
- */
-function mThres() {
-  return {
-    awakeAbove : 1000,
-    lightAbove : 120, 
+    byMorpheuz: "Morpheuz"
   };
 }

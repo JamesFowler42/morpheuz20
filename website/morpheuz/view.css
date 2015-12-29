@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -175,6 +175,27 @@ a {
     margin-left: 2px;
 }
 
+.summaryhead {
+    background-color: #b36dff;
+    border-top-left-radius: 5px;
+    border-top-right-radius: 5px;
+    margin-left: 2px;
+    padding-top: 5px;
+    color: white;
+}
+
+.summarywrap {
+    background-color: #b36dff;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+    padding-top: 2px;
+    padding-bottom: 5px;
+    margin-top: 0px;
+    margin-bottom: 2px;
+    margin-left: 2px;
+    color:white;
+}
+
 table.jqplot-table-legend {
     background-color: #FF7D48 !important;
     z-index: 10;
@@ -220,9 +241,9 @@ div.jqplot-pie-series.jqplot-data-label {
 
 .statstable {
     font-size: 100%;
-    width: 320px;
     padding-top: 5px;
     color: white;
+    width: 100%;
 }
 
 .statstable td {

@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -52,7 +52,7 @@
   #define LOG_DEBUG(fmt, args...) 
 #endif
 
-#ifndef PBL_PLATFORM_APLITE
+#ifdef PBL_MICROPHONE
   #define VOICE_SUPPORTED
 #else 
   #define is_voice_system_active() (false)

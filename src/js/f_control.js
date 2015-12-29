@@ -1,7 +1,7 @@
 /* 
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -54,6 +54,7 @@ function resetWithPreserve() {
   var ifkey = window.localStorage.getItem("ifkey");
   var ifserver = window.localStorage.getItem("ifserver");
   var ifstat = window.localStorage.getItem("ifstat");
+  var age = window.localStorage.getItem("age");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -80,6 +81,7 @@ function resetWithPreserve() {
   window.localStorage.setItem("ifkey", nvl(ifkey, ""));
   window.localStorage.setItem("ifserver", nvl(ifserver, ""));
   window.localStorage.setItem("ifstat", nvl(ifstat, ""));
+  window.localStorage.setItem("age", nvl(age, ""));
 }
 
 /*
@@ -99,7 +101,7 @@ function getPlatform() {
  * Which platforms require time zone correction
  */
 function isTimeZoneCorrectionRequired() {
-   return (getPlatform() === "aplite" );
+  return false; 
 }
 
 /*
@@ -334,6 +336,7 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("hueid", configData.hueid);
     window.localStorage.setItem("ifkey", configData.ifkey);
     window.localStorage.setItem("ifserver", configData.ifserver);
+    window.localStorage.setItem("age", configData.age);
 
     // Test if requested
     if (configData.testsettings === "Y") {
@@ -379,6 +382,7 @@ function buildUrl(noset) {
   var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
   var emailto = nvl(window.localStorage.getItem("emailto"), "");
   var token = Pebble.getAccountToken();
+  var age = nvl(window.localStorage.getItem("age"), "");
 
   var extra = "";
   if (noset === "N") {
@@ -411,7 +415,7 @@ function buildUrl(noset) {
   
   var url = mConst().url + version + ".html" + 
            "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
-           "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token +
+           "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token + "&age=" + age + 
            "&noset=" + noset + extra;
   
   console.log("url=" + url + " (len=" + url.length + ")");

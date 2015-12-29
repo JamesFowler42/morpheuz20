@@ -1,7 +1,7 @@
 /*
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -74,7 +74,7 @@
 #define EARLIEST "Earliest"
 #define LATEST "Latest"
 
-#define COPYRIGHT "\n© 2015\nJames Fowler"
+#define COPYRIGHT "\n© 2016\nJames Fowler"
 
 #define MORPHEUZ "Morpheuz"
 

@@ -1,7 +1,7 @@
 /*
  * Morpheuz Sleep Monitor
  *
- * Copyright (c) 2013-2015 James Fowler
+ * Copyright (c) 2013-2016 James Fowler
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -403,6 +403,19 @@ EXTFN void set_ignore_on_current_time_segment() {
 }
 
 /*
+ * Set status for end of recording
+ */
+static void end_of_recording() {
+  set_icon(false, IS_RECORD);
+  set_icon(false, IS_IGNORE);
+  if (no_record_warning && !complete_outstanding) {
+    show_notice(RESOURCE_ID_NOTICE_END_OF_RECORDING);
+    no_record_warning = false;
+  }
+}
+
+
+/*
  * Store data returned from the accelerometer
  */
 static void store_point_info(uint16_t point) {
@@ -410,12 +423,7 @@ static void store_point_info(uint16_t point) {
   int32_t offset = calc_offset();
 
   if (at_limit(offset)) {
-    set_icon(false, IS_RECORD);
-    set_icon(false, IS_IGNORE);
-    if (no_record_warning && !complete_outstanding) {
-      show_notice(RESOURCE_ID_NOTICE_END_OF_RECORDING);
-      no_record_warning = false;
-    }
+    end_of_recording();
     return;
   }
 
@@ -587,6 +595,7 @@ EXTFN void server_processing(uint16_t biggest) {
     // Check smart alarm
     if (smart_alarm(biggest)) {
       fire_alarm();
+      end_of_recording();
     }
   }
   // Check to see if we need to transmit data
