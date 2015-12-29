@@ -110,7 +110,7 @@ function iftttMakerInterfaceData() {
     
     var csvData = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
   
-    var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData };
+    var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData.body };
 
     var url = getIfServer() + mConst().makerDataUrl + ifkey;
     

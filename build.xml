@@ -2,13 +2,18 @@
 <project name="morpheuz" basedir="." default="all">
 
 	<property name="ver" value="38"/>
-	<property name="inc" value="10"/>
+	<property name="verdec" value="3.8"/>
+	<property name="inc" value="14"/>
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
 	<property name="img" value="/img"/>
-
+	<property name="cpexport" value="/Users/keith/Dropbox/PebbleStuff/morpheuz20/${verdec}/cloud/morpheuz${ver}-${inc}.zip"/>
+	<property name="maindir" value="/Users/keith/morpheuz20"/>
+	<property name="dbarchive" value="/Users/keith/Dropbox/PebbleStuff/morpheuz20/${verdec}/morpheuz20.zip"/>
+	
 	<target name="all"  description="all">
+		<antcall target="unpack-cloud" inheritrefs="true" inheritall="true"/>
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="view.css" />
 			<param name="min.file" value="view-${ver}.min.css" />
@@ -66,6 +71,7 @@
 			<param name="min.file" value="json_email.php" />
 		</antcall>
 		<antcall target="copyimages" inheritrefs="true" inheritall="true" />
+		<antcall target="archive" inheritrefs="true" inheritall="true"/>
 	</target>
 
 	<target name="shrink" description="shrink">
@@ -114,5 +120,18 @@
 			<fileset dir="${srcdir}${img}"/>
 		</copy>
 	</target>
+	
+	<target name="unpack-cloud" description="unpack cloudpebble file">
+		<unzip src="${cpexport}" dest="${maindir}">
+			   <mapper>
+			        <globmapper from="morpheuz${ver}/*" to="*"/>
+			    </mapper>
+		</unzip>
+	</target>
+	
+	<target name="archive" description="archive maindir">
+		<zip basedir="${maindir}" destfile="${dbarchive}"/>
+	</target>
+	
 
 </project>

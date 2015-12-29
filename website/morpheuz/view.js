@@ -555,7 +555,8 @@ $("document").ready(function() {
     // Extract data
     var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
 
-    var url = "<a href='" + mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "'>" + mConst().report + "</a><br/>";
+    var url = "<a href='" + mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age +
+    "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "'>" + mConst().report + "</a><br/>";
 
     // Build email json
     var email = {
