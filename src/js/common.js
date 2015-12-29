@@ -159,10 +159,12 @@ function hrsmin(value) {
     result += hours + mCommonLang().hours;
   }
   var minutes = value % 60;
-  if (hours === 0) {
-    result += fixLen(String(minutes)) + mCommonLang().minutes;
-  } else {
-    result += " " + fixLen(String(minutes));
+  if (minutes !== 0) {
+    if (hours === 0) {
+      result += fixLen(String(minutes)) + mCommonLang().minutes;
+    } else {
+      result += " " + fixLen(String(minutes));
+    }
   }
   return result;
 }

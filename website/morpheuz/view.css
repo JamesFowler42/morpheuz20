@@ -332,6 +332,10 @@ p.small.red {
     padding-left: 5px;
 }
 
+.indentright {
+    padding-right: 5px;
+}
+
 .usageindent {
     padding-left: 5px;
     font-size: 100%;
