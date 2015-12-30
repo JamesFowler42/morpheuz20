@@ -94,35 +94,68 @@ function addSmartAlarmPin() {
 function addBedTimePin(base) {
 
   var auto = window.localStorage.getItem("autoReset");
-  if (auto === null || auto === "0") {
-    return;
-  }
 
   var baseDt = new Date(base);
   var bedTime = baseDt.addMinutes(24 * 60);
+  var reminderTime = baseDt.addMinutes(23 * 60 + 30);
 
   var quote = window.localStorage.getItem("quote");
-
-  var pin = {
-    "id" : getPinId(baseDt,"bt"),
-    "time" : bedTime.toISOString(),
-    "layout" : {
-      "type" : "genericPin",
-      "title" : mLang().bedTime,
-      "tinyIcon" : "system://images/SCHEDULED_EVENT",
-      "backgroundColor" : "#00AAFF",
-      "body" : quote
-    },
-    "actions" : [ {
-      "title" : mLang().bedNow,
-      "type" : "openWatchApp",
-      "launchCode" : 1
-    }, {
-      "title" : mLang().cancelBed,
-      "type" : "openWatchApp",
-      "launchCode" : 2
-    } ]
-  };
+  
+  var pin = null;
+  
+  if (auto === null || auto === "0") {
+    // Suggested bed-time
+    pin = {
+      "id" : getPinId(baseDt,"bt"),
+      "time" : bedTime.toISOString(),
+      "layout" : {
+        "type" : "genericPin",
+        "title" : mLang().bedTime,
+        "subtitle" : mLang().suggested,
+        "tinyIcon" : "system://images/NOTIFICATION_REMINDER",
+        "backgroundColor" : "#00AAFF",
+        "body" : quote
+      },
+      "actions" : [ {
+        "title" : mLang().bedNow,
+        "type" : "openWatchApp",
+        "launchCode" : 1
+      } ]
+    };
+  } else {
+    // Automatic bed time pin
+    pin = {
+      "id" : getPinId(baseDt,"bt"),
+      "time" : bedTime.toISOString(),
+      "layout" : {
+        "type" : "genericPin",
+        "title" : mLang().bedTime,
+        "subtitle" : mLang().automatic,
+        "tinyIcon" : "system://images/SCHEDULED_EVENT",
+        "backgroundColor" : "#00AAFF",
+        "body" : quote
+      },
+      "reminders": [
+        {
+          "time": reminderTime.toISOString(),
+          "layout": {
+            "type": "genericReminder",
+            "tinyIcon": "system://images/SCHEDULED_EVENT",
+            "title": mLang().bedtimeIn30Mins
+          }
+        } 
+      ],
+      "actions" : [ {
+        "title" : mLang().bedNow,
+        "type" : "openWatchApp",
+        "launchCode" : 1
+      }, {
+        "title" : mLang().cancelBed,
+        "type" : "openWatchApp",
+        "launchCode" : 2
+      } ]
+    };
+  }
 
   console.log('Inserting pin: ' + JSON.stringify(pin));
 

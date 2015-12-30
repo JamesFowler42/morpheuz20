@@ -225,11 +225,6 @@
                 "type": "raw"
             },
             {
-                "file": "data/end-of-recording.txt",
-                "name": "NOTICE_END_OF_RECORDING",
-                "type": "raw"
-            },
-            {
                 "file": "data/data-will-be-resent-shortly.txt",
                 "name": "NOTICE_DATA_WILL_BE_RESENT_SHORTLY",
                 "type": "raw"

@@ -77,6 +77,8 @@ function mLang() {
     cancelBed : "Cancel bed time",
     earliest: "Earliest: ",
     latest: "Latest: ",
-    byMorpheuz: "Morpheuz"
+    suggested: "Suggested",
+    automatic: "Automatic",
+    bedtimeIn30Mins: "Bed time in 30 minutes" 
   };
 }

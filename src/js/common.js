@@ -40,7 +40,7 @@ function mCommonConst() {
  */ 
 function mCommonLang() {
   return {
-    sleepSummary: "It is recommended that you get {0} to {1} hours sleep every night. Last night was {2} as you slept for {3}. Of that sleep: {4} was restless; {5} was light; {6} was deep; {7} was excluded as it either wasn't recorded, or you marked it to be ignored.",
+    sleepSummary: "Your body and brain requires {0} to {1} hours sleep every night. Last night was {2} as you slept for {3}. Of that sleep: {4} was restless; {5} was light; {6} was deep; {7} was excluded as it either wasn't recorded, or you marked it to be ignored.",
     sleepSummaryNoRecommend: "You slept for {0}. Of that sleep: {1} was restless; {2} was light; {3} was deep; {4} was excluded as it either wasn't recorded, or you marked it to be ignored.",
     minutes: " minutes",
     hour: " hour",

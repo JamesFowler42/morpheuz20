@@ -382,7 +382,7 @@ static int32_t calc_offset() {
  * Are we at the limit for recording
  */
 static bool at_limit(int32_t offset) {
-  return (offset >= LIMIT || offset < 0);
+  return (offset >= LIMIT || offset < 0) || internal_data.gone_off > 0;
 }
 
 /*
@@ -403,19 +403,6 @@ EXTFN void set_ignore_on_current_time_segment() {
 }
 
 /*
- * Set status for end of recording
- */
-static void end_of_recording() {
-  set_icon(false, IS_RECORD);
-  set_icon(false, IS_IGNORE);
-  if (no_record_warning && !complete_outstanding) {
-    show_notice(RESOURCE_ID_NOTICE_END_OF_RECORDING);
-    no_record_warning = false;
-  }
-}
-
-
-/*
  * Store data returned from the accelerometer
  */
 static void store_point_info(uint16_t point) {
@@ -423,7 +410,8 @@ static void store_point_info(uint16_t point) {
   int32_t offset = calc_offset();
 
   if (at_limit(offset)) {
-    end_of_recording();
+    set_icon(false, IS_RECORD);
+    set_icon(false, IS_IGNORE);
     return;
   }
 
@@ -450,8 +438,8 @@ static bool smart_alarm(uint16_t point) {
   uint32_t before;
   uint32_t after;
 
-  // Are we doing smart alarm thing
-  if (!config_data.smart)
+  // Are we doing smart alarm thing or we are and it has already happened
+  if (!config_data.smart || internal_data.gone_off > 0)
     return false;
 
   // Are we in the right timeframe
@@ -587,17 +575,15 @@ EXTFN void server_processing(uint16_t biggest) {
       no_record_warning = false;
     }
   }
-  // Record data and keep checking until alarm goes off
-  if (internal_data.gone_off == 0) {
-    // Store data
-    store_point_info(biggest);
+
+  // Store data
+  store_point_info(biggest);
     
-    // Check smart alarm
-    if (smart_alarm(biggest)) {
+  // Check smart alarm
+  if (smart_alarm(biggest)) {
       fire_alarm();
-      end_of_recording();
-    }
   }
+
   // Check to see if we need to transmit data
   transmit_data();
 }

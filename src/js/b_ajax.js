@@ -178,7 +178,7 @@ function makeAjaxCall(mode, url, toTime, dataout, resp) {
   if (dataout === "") {
     req.send();
   } else {
-	req.send(dataout);
+	  req.send(dataout);
   }
 
 }

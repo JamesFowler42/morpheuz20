@@ -190,10 +190,11 @@ EXTFN bool get_icon(IconState icon) {
 }
 
 /*
- * Are we monitoring sleep (recording or powernap)?
+ * Are we monitoring sleep (recording or powernap)? 
+ * Also now includes case where we have stopped recording and are ringing the alarm (including snoozed alarm)
  */
 EXTFN bool is_monitoring_sleep() {
-  return get_icon(IS_RECORD) || is_doing_powernap();
+  return get_icon(IS_RECORD) || is_doing_powernap() || get_icon(IS_ALARM_RING);
 }
 
 /*
