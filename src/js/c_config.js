@@ -79,6 +79,6 @@ function mLang() {
     latest: "Latest: ",
     suggested: "Suggested",
     automatic: "Automatic",
-    bedtimeIn30Mins: "Bed time in 30 minutes" 
+    bedtimeIn30Mins: "Bed time" 
   };
 }

@@ -379,10 +379,10 @@ static int32_t calc_offset() {
 }
 
 /*
- * Are we at the limit for recording
+ * Are we at the limit for recording, or the alarm has gone off, or the recording has been stopped because we got up
  */
 static bool at_limit(int32_t offset) {
-  return (offset >= LIMIT || offset < 0) || internal_data.gone_off > 0;
+  return (offset >= LIMIT || offset < 0) || internal_data.gone_off > 0 || internal_data.stopped;
 }
 
 /*

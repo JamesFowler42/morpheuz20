@@ -225,7 +225,7 @@ enum Thresholds {
 #define LATE_PRESET 2
 
 // Change INTERNAL_VER only if the InternalData struct changes
-#define INTERNAL_VER 42
+#define INTERNAL_VER 43
 typedef struct {
   uint8_t internal_ver;
   uint32_t base;
@@ -237,6 +237,7 @@ typedef struct {
   bool has_been_reset;
   bool gone_off_sent;
   bool transmit_sent;
+  bool stopped;
 } InternalData;
 
 // Change the CONFIG_VER only if the ConfigData struct changes

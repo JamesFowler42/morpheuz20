@@ -39,7 +39,9 @@
 #define MENU_ANALOGUE "Analogue"
 #define MENU_ANALOGUE_DES "Hands or classic?"
 #define MENU_QUIT "Quit"
-#define MENU_QUIT_DES "...or a long press on back"
+#define MENU_QUIT_DES "Shut down Morpheuz"
+#define MENU_STOP_AND_QUIT "Stop & quit"
+#define MENU_STOP_AND_QUIT_DES "Woke and got up"
 #define MENU_SNOOZE "Snooze Alarm"
 #define MENU_CANCEL "Cancel Alarm"
 #define MENU_AUTO_RESET "Auto bed time"
@@ -58,13 +60,8 @@
 #define DATE_FORMAT "%a, %b %e"
 #define DATE_FORMAT_LEN 12
   
-#ifdef PBL_COLOR
-  #define MENU_SNOOZE_DES  "... or press up"
-  #define MENU_CANCEL_DES "... or press down"
-#else
-  #define MENU_SNOOZE_DES "... or press down"
-  #define MENU_CANCEL_DES "... or press up"
-#endif
+#define MENU_SNOOZE_DES  "... or press up"
+#define MENU_CANCEL_DES "... or press down"
 
 #define TEXT_AM "AM"
 #define TEXT_PM "PM"
