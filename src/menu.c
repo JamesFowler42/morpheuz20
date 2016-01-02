@@ -34,7 +34,6 @@
 #define FEATURE_AUTO_HIDE 1
 #define FEATURE_SMART_ALARM 2
 #define FEATURE_WAKEUP 4
-#define FEATURE_QUIT 8
 
 // Private
 static Window *window;
@@ -47,7 +46,6 @@ static uint8_t power_nap_state = 0;
 static uint8_t auto_reset_state = 0;
 static uint8_t original_auto_reset_state = 0;
 static uint8_t menu_slide;
-static bool is_recording;
 static char menu_text[TIME_RANGE_LEN];
 static int16_t selected_row;
 bool menu_live = false;
@@ -80,6 +78,7 @@ static MenuDef menu_def[] = {
   { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, FEATURE_AUTO_HIDE},
   { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, FEATURE_AUTO_HIDE},
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, FEATURE_AUTO_HIDE},
+  { MENU_STOP_AND_QUIT, MENU_STOP_AND_QUIT_DES, NULL, stop_and_quit, FEATURE_AUTO_HIDE},    
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, FEATURE_AUTO_HIDE},
   { MENU_SMART_ALARM, NULL, NULL, show_set_alarm, FEATURE_SMART_ALARM},
   { MENU_TOGGLE_ALARM, MENU_TOGGLE_ALARM_DES, &smart_alarm, toggle_alarm, FEATURE_NONE},
@@ -92,7 +91,7 @@ static MenuDef menu_def[] = {
   { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, FEATURE_AUTO_HIDE},
 #endif
   { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend, FEATURE_AUTO_HIDE},
-  { MENU_STOP_AND_QUIT, MENU_STOP_AND_QUIT_DES, NULL, stop_and_quit, FEATURE_AUTO_HIDE | FEATURE_QUIT}};
+  { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz, FEATURE_AUTO_HIDE}};
 
 // Shared with menu, rootui and presets 
 extern char date_text[DATE_FORMAT_LEN];
@@ -149,10 +148,7 @@ static void menu_draw_row_callback(GContext* ctx, const Layer *cell_layer, MenuI
   } else if ((menu_def[index].feature & FEATURE_SMART_ALARM) == FEATURE_SMART_ALARM) {
     copy_alarm_time_range_into_field(menu_text, sizeof(menu_text));
     subtitle = menu_text;
-  } else if ((menu_def[index].feature & FEATURE_QUIT) == FEATURE_QUIT && !is_recording) {
-    title = MENU_QUIT;
-    subtitle = MENU_QUIT_DES;
-  }
+  } 
   
   #ifndef PBL_ROUND
      menu_cell_basic_draw(ctx, cell_layer, title, subtitle, icon);
@@ -311,9 +307,9 @@ EXTFN void show_menu() {
   auto_reset_state = get_config_data()->auto_reset;
   original_auto_reset_state = auto_reset_state;
   bool alarm_on = get_icon(IS_ALARM_RING);
-  is_recording = get_icon(IS_RECORD);
+  bool is_recording = get_icon(IS_RECORD);
   
-  menu_slide = alarm_on ? 0 : is_recording ? 2 : 3;
+  menu_slide = alarm_on ? 0 : is_recording ? 2 : 4;
   
   window = window_create();
   // Setup the window handlers

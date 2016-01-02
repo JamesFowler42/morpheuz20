@@ -39,7 +39,7 @@
 #define MENU_ANALOGUE "Analogue"
 #define MENU_ANALOGUE_DES "Hands or classic?"
 #define MENU_QUIT "Quit"
-#define MENU_QUIT_DES "Shut down Morpheuz"
+#define MENU_QUIT_DES "...or a long press on back"
 #define MENU_STOP_AND_QUIT "Stop & quit"
 #define MENU_STOP_AND_QUIT_DES "Woke and got up"
 #define MENU_SNOOZE "Snooze Alarm"

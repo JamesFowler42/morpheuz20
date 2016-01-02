@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup, mCommonConst, hrsmin */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin, addSummaryPin */
 
 /*
@@ -37,31 +37,25 @@ function getPinId(base, type) {
  * Add a smart alarm pin when wakeup occurs (triggered when the gone off data is sent)
  */
 function addSmartAlarmPin() {
+  
+  var baseStr = window.localStorage.getItem("base");
+  var base = new Date(parseInt(baseStr,10));
 
-  var stats = calculateStats(parseInt(window.localStorage.getItem("base"), 10), nvl(window.localStorage.getItem("goneOff"), "N"), extractSplitup());
+  var stats = calculateStats(base, nvl(window.localStorage.getItem("goneOff"), "N"), extractSplitup());
   if (stats.tends === null) {
     console.log("addSmartAlarmPin: stats couldn't be calculated");
     return;
   }
 
   var alarmTime = stats.tends;
-
   var quote = window.localStorage.getItem("quote");
-  var baseStr = window.localStorage.getItem("base");
-  var base = new Date(parseInt(baseStr,10));
   var fromhr = window.localStorage.getItem("fromhr");
   var tohr = window.localStorage.getItem("tohr");
   var frommin = window.localStorage.getItem("frommin");
   var tomin = window.localStorage.getItem("tomin");
-  var age = nvl(window.localStorage.getItem("age"), "");
 
-  var body = "";
+  var body = quote;
   
-  body += buildRecommendationPhrase(age, stats);
-    
-  body += "\n\n" +
-          quote;
-
   var pin = {
     "id" : getPinId(base,"sa"),
     "time" : alarmTime.toISOString(),
@@ -166,39 +160,35 @@ function addBedTimePin(base) {
 }
 
 /*
- * Without the smart alarm pin, we need a sleep summary pin (triggered on exports)
+ * Add the sleep summary pin
  */
 function addSummaryPin() {
  
   var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
+  var baseStr = window.localStorage.getItem("base");
+  var base = new Date(parseInt(baseStr,10));
   
-  if (goneOff === "N") {
-    console.log("addSummaryPin: Summary already covered in addSmartAlarmPin");
-    return;
-  }
-  
-  var stats = calculateStats(parseInt(window.localStorage.getItem("base"), 10), goneOff, extractSplitup());
+  var stats = calculateStats(base, goneOff, extractSplitup());
   if (stats.tends === null) {
     console.log("addSummaryPin: stats couldn't be calculated");
     return;
   }
   
-  var alarmTime = stats.tends;
+  // We add one minute, just so as the smart alarm and summary pin occur in the same order always
+  var summaryTime = stats.tends.addMinutes(1);
 
-  var baseStr = window.localStorage.getItem("base");
-  var base = new Date(parseInt(baseStr,10));
   var age = nvl(window.localStorage.getItem("age"), "");
 
   var body = buildRecommendationPhrase(age, stats);
 
   var pin = {
     "id" : getPinId(base,"su"),
-    "time" : alarmTime.toISOString(),
+    "time" : summaryTime.toISOString(),
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().summary,
-      "subtitle": mLang().byMorpheuz,
-      "tinyIcon" : "system://images/GENERIC_CONFIRMATION",
+      "subtitle": hrsmin(stats.total * mCommonConst().sampleIntervalMins),
+      "tinyIcon" : "system://images/GLUCOSE_MONITOR",
       "backgroundColor" : "#00AAFF",
       "body" : body
     }

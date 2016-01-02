@@ -248,6 +248,8 @@ function calculateStats(base, goneoff, splitup) {
       }
     }
   }
+  
+  var total = (deep + light + awake + ignore);
 
   return {
     "tbegin" : tbegin,
@@ -255,7 +257,8 @@ function calculateStats(base, goneoff, splitup) {
     "deep" : deep,
     "light" : light,
     "awake" : awake,
-    "ignore" : ignore
+    "ignore" : ignore,
+    "total" : total
   };
 }
 
@@ -330,7 +333,7 @@ function generateRecommendation(age, total) {
  * Build the recommendation phrase
  */
 function buildRecommendationPhrase(age, stats) {
-  var total = (stats.deep + stats.light + stats.awake + stats.ignore) * mCommonConst().sampleIntervalMins;
+  var total = stats.total * mCommonConst().sampleIntervalMins;
   
   var trex = generateRecommendation(age, total);
    
