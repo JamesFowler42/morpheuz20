@@ -23,7 +23,7 @@
  */
 
 /*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup */
-/*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin */
+/*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin, addSummaryPin */
 
 /*
  * Ensure that we only insert one pin per day for each type and they move if we reset
@@ -34,7 +34,7 @@ function getPinId(base, type) {
 }
 
 /*
- * Add a smart alarm pin when wakeup occurs
+ * Add a smart alarm pin when wakeup occurs (triggered when the gone off data is sent)
  */
 function addSmartAlarmPin() {
 
@@ -89,7 +89,7 @@ function addSmartAlarmPin() {
 }
 
 /*
- * Add a bed time pin when we're due to go to sleep
+ * Add a bed time pin when we're due to go to sleep (triggered on reset and placed ahead of time)
  */
 function addBedTimePin(base) {
 
@@ -156,6 +156,53 @@ function addBedTimePin(base) {
       } ]
     };
   }
+
+  console.log('Inserting pin: ' + JSON.stringify(pin));
+
+  insertUserPin(pin, function(responseText) {
+    console.log('Result: ' + responseText);
+  });
+
+}
+
+/*
+ * Without the smart alarm pin, we need a sleep summary pin (triggered on exports)
+ */
+function addSummaryPin() {
+ 
+  var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
+  
+  if (goneOff === "N") {
+    console.log("addSummaryPin: Summary already covered in addSmartAlarmPin");
+    return;
+  }
+  
+  var stats = calculateStats(parseInt(window.localStorage.getItem("base"), 10), goneOff, extractSplitup());
+  if (stats.tends === null) {
+    console.log("addSummaryPin: stats couldn't be calculated");
+    return;
+  }
+  
+  var alarmTime = stats.tends;
+
+  var baseStr = window.localStorage.getItem("base");
+  var base = new Date(parseInt(baseStr,10));
+  var age = nvl(window.localStorage.getItem("age"), "");
+
+  var body = buildRecommendationPhrase(age, stats);
+
+  var pin = {
+    "id" : getPinId(base,"su"),
+    "time" : alarmTime.toISOString(),
+    "layout" : {
+      "type" : "genericPin",
+      "title" : mLang().summary,
+      "subtitle": mLang().byMorpheuz,
+      "tinyIcon" : "system://images/GENERIC_CONFIRMATION",
+      "backgroundColor" : "#00AAFF",
+      "body" : body
+    }
+  };
 
   console.log('Inserting pin: ' + JSON.stringify(pin));
 

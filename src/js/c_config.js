@@ -79,6 +79,8 @@ function mLang() {
     latest: "Latest: ",
     suggested: "Suggested",
     automatic: "Automatic",
-    bedtimeIn30Mins: "Bed time" 
+    bedtimeIn30Mins: "Bed time",
+    summary: "Summary",
+    byMorpheuz: "Morpheuz"
   };
 }

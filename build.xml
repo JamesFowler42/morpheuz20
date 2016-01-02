@@ -3,7 +3,7 @@
 
 	<property name="ver" value="38"/>
 	<property name="verdec" value="3.8"/>
-	<property name="inc" value="17"/>
+	<property name="inc" value="19"/>
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
@@ -72,6 +72,20 @@
 		</antcall>
 		<antcall target="copyimages" inheritrefs="true" inheritall="true" />
 		<antcall target="archive" inheritrefs="true" inheritall="true"/>
+		<fail message="appinfo.json has incorrect version">
+		    <condition>
+		    	<not>
+		    		<resourcecontains resource="appinfo.json" substring="&quot;${verdec}&quot;"/>
+		    	</not>
+		    </condition>
+		</fail>
+		<fail message="morpheuz.h has incorrect version">
+		    <condition>
+		    	<not>
+		    		<resourcecontains resource="src/morpheuz.h" substring="&quot;${verdec}&quot;"/>
+		    	</not>
+		    </condition>
+		</fail>
 	</target>
 
 	<target name="shrink" description="shrink">

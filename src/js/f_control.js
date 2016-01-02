@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
 
 /*
  * Reset log
@@ -82,19 +82,6 @@ function resetWithPreserve() {
   window.localStorage.setItem("ifserver", nvl(ifserver, ""));
   window.localStorage.setItem("ifstat", nvl(ifstat, ""));
   window.localStorage.setItem("age", nvl(age, ""));
-}
-
-/*
- * Returns the platform
- */
-function getPlatform() {
-  if (Pebble.getActiveWatchInfo) {
-    var watchinfo = Pebble.getActiveWatchInfo();
-    var platform = watchinfo.platform;
-    return platform;
-  } else {
-    return "aplite" ;
-  }
 }
 
 /*
@@ -190,18 +177,18 @@ Pebble.addEventListener("appmessage", function(e) {
     var from = parseInt(e.payload.keyFrom, 10);
     var fromhr = mConst().fromhrDef;
     var frommin = mConst().fromminDef;
-    var smart = mConst().smartDef;
+    var fsmart = mConst().smartDef;
     if (from !== -1) {
-      var hours = Math.floor(from / 60);
-      var minutes = from - hours * 60;
-      fromhr = fixLen(String(hours));
-      frommin = fixLen(String(minutes));
-      smart = "Y";
+      var fhours = Math.floor(from / 60);
+      var fminutes = from - fhours * 60;
+      fromhr = fixLen(String(fhours));
+      frommin = fixLen(String(fminutes));
+      fsmart = "Y";
     }
     window.localStorage.setItem("fromhr", fromhr);
     window.localStorage.setItem("frommin", frommin);
-    window.localStorage.setItem("smart", smart);
-    console.log("MSG from=" + from + ", smart=" + smart + ", fromhr=" + fromhr + ", frommin=" + frommin);
+    window.localStorage.setItem("smart", fsmart);
+    console.log("MSG from=" + from + ", smart=" + fsmart + ", fromhr=" + fromhr + ", frommin=" + frommin);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
 
@@ -210,18 +197,18 @@ Pebble.addEventListener("appmessage", function(e) {
     var to = parseInt(e.payload.keyTo, 10);
     var tohr = mConst().tohrDef;
     var tomin = mConst().tominDef;
-    var smart = mConst().smartDef;
+    var tsmart = mConst().smartDef;
     if (to !== -1) {
-      var hours = Math.floor(to / 60);
-      var minutes = to - hours * 60;
-      tohr = fixLen(String(hours));
-      tomin = fixLen(String(minutes));
-      smart = "Y";
+      var thours = Math.floor(to / 60);
+      var tminutes = to - thours * 60;
+      tohr = fixLen(String(thours));
+      tomin = fixLen(String(tminutes));
+      tsmart = "Y";
     }
     window.localStorage.setItem("tohr", tohr);
     window.localStorage.setItem("tomin", tomin);
-    window.localStorage.setItem("smart", smart);
-    console.log("MSG to=" + to + ", smart=" + smart + ", tohr=" + tohr + ", tomin=" + tomin);
+    window.localStorage.setItem("smart", tsmart);
+    console.log("MSG to=" + to + ", smart=" + tsmart + ", tohr=" + tohr + ", tomin=" + tomin);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
 
@@ -293,6 +280,7 @@ function transmitMethods() {
   pushoverTransmit();
   smartwatchProTransmit();
   iftttMakerInterfaceData();
+  addSummaryPin();
 
   // Protect and report time
   window.localStorage.setItem("transmitDone", "done");
