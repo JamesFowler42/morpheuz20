@@ -28,6 +28,10 @@
   
 #ifdef PBL_RECT
 
+#define WIDTH_SMART_POINTS 3
+#define WIDTH_HOUR_MARKS 3
+#define WIDTH_MINUTES PBL_IF_COLOR_ELSE(2,1)
+
 const GPathInfo MINUTE_HAND_POINTS = HAND_MACRO(49);
 
 const GPathInfo HOUR_HAND_POINTS = HAND_MACRO(35);
@@ -56,10 +60,10 @@ static bool g_call_post_init;
  * start = 0 to 1440 starting position
  * stop = 0 to 1440 ending position
  * step = 120: hourly; 24: minute; etc
- * jitter = line thickening (low numbers less, high numbers more)
+ * width = line thickening 
  * color = line color
  */
-static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int start, int stop, int step, int jitter, GColor color) {
+static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int start, int stop, int step, int width, GColor color) {
   graphics_context_set_stroke_color(ctx, color);
   
   GRect bounds = layer_get_bounds(layer);
@@ -70,11 +74,10 @@ static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int st
 
   GPoint pointInner;
   GPoint pointOuter;
-
+  
+  graphics_context_set_stroke_width(ctx, width);
   for (int i = start; i < stop; i += step) {
-    for (int j = -jitter; j < jitter; j++) {
-
-      int32_t second_angle = (TRIG_MAX_ANGLE * (i + j) / 1440);
+      int32_t second_angle = (TRIG_MAX_ANGLE * i / 1440);
       int32_t minus_cos = -cos_lookup(second_angle);
       int32_t plus_sin = sin_lookup(second_angle);
 
@@ -84,9 +87,7 @@ static void draw_marks(Layer *layer, GContext *ctx, int inner, int outer, int st
       pointOuter.x = (int16_t) (plus_sin * (int32_t) pixelsOuter / TRIG_MAX_RATIO) + center.x;
 
       graphics_draw_line(ctx, pointInner, pointOuter);
-    }
   }
-
 }
 
 /*
@@ -105,28 +106,28 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
 
   // Start and first and last times for smart alarm
   if (show_smart_points) {
-    draw_marks(layer, ctx, OUTER_STOP, OUTER, from_time, from_time + 1, 1, 7, FROM_TIME_COLOR);
-    draw_marks(layer, ctx, OUTER_STOP, OUTER, to_time, to_time + 1, 1, 7, TO_TIME_COLOR);
+    draw_marks(layer, ctx, OUTER_STOP, OUTER, from_time, from_time + 1, 1, WIDTH_SMART_POINTS, FROM_TIME_COLOR);
+    draw_marks(layer, ctx, OUTER_STOP, OUTER, to_time, to_time + 1, 1, WIDTH_SMART_POINTS, TO_TIME_COLOR);
   }
 
   // Minute marks
-  draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, MINUTE_STEP, 1, MINUTE_MARK_COLOR);
+  draw_marks(layer, ctx, MIN, CLOCK, 0, 1440, MINUTE_STEP, WIDTH_MINUTES, MINUTE_MARK_COLOR);
 
   // Show reset point
   if (start_time != -1) {
-    draw_marks(layer, ctx, OUTER_STOP, OUTER, start_time, start_time + 1, 1, 7, START_TIME_COLOR);
+    draw_marks(layer, ctx, OUTER_STOP, OUTER, start_time, start_time + 1, 1, WIDTH_SMART_POINTS, START_TIME_COLOR);
 
     // Progress line
     if (progress_1 != -1) {
-      draw_marks(layer, ctx, MIN, CLOCK, start_time_round, progress_1, PROGRESS_STEP, 1, PROGRESS_COLOR);
+      draw_marks(layer, ctx, MIN, CLOCK, start_time_round, progress_1, PROGRESS_STEP, WIDTH_MINUTES, PROGRESS_COLOR);
       if (progress_2 != -1) {
-        draw_marks(layer, ctx, MIN, CLOCK, 0, progress_2, PROGRESS_STEP, 1, PROGRESS_COLOR);
+        draw_marks(layer, ctx, MIN, CLOCK, 0, progress_2, PROGRESS_STEP, WIDTH_MINUTES, PROGRESS_COLOR);
       }
     }
   }
   
   // Hour marks
-  draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, 7, HOUR_MARK_COLOR);
+  draw_marks(layer, ctx, HOUR, CLOCK, 0, 1440, 120, WIDTH_HOUR_MARKS, HOUR_MARK_COLOR);
 
 }
 
