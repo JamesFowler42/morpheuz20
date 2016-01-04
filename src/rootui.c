@@ -30,7 +30,6 @@
 // Private  
 static bool icon_state[MAX_ICON_STATE];
 static uint8_t previous_mday = 255;
-static time_t last_clock_update;
 static char powernap_text[3];
 
 // Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
@@ -52,21 +51,6 @@ static void update_clock() {
      text_layer_set_text(ui.text_time_shadow_layer, time_text); 
   #endif
   analogue_minute_tick();
-  last_clock_update = time(NULL);
-}
-
-/*
- * Display the clock on movement (ensures if you start moving the clock is up to date)
- * Also fired from button press
- */
-EXTFN void revive_clock_on_movement(uint16_t last_movement) {
-
-  if (last_movement >= CLOCK_UPDATE_THRESHOLD) {
-    time_t now = time(NULL);
-    if ((now - last_clock_update) > 60) {
-      update_clock();
-    }
-  }
 }
 
 /**
@@ -78,7 +62,6 @@ static void back_single_click_handler(ClickRecognizerRef recognizer, void *conte
   // Only if we're recording or running powernap
   if (is_monitoring_sleep()) {
     manual_shutdown_request();
-    revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
   } else {
     close_morpheuz();  
   }
@@ -90,8 +73,6 @@ static void back_single_click_handler(ClickRecognizerRef recognizer, void *conte
 static void down_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Make the snooze and the cancel buttons the same way around as the default alarm app
   cancel_alarm();
-  // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }
 
 /*
@@ -99,7 +80,6 @@ static void down_single_click_handler(ClickRecognizerRef recognizer, void *conte
  */
 static void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
   if (!is_notice_showing())
     show_menu();
 }
@@ -110,8 +90,6 @@ static void select_single_click_handler(ClickRecognizerRef recognizer, void *con
 static void up_single_click_handler(ClickRecognizerRef recognizer, void *context) {
   // Make the snooze and the cancel buttons the same way around as the default alarm app
   snooze_alarm();
-  // Bring clock up to date if a button is pressed
-  revive_clock_on_movement(CLOCK_UPDATE_THRESHOLD);
 }
 
 #ifdef VOICE_SUPPORTED
@@ -361,20 +339,13 @@ EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
   #endif
 
   // Perform all background processing
-  uint16_t last_movement;
-  if (is_animation_complete()) {
-    last_movement = every_minute_processing();
-  } else {
-    last_movement = CLOCK_UPDATE_THRESHOLD;
-  }
+  every_minute_processing();
 
   // Do the power nap countdown
   power_nap_countdown();
 
-  // Only update the clock every five minutes unless awake
-  if (last_movement >= CLOCK_UPDATE_THRESHOLD || (tick_time->tm_min % 5 == 0)) {
-    update_clock();
-  }
+  // Update the clock
+  update_clock();
 }
 
 /*

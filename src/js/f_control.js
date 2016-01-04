@@ -227,6 +227,7 @@ Pebble.addEventListener("appmessage", function(e) {
     window.localStorage.setItem("goneOff", goneoff);
     ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
     addSmartAlarmPin();
+    addSummaryPin(true);
     turnLifxLightsOn();
     turnHueLightsOn();
     iftttMakerInterfaceAlarm();
@@ -280,7 +281,7 @@ function transmitMethods() {
   pushoverTransmit();
   smartwatchProTransmit();
   iftttMakerInterfaceData();
-  addSummaryPin();
+  addSummaryPin(false);
 
   // Protect and report time
   window.localStorage.setItem("transmitDone", "done");

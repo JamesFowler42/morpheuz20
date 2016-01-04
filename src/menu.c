@@ -75,8 +75,6 @@ typedef struct {
   
 // Define the menu
 static MenuDef menu_def[] = { 
-  { MENU_SNOOZE, MENU_SNOOZE_DES, NULL, snooze_alarm, FEATURE_AUTO_HIDE},
-  { MENU_CANCEL, MENU_CANCEL_DES, NULL, cancel_alarm, FEATURE_AUTO_HIDE},
   { MENU_IGNORE, MENU_IGNORE_DES, &ignore_state, set_ignore_on_current_time_segment, FEATURE_AUTO_HIDE},
   { MENU_STOP_AND_QUIT, MENU_STOP_AND_QUIT_DES, NULL, stop_and_quit, FEATURE_AUTO_HIDE},    
   { MENU_RESET, MENU_RESET_DES, NULL, reset_sleep_period, FEATURE_AUTO_HIDE},
@@ -306,10 +304,8 @@ EXTFN void show_menu() {
   power_nap_state = is_doing_powernap();
   auto_reset_state = get_config_data()->auto_reset;
   original_auto_reset_state = auto_reset_state;
-  bool alarm_on = get_icon(IS_ALARM_RING);
-  bool is_recording = get_icon(IS_RECORD);
   
-  menu_slide = alarm_on ? 0 : is_recording ? 2 : 4;
+  menu_slide = get_icon(IS_RECORD) ? 0 : 2;
   
   window = window_create();
   // Setup the window handlers

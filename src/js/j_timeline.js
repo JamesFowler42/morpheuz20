@@ -160,11 +160,17 @@ function addBedTimePin(base) {
 }
 
 /*
- * Add the sleep summary pin
+ * Add the sleep summary pin (called at the same time as the smart alarm pin and during summary for when the smart alarm is not set)
  */
-function addSummaryPin() {
- 
+function addSummaryPin(atAlarmTime) {
+  
   var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
+  
+  // At summary time and the alarm has gone off then this has already been done. Run away and don't tell anyone.
+  if (!atAlarmTime && goneOff !== "N") {
+    return;
+  }
+  
   var baseStr = window.localStorage.getItem("base");
   var base = new Date(parseInt(baseStr,10));
   
@@ -187,7 +193,7 @@ function addSummaryPin() {
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().summary,
-      "subtitle": hrsmin(stats.total * mCommonConst().sampleIntervalMins),
+      "subtitle": hrsmin(stats.total),
       "tinyIcon" : "system://images/GLUCOSE_MONITOR",
       "backgroundColor" : "#00AAFF",
       "body" : body

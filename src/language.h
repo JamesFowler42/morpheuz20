@@ -42,8 +42,6 @@
 #define MENU_QUIT_DES "...or a long press on back"
 #define MENU_STOP_AND_QUIT "Stop & quit"
 #define MENU_STOP_AND_QUIT_DES "Woke and got up"
-#define MENU_SNOOZE "Snooze Alarm"
-#define MENU_CANCEL "Cancel Alarm"
 #define MENU_AUTO_RESET "Auto bed time"
 #define MENU_AUTO_RESET_DES_OFF "... same time again"
 #define MENU_AUTO_RESET_DES_ON "... at %d:%02d%s"
@@ -60,9 +58,6 @@
 #define DATE_FORMAT "%a, %b %e"
 #define DATE_FORMAT_LEN 12
   
-#define MENU_SNOOZE_DES  "... or press up"
-#define MENU_CANCEL_DES "... or press down"
-
 #define TEXT_AM "AM"
 #define TEXT_PM "PM"
 #define TEXT_AM_PAD " AM"

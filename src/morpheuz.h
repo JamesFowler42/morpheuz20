@@ -82,7 +82,6 @@
 // #define POWER_NAP_MINUTES 1 
   
 #define POWER_NAP_SETTLE 2
-#define CLOCK_UPDATE_THRESHOLD 1000
 #define SNOOZE_PERIOD_MS (9*60*1000)
 #define POST_MENU_ACTION_DISPLAY_UPDATE_MS 900
 #define MENU_ACTION_MS 750
@@ -283,7 +282,7 @@ GColor bar_color(uint16_t height);
 int main(void);
 int32_t dirty_checksum(void *data, uint8_t data_size);
 int32_t join_value(int16_t top, int16_t bottom);
-uint16_t every_minute_processing();
+void every_minute_processing();
 uint8_t twenty_four_to_twelve(uint8_t hour);
 void analogue_minute_tick();
 void analogue_powernap_text(char *text);
@@ -324,7 +323,6 @@ void read_config_data();
 void read_internal_data();
 void resend_all_data(bool invoked_by_change_of_time);
 void reset_sleep_period();
-void revive_clock_on_movement(uint16_t last_movement);
 void save_config_data(void *data);
 void save_internal_data();
 void server_processing(uint16_t biggest);

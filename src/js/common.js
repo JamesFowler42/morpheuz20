@@ -40,9 +40,11 @@ function mCommonConst() {
  */ 
 function mCommonLang() {
   return {
+    noSleep: "No sleep has been recorded yet. If this is incorrect, select the 'Resend' menu option on your watch and check again in a few minutes.",
     sleepSummary: "Your body and brain requires {0} to {1} hours sleep every night. Last night was {2} as you slept for {3}. Of that sleep: {4} was restless; {5} was light; {6} was deep; {7} was excluded as it either wasn't recorded, or you marked it to be ignored.",
     sleepSummaryNoRecommend: "You slept for {0}. Of that sleep: {1} was restless; {2} was light; {3} was deep; {4} was excluded as it either wasn't recorded, or you marked it to be ignored.",
     minutes: " minutes",
+    minute: " minute",
     hour: " hour",
     hours: " hours",
     none: "none",
@@ -161,7 +163,11 @@ function hrsmin(value) {
   var minutes = value % 60;
   if (minutes !== 0) {
     if (hours === 0) {
-      result += fixLen(String(minutes)) + mCommonLang().minutes;
+      if (minutes === 1) {
+        result += fixLen(String(minutes)) + mCommonLang().minute;
+      } else {
+        result += fixLen(String(minutes)) + mCommonLang().minutes;
+      }
     } else {
       result += " " + fixLen(String(minutes));
     }
@@ -248,16 +254,20 @@ function calculateStats(base, goneoff, splitup) {
       }
     }
   }
-  
-  var total = (deep + light + awake + ignore);
+
+  // Note - the total should really be deep + light + awake + ignore. However begin and end times are calculated to an exact number of minutes
+  // (the smart alarm is accurate to the minute), whilst all other times are accurate to a 10 minute period. I'd prefer the time in the summary
+  // to match the time recorded in Healthkit.
+  var diff = tends - tbegin;
+  var total = Math.round((diff/1000)/60);
 
   return {
     "tbegin" : tbegin,
     "tends" : tends, 
-    "deep" : deep,
-    "light" : light,
-    "awake" : awake,
-    "ignore" : ignore,
+    "deep" : deep * mCommonConst().sampleIntervalMins,
+    "light" : light * mCommonConst().sampleIntervalMins,
+    "awake" : awake * mCommonConst().sampleIntervalMins,
+    "ignore" : ignore * mCommonConst().sampleIntervalMins,
     "total" : total
   };
 }
@@ -333,14 +343,17 @@ function generateRecommendation(age, total) {
  * Build the recommendation phrase
  */
 function buildRecommendationPhrase(age, stats) {
-  var total = stats.total * mCommonConst().sampleIntervalMins;
   
-  var trex = generateRecommendation(age, total);
+  if (stats.total === 0) {
+    return mCommonLang().noSleep;
+  }
+  
+  var trex = generateRecommendation(age, stats.total);
    
   if (trex !== null) {
-    return mCommonLang().sleepSummary.format(trex.min, trex.max, trex.view, hrsmin(total), hrsmin(stats.awake * mCommonConst().sampleIntervalMins), hrsmin(stats.light * mCommonConst().sampleIntervalMins), hrsmin(stats.deep * mCommonConst().sampleIntervalMins), hrsmin(stats.ignore * mCommonConst().sampleIntervalMins));
+    return mCommonLang().sleepSummary.format(trex.min, trex.max, trex.view, hrsmin(stats.total), hrsmin(stats.awake), hrsmin(stats.light), hrsmin(stats.deep), hrsmin(stats.ignore));
   } else {
-    return mCommonLang().sleepSummaryNoRecommend.format(hrsmin(total), hrsmin(stats.awake * mCommonConst().sampleIntervalMins), hrsmin(stats.light * mCommonConst().sampleIntervalMins), hrsmin(stats.deep * mCommonConst().sampleIntervalMins), hrsmin(stats.ignore * mCommonConst().sampleIntervalMins));
+    return mCommonLang().sleepSummaryNoRecommend.format(hrsmin(stats.total), hrsmin(stats.awake), hrsmin(stats.light), hrsmin(stats.deep), hrsmin(stats.ignore));
   } 
 }
 
