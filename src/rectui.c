@@ -151,6 +151,7 @@ EXTFN void morpheuz_load(Window *window) {
 
   ui.text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(0, 86, 144, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
+  init_icon_cache();
   ui.icon_bar = macro_layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12), window_layer, &icon_bar_update_callback);
 
   BatteryChargeState initial = battery_state_service_peek();
@@ -170,9 +171,10 @@ EXTFN void morpheuz_load(Window *window) {
   
   read_internal_data();
   read_config_data();
-
+  
+  // Start clock
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
-
+  
   battery_state_service_subscribe(&battery_state_handler);
 
   bluetooth_connection_service_subscribe(bluetooth_state_handler);
@@ -212,6 +214,7 @@ EXTFN void morpheuz_unload(Window *window) {
 
   layer_destroy(ui.progress_layer);
   layer_destroy(ui.icon_bar);
+  destroy_icon_cache();
 
   text_layer_destroy(ui.text_time_layer);
   text_layer_destroy(ui.text_date_smart_alarm_range_layer);

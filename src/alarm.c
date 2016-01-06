@@ -43,6 +43,12 @@ static void do_alarm(void *data) {
   if (alarm_count >= ALARM_LIMIT) {
     return;
   }
+  
+  // Flash the light every 10th entry in the alarm pattern
+  // Did this once - took it out for some random reason
+  if (alarm_count%10 == 0) {
+    light_enable_interaction();
+  }
 
   // Don't vibe if waiting for voice
   if (!is_voice_system_active()) {

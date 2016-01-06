@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup, mCommonConst, hrsmin */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup, hrsmin */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin, addSummaryPin */
 
 /*
@@ -83,9 +83,12 @@ function addSmartAlarmPin() {
 }
 
 /*
- * Add a bed time pin when we're due to go to sleep (triggered on reset and placed ahead of time)
+ * Add a bed time pin when we're due to go to sleep (triggered on export functions)
  */
-function addBedTimePin(base) {
+function addBedTimePin() {
+  
+  var baseStr = window.localStorage.getItem("base");
+  var base = new Date(parseInt(baseStr,10));
 
   var auto = window.localStorage.getItem("autoReset");
 

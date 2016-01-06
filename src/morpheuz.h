@@ -57,6 +57,11 @@
 #else 
   #define is_voice_system_active() (false)
 #endif
+
+// APLITE is optimised for space, BASALT/CHALK and above are optimised for battery life
+#ifndef PBL_PLATFORM_APLITE
+  #define CACHE_ICONS
+#endif
   
 // Only do this to make greping for external functions easier (lot of space to be saved with statics)
 #define EXTFN
@@ -351,6 +356,14 @@ bool is_voice_system_active();
 void show_notice_with_message(uint32_t resource_id, char *message);
 void voice_system_inactive();
 void copy_end_time_into_field(char *field, size_t fsize);
+#endif
+
+#ifdef CACHE_ICONS
+void init_icon_cache();
+void destroy_icon_cache();
+#else
+#define init_icon_cache() 
+#define destroy_icon_cache() 
 #endif
 
 #endif /* MORPHEUZ_H_ */

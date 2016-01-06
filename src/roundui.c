@@ -34,6 +34,7 @@
 #define HOUR_COLOR GColorVividCerulean
 #define MINUTE_RADIUS 6
 #define MINUTE_COLOR GColorIcterine 
+#define ROUND_SPLASH_TIME 2500
   
 // Private
 static BitmapLayerComp round_background;
@@ -94,8 +95,8 @@ static void load_complete(void *data) {
   layer_set_hidden(ui.progress_layer, false);
   layer_set_hidden(analogue_time_layer, false);
   layer_set_hidden(text_layer_get_layer_jf(ui.powernap_layer), false);
-  
-   app_timer_register(250, post_init_hook, NULL);
+ 
+  app_timer_register(250, post_init_hook, NULL);
 }
 
 /*
@@ -167,6 +168,7 @@ EXTFN void morpheuz_load(Window *window) {
   ui.text_time_layer = macro_text_layer_create(GRect(0, 34, width, 44), window_layer, GColorWhite, GColorClear, ui.time_font, GTextAlignmentCenter);
   layer_set_hidden(text_layer_get_layer_jf(ui.text_time_layer), true);
   
+  init_icon_cache();
   ui.icon_bar = macro_layer_create(GRect(47, ICON_TOPS, ICON_BAR_WIDTH, 12), window_layer, &icon_bar_update_callback);
   layer_set_hidden(ui.icon_bar, true);
 
@@ -186,7 +188,8 @@ EXTFN void morpheuz_load(Window *window) {
  
   read_internal_data();
   read_config_data();
-
+  
+  // Start clock
   tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
 
   battery_state_service_subscribe(&battery_state_handler);
@@ -198,7 +201,7 @@ EXTFN void morpheuz_load(Window *window) {
   set_icon(get_internal_data()->transmit_sent, IS_EXPORT);
 
   // Wait for version display
-  app_timer_register(PRE_ANIMATE_DELAY, load_complete, NULL);
+  app_timer_register(ROUND_SPLASH_TIME, load_complete, NULL);
   
 }
   
@@ -219,6 +222,7 @@ EXTFN void morpheuz_unload(Window *window) {
 
   layer_destroy(ui.progress_layer);
   layer_destroy(ui.icon_bar);
+  destroy_icon_cache();
   
   layer_destroy(analogue_time_layer);
 

@@ -168,7 +168,6 @@ Pebble.addEventListener("appmessage", function(e) {
     resetWithPreserve();
     window.localStorage.setItem("base", base);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
-    addBedTimePin(base);
     iftttMakerInterfaceBedtime();
   }
 
@@ -282,6 +281,7 @@ function transmitMethods() {
   smartwatchProTransmit();
   iftttMakerInterfaceData();
   addSummaryPin(false);
+  addBedTimePin();
 
   // Protect and report time
   window.localStorage.setItem("transmitDone", "done");

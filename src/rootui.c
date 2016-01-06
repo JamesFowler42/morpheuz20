@@ -26,6 +26,30 @@
 #include "morpheuz.h"
 #include "language.h"
 #include "rootui.h"
+
+// Icons in the bitmap cache (if we are doing this)
+typedef enum {
+  BMP_CACHE_BATTERY_ICON,
+  BMP_CACHE_BATTERY_CHARGE,
+  BMP_CACHE_COMMS_ICON,
+  BMP_CACHE_BLUETOOTH_ICON,
+  BMP_CACHE_ICON_RECORD,
+  BMP_CACHE_ALARM_RING_ICON,
+  BMP_CACHE_ALARM_ICON,
+  BMP_CACHE_IGNORE,
+  BMP_CACHE_EXPORT,
+  BMP_CACHE_TOP
+} BmpCache;
+
+// A bitmap cache entry
+typedef struct {
+  GBitmap *bitmap;
+} BmpCacheEntry;
+
+// Only if we are caching icons do we declare this
+#ifdef CACHE_ICONS
+static BmpCacheEntry bmp_cache_entries[BMP_CACHE_TOP];
+#endif
  
 // Private  
 static bool icon_state[MAX_ICON_STATE];
@@ -37,6 +61,46 @@ UiCommon ui;
 
 // Shared with menu, rootui and presets 
 char date_text[DATE_FORMAT_LEN] = "";
+
+#ifdef CACHE_ICONS
+/*
+ * Set up the icon cache - make sure NULL for all entries
+ */
+EXTFN void init_icon_cache() {
+  for (uint8_t i=0; i < BMP_CACHE_TOP; i++) {
+    bmp_cache_entries[i].bitmap = NULL;
+  }
+}
+
+/*
+ * Get a bitmap from cache, failing that from resources
+ */
+static GBitmap* gbitmap_create_with_resource_cache(uint32_t resource_id, BmpCache cache_id) {
+  if (bmp_cache_entries[cache_id].bitmap == NULL) {
+    bmp_cache_entries[cache_id].bitmap = gbitmap_create_with_resource(resource_id);
+  }
+  return bmp_cache_entries[cache_id].bitmap;
+}
+
+/*
+ * When caching we don't get rid of the bitmap
+ */
+#define gbitmap_destroy_cache(bitmap)
+
+/*
+ * Remove all the allocated icons
+ */
+EXTFN void destroy_icon_cache() {
+  for (uint8_t i=0; i < BMP_CACHE_TOP; i++) {
+    if (bmp_cache_entries[i].bitmap != NULL) {
+      gbitmap_destroy(bmp_cache_entries[i].bitmap);
+    }
+  }
+}
+#else
+#define gbitmap_create_with_resource_cache(resource_id, cache_id) gbitmap_create_with_resource(resource_id)
+#define gbitmap_destroy_cache(bitmap) gbitmap_destroy(bitmap)
+#endif
 
 /*
  * Perform the clock update
@@ -128,7 +192,7 @@ EXTFN void post_init_hook(void *data) {
   wakeup_init();
   ui.animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
   layer_mark_dirty(ui.icon_bar);
-  
+ 
   // Set click provider
   window_set_click_config_provider(ui.primary_window, (ClickConfigProvider) click_config_provider);
 }
@@ -191,11 +255,11 @@ EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
 /*
  * Build an icon
  */
-static void paint_icon(GContext *ctx, int *running_horizontal, int width, uint32_t resource_id) {
-  GBitmap *bitmap = gbitmap_create_with_resource(resource_id);
+static void paint_icon(GContext *ctx, int *running_horizontal, int width, uint32_t resource_id, BmpCache cacheId) {
+  GBitmap *bitmap = gbitmap_create_with_resource_cache(resource_id, cacheId);
   *running_horizontal -= width + ICON_PAD;
   graphics_draw_bitmap_in_rect(ctx, bitmap, GRect(*running_horizontal, 0, width, 12));
-  gbitmap_destroy(bitmap);
+  gbitmap_destroy_cache(bitmap);
 }
 
 /*
@@ -210,7 +274,7 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *runn
   #endif
 
   if (!ui.battery_plugged) {
-    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON);
+    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_ICON, BMP_CACHE_BATTERY_ICON);
     graphics_context_set_stroke_color(ctx, BACKGROUND_COLOR);
     #ifdef PBL_COLOR
       GColor b_color = BATTERY_BAR_COLOR;
@@ -225,7 +289,7 @@ static void battery_layer_update_callback(Layer *layer, GContext *ctx, int *runn
     #endif
     graphics_fill_rect(ctx, GRect(*running_horizontal + 7, 4, ui.battery_level / 9, 4), 0, GCornerNone);
   } else {
-    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE);
+    paint_icon(ctx, running_horizontal, 24, RESOURCE_ID_BATTERY_CHARGE, BMP_CACHE_BATTERY_CHARGE);
   }
 }
 
@@ -256,27 +320,29 @@ EXTFN void icon_bar_update_callback(Layer *layer, GContext *ctx) {
 
   // Comms icon / Bluetooth icon
   if (icon_state[IS_COMMS] || icon_state[IS_BLUETOOTH]) {
-    paint_icon(ctx, &running_horizontal, 9, icon_state[IS_COMMS] ? RESOURCE_ID_COMMS_ICON : RESOURCE_ID_BLUETOOTH_ICON);
+    paint_icon(ctx, &running_horizontal, 9, icon_state[IS_COMMS] ? RESOURCE_ID_COMMS_ICON : RESOURCE_ID_BLUETOOTH_ICON,
+               icon_state[IS_COMMS] ? BMP_CACHE_COMMS_ICON : BMP_CACHE_BLUETOOTH_ICON);
   }
 
   // Record icon
   if (icon_state[IS_RECORD]) {
-    paint_icon(ctx, &running_horizontal, 10, RESOURCE_ID_ICON_RECORD);
+    paint_icon(ctx, &running_horizontal, 10, RESOURCE_ID_ICON_RECORD, BMP_CACHE_ICON_RECORD);
   }
 
   // Alarm icon
   if (icon_state[IS_ALARM_RING] || icon_state[IS_ALARM]) {
-    paint_icon(ctx, &running_horizontal, 12, icon_state[IS_ALARM_RING] ? RESOURCE_ID_ALARM_RING_ICON : RESOURCE_ID_ALARM_ICON);
+    paint_icon(ctx, &running_horizontal, 12, icon_state[IS_ALARM_RING] ? RESOURCE_ID_ALARM_RING_ICON : RESOURCE_ID_ALARM_ICON,
+              icon_state[IS_ALARM_RING] ? BMP_CACHE_ALARM_RING_ICON : BMP_CACHE_ALARM_ICON);
   }
 
   // Ignore icon
   if (icon_state[IS_IGNORE]) {
-    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_IGNORE);
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_IGNORE, BMP_CACHE_IGNORE );
   }
 
   // Export icon
   if (icon_state[IS_EXPORT]) {
-    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_EXPORT);
+    paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_EXPORT, BMP_CACHE_EXPORT);
   }
 }
 

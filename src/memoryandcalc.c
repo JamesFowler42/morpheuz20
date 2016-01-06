@@ -570,7 +570,7 @@ static void transmit_next_data(void *data) {
 EXTFN void server_processing(uint16_t biggest) {
   // Provide an information message
   if (!internal_data.has_been_reset) {
-    if (no_record_warning) {
+    if (no_record_warning && is_animation_complete()) {
       show_notice(RESOURCE_ID_NOTICE_RESET_TO_START_USING);
       no_record_warning = false;
     }
