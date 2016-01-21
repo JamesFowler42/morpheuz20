@@ -385,7 +385,13 @@ $("document").ready(function() {
   var out = calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf);
   
   // Populate the statistics area
-  $("#stats").text(buildRecommendationPhrase(age, out));
+  var rec = buildRecommendationPhrase(age, out);
+  $("#stats").text(rec.summary);
+  $("#ttotal").text(rec.total);
+  $("#tawake").text(rec.awake);
+  $("#tlight").text(rec.light);
+  $("#tdeep").text(rec.deep);
+  $("#tignore").text(rec.ignore);
 
   // If we have a begin and an end then show this in our 'HealthKit' datapoint
   // section and
@@ -589,7 +595,7 @@ $("document").ready(function() {
   $("#age").keyup(function() {
     // Populate the statistics area
     var age = $("#age").val();
-    $("#stats").text(buildRecommendationPhrase(age, out));
+    $("#stats").text(buildRecommendationPhrase(age, out).summary);
   });
   
 

@@ -438,8 +438,8 @@ static bool smart_alarm(uint16_t point) {
   uint32_t before;
   uint32_t after;
 
-  // Are we doing smart alarm thing or we are and it has already happened
-  if (!config_data.smart || internal_data.gone_off > 0)
+  // Are we doing smart alarm thing, we are and it has already happened or the user has requested a stop
+  if (!config_data.smart || internal_data.gone_off > 0 || internal_data.stopped)
     return false;
 
   // Are we in the right timeframe

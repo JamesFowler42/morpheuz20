@@ -42,16 +42,19 @@ EXTFN void set_smart_status() {
 /*
  * Do something with samples every minute
  */
-EXTFN void every_minute_processing() {
+EXTFN uint16_t every_minute_processing() {
+  uint16_t last_biggest = biggest_movement_in_one_minute;
   power_nap_check(biggest_movement_in_one_minute);
   server_processing(biggest_movement_in_one_minute);
   biggest_movement_in_one_minute = 0;
+  return last_biggest;
 }
 
 /*
  * Store our samples from each group until we have two minute's worth
  */
 static void store_sample(uint16_t biggest) {
+  revive_clock_on_movement(biggest);
   if (biggest > biggest_movement_in_one_minute)
     biggest_movement_in_one_minute = biggest;
 }
@@ -83,10 +86,6 @@ static void do_axis(int16_t val, uint16_t *biggest, uint32_t avg) {
  * Process accelerometer data
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
-  
-  // Reduces processing when not doing anything
-  if (!is_monitoring_sleep())
-    return;
 
   // Average the data
   uint32_t avg_x = 0;

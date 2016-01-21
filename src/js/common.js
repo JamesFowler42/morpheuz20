@@ -345,16 +345,25 @@ function generateRecommendation(age, total) {
 function buildRecommendationPhrase(age, stats) {
   
   if (stats.total === 0) {
-    return mCommonLang().noSleep;
+    return { "summary" : mCommonLang().noSleep, "total": "-", "awake": "-", "light": "-", "deep": "-", "ignore": "-" };
   }
   
   var trex = generateRecommendation(age, stats.total);
-   
+  
+  var totalStr = hrsmin(stats.total);
+  var awakeStr = hrsmin(stats.awake);
+  var lightStr = hrsmin(stats.light);
+  var deepStr = hrsmin(stats.deep);
+  var ignoreStr = hrsmin(stats.ignore);
+  
+  var summaryTxt;
   if (trex !== null) {
-    return mCommonLang().sleepSummary.format(trex.min, trex.max, trex.view, hrsmin(stats.total), hrsmin(stats.awake), hrsmin(stats.light), hrsmin(stats.deep), hrsmin(stats.ignore));
+    summaryTxt = mCommonLang().sleepSummary.format(trex.min, trex.max, trex.view, totalStr, awakeStr, lightStr, deepStr, ignoreStr);
   } else {
-    return mCommonLang().sleepSummaryNoRecommend.format(hrsmin(stats.total), hrsmin(stats.awake), hrsmin(stats.light), hrsmin(stats.deep), hrsmin(stats.ignore));
+    summaryTxt = mCommonLang().sleepSummaryNoRecommend.format(totalStr, awakeStr, lightStr, deepStr, ignoreStr);
   } 
+  
+  return { "summary" : summaryTxt, "total": totalStr, "awake": awakeStr, "light": lightStr, "deep": deepStr, "ignore": ignoreStr };
 }
 
 /*

@@ -188,7 +188,7 @@ function addSummaryPin(atAlarmTime) {
 
   var age = nvl(window.localStorage.getItem("age"), "");
 
-  var body = buildRecommendationPhrase(age, stats);
+  var rec = buildRecommendationPhrase(age, stats);
 
   var pin = {
     "id" : getPinId(base,"su"),
@@ -196,10 +196,10 @@ function addSummaryPin(atAlarmTime) {
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().summary,
-      "subtitle": hrsmin(stats.total),
+      "subtitle": rec.total,
       "tinyIcon" : "system://images/GLUCOSE_MONITOR",
       "backgroundColor" : "#00AAFF",
-      "body" : body
+      "body" : rec.summary
     }
   };
 

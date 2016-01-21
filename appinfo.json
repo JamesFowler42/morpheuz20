@@ -19,6 +19,13 @@
     "resources": {
         "media": [
             {
+                "file": "images/icon.png",
+                "menuIcon": true,
+                "name": "IMAGE_APP_ICON",
+                "targetPlatforms": null,
+                "type": "bitmap"
+            },
+            {
                 "file": "images/round-title.png",
                 "name": "IMAGE_ROUND_TITLE",
                 "targetPlatforms": [
@@ -239,7 +246,7 @@
         "chalk"
     ],
     "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
-    "versionLabel": "3.8",
+    "versionLabel": "3.9",
     "watchapp": {
         "watchface": false
     }

@@ -65,7 +65,18 @@
           </p>
         </div>
         <h3 class="summaryhead">Summary</h3>
-        <p id="stats" class="summarywrap indent indentright"/>
+        <div class="summarywrap indent indentright">
+        <p id="stats" />
+        <table class="tsummary">
+        <col width="50%">
+        <col width="50%">
+        <tr class="stat2"><td>Total:</td><td id="ttotal"></td></tr>
+        <tr class="stat2"><td>Restless:</td><td id="tawake"></td></tr>
+        <tr class="stat2"><td>Light:</td><td id="tlight"></td></tr>
+        <tr class="stat2"><td>Deep:</td><td id="tdeep"></td></tr>
+        <tr class="stat2"><td>Ignore:</td><td id="tignore"></td></tr>
+        </table>
+        </div>
         <h3 class="movement-head">Sleep Movement</h3>
         <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
         <h3 class="quality-head">Quality of Sleep</h3>

@@ -409,3 +409,19 @@ input#save2.save {
 .licollapse.liclosed .lidown {
     display: none;
 }
+
+.tsummary {
+    border-collapse: collapse;
+}
+
+.stat2 td {
+    text-align: left;
+}
+
+.stat2 td:first-child {
+    color: white;
+}
+
+.stat2 td:last-child {
+    color: black;
+}
