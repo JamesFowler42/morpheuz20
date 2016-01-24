@@ -3,7 +3,8 @@
 
 	<property name="ver" value="39"/>
 	<property name="verdec" value="3.9"/>
-	<property name="inc" value="3"/>
+	<property name="inc" value="4"/> <!-- Cloudpebble download inc -->
+	<property name="vinc" value="5"/> <!-- Version marker on urls v=?? -->
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
@@ -13,22 +14,27 @@
 	<property name="dbarchive" value="/Users/keith/Dropbox/PebbleStuff/morpheuz20/${verdec}/morpheuz20.zip"/>
 	
 	<target name="all"  description="all">
+		<antcall target="concatjqplot" inheritrefs="true" inheritall="true"/>
 		<antcall target="unpack-cloud" inheritrefs="true" inheritall="true"/>
+		<antcall target="concat" inheritrefs="true" inheritall="true">
+			<param name="in.file.1" value="view.js" />
+			<param name="in.file.2" value="utils.js" />
+			<param name="in.file.3" value="../../src/js/common.js" />
+			<param name="join.file" value="view-${ver}.js" />
+		</antcall>
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
-			<param name="in.file" value="view.css" />
+			<param name="in.file" value="${srcdir}/view.css" />
 			<param name="min.file" value="view-${ver}.min.css" />
 		</antcall>
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
-			<param name="in.file" value="view.js" />
+			<param name="in.file" value="${builddir}/view-${ver}.js" />
 			<param name="min.file" value="view-${ver}.min.js" />
 		</antcall>
-		<antcall target="shrink" inheritrefs="true" inheritall="true">
-			<param name="in.file" value="utils.js" />
-			<param name="min.file" value="utils-${ver}.min.js" />
-		</antcall>
-		<antcall target="shrink" inheritrefs="true" inheritall="true">
-			<param name="in.file" value="../../src/js/common.js" />
-			<param name="min.file" value="common-${ver}.min.js" />
+		<antcall target="concat" inheritrefs="true" inheritall="true">
+			<param name="in.file.1" value="view-temp.min.js" />
+			<param name="in.file.2" value="utils-temp.min.js" />
+			<param name="in.file.3" value="common-temp.min.js" />
+			<param name="min.file" value="view-${ver}.min.js" />
 		</antcall>
 		<antcall target="copyedit" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="view.html" />
@@ -51,12 +57,6 @@
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.min.js" />
-		</antcall>
-		<antcall target="copy" inheritrefs="true" inheritall="true">
-			<param name="min.file" value="utils-${ver}.min.js" />
-		</antcall>
-		<antcall target="copy" inheritrefs="true" inheritall="true">
-			<param name="min.file" value="common-${ver}.min.js" />
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.html" />
@@ -87,12 +87,36 @@
 		    </condition>
 		</fail>
 	</target>
+	
+	<property name="jqplot" value="website/morpheuz/jqplot"/>
+	<property name="jqplotplug" value="website/morpheuz/jqplot/plugins"/>
+	
+	<target name="concatjqplot" description="concatjqplot">
+		<concat destfile="${jqplot}/jqplotbundle.min.js">
+	     <fileset file="${jqplot}/jquery.min.js" />
+         <fileset file="${jqplot}/jquery.jqplot.min.js" />
+	     <fileset file="${jqplotplug}/jqplot.canvasAxisLabelRenderer.min.js" />
+	     <fileset file="${jqplotplug}/jqplot.dateAxisRenderer.min.js" />
+	     <fileset file="${jqplotplug}/jqplot.canvasTextRenderer.min.js" />
+	     <fileset file="${jqplotplug}/jqplot.canvasAxisTickRenderer.min.js" />
+	     <fileset file="${jqplotplug}/jqplot.canvasOverlay.min.js" />
+	     <fileset file="${jqplotplug}/jqplot.pieRenderer.min.js" />
+	   </concat>
+	</target>
+	
+	<target name="concat" description="concat">
+		<concat destfile="${builddir}/${join.file}">
+	     <fileset file="${srcdir}/${in.file.1}" />
+         <fileset file="${srcdir}/${in.file.2}" />
+	     <fileset file="${srcdir}/${in.file.3}" />
+	   </concat>
+	</target>
 
 	<target name="shrink" description="shrink">
 		<delete file="${builddir}/${min.file}"/>
 		<echo message="Minifying ${srcdir}/${in.file} to ${builddir}/${min.file}"/>
 		<java jar="../yui/yuicompressor-2.4.8.jar" fork="true">
-			<arg value="${srcdir}/${in.file}" />
+			<arg value="${in.file}" />
 			<arg value="-o" />
 			<arg value="${builddir}/${min.file}" />
 			<classpath>
@@ -110,10 +134,8 @@
 		<echo message="Copying ${srcdir}/${in.file} to ${builddir}/${out.file}"/>
 		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" />
 		<echo message="Editing ${builddir}/${out.file}"/>
-		<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js?v=${inc}"/>
-		<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css?v=${inc}"/>
-		<replace file="${builddir}/${out.file}" token="utils.js?v=1" value="utils-${ver}.min.js?v=${inc}"/>
-		<replace file="${builddir}/${out.file}" token="common.js?v=1" value="common-${ver}.min.js?v=${inc}"/>
+		<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js?v=${vinc}"/>
+		<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css?v=${vinc}"/>
 	</target>
 	
 	<target name="copyversion" description="copyversion">

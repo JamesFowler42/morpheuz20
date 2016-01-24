@@ -425,3 +425,11 @@ input#save2.save {
 .stat2 td:last-child {
     color: black;
 }
+
+.lessismore {
+    float: right;
+    color:#E2C7FF;
+    position:relative;
+    top:-15px;
+    cursor: pointer;
+}

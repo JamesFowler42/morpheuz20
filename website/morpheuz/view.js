@@ -598,6 +598,32 @@ $("document").ready(function() {
     $("#stats").text(buildRecommendationPhrase(age, out).summary);
   });
   
-
+  // Show less summary
+  $("#lesssummary").click(function() {
+    $("#summarytable").hide();
+    $("#lesssummary").hide();
+    $("#moresummary").show();
+    if (window.localStorage) {
+      window.localStorage.setItem("lesssummary", "true");
+    }
+  });
+  
+  // Show more summary
+  $("#moresummary").click(function() {
+    $("#summarytable").show();
+    $("#moresummary").hide();
+    $("#lesssummary").show();
+    if (window.localStorage) {
+      window.localStorage.setItem("lesssummary", "false");
+    }
+  });
+  
+  // Set summary to last remembered position
+  if (window.localStorage && window.localStorage.getItem("lesssummary") === "true") {
+    $("#summarytable").hide();
+    $("#lesssummary").hide();
+    $("#moresummary").show();
+  }
+ 
 });
 
