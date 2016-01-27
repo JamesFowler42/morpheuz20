@@ -4,7 +4,11 @@
 	<property name="ver" value="39"/>
 	<property name="verdec" value="3.9"/>
 	<property name="inc" value="4"/> <!-- Cloudpebble download inc -->
-	<property name="vinc" value="5"/> <!-- Version marker on urls v=?? -->
+	<property name="vinc" value="8"/> <!-- Version marker on urls v=?? -->
+	<!--<property name="vincstr" value="?v=${vinc}"/>-->
+	<property name="vincstr" value=""/>
+	
+	
 	<property name="builddir" value="website/morpheuz/build"/>
 	<property name="srcdir" value="website/morpheuz"/>
 	<property name="test.dir" value="../Desktop/morpheuz"/>
@@ -12,9 +16,15 @@
 	<property name="cpexport" value="/Users/keith/Dropbox/PebbleStuff/morpheuz20/${verdec}/cloud/morpheuz${ver}-${inc}.zip"/>
 	<property name="maindir" value="/Users/keith/morpheuz20"/>
 	<property name="dbarchive" value="/Users/keith/Dropbox/PebbleStuff/morpheuz20/${verdec}/morpheuz20.zip"/>
+	<property name="jqplot" value="website/morpheuz/jqplot"/>
+	<property name="jqplotplug" value="website/morpheuz/jqplot/plugins"/>
+
+	
+	<target name="baselibs"  description="baselibs">
+		<antcall target="concatjqplot" inheritrefs="true" inheritall="true"/>
+	</target>
 	
 	<target name="all"  description="all">
-		<antcall target="concatjqplot" inheritrefs="true" inheritall="true"/>
 		<antcall target="unpack-cloud" inheritrefs="true" inheritall="true"/>
 		<antcall target="concat" inheritrefs="true" inheritall="true">
 			<param name="in.file.1" value="view.js" />
@@ -38,7 +48,7 @@
 		</antcall>
 		<antcall target="copyedit" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="view.html" />
-			<param name="out.file" value="view-${ver}.html" />
+			<param name="out.file" value="view-${ver}.max.html" />
 		</antcall>
 		<antcall target="copyversion" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="currentversion.json" />
@@ -51,6 +61,10 @@
 		<antcall target="copyquote" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="json_email.php" />
 			<param name="out.file" value="json_email.php" />
+		</antcall>
+		<antcall target="shrinkhtml" inheritrefs="true" inheritall="true">
+			<param name="max.html" value="view-${ver}.max.html" />
+			<param name="min.html" value="view-${ver}.html" />
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="view-${ver}.min.css" />
@@ -88,9 +102,6 @@
 		</fail>
 	</target>
 	
-	<property name="jqplot" value="website/morpheuz/jqplot"/>
-	<property name="jqplotplug" value="website/morpheuz/jqplot/plugins"/>
-	
 	<target name="concatjqplot" description="concatjqplot">
 		<concat destfile="${jqplot}/jqplotbundle.min.js">
 	     <fileset file="${jqplot}/jquery.min.js" />
@@ -124,6 +135,27 @@
 			</classpath>
 		</java>
 	</target>
+	
+	<target name="shrinkhtml" description="shrinkhtml">
+		<java jar="../yui/htmlcompressor-1.5.3.jar" fork="true">
+			<arg value="-o"/>
+			<arg value="${builddir}/${min.html}"/>
+			<arg value="${builddir}/${max.html}"/>
+			<arg value="--remove-quotes"/>
+			<arg value="--simple-doctype"/>
+			<arg value="--remove-style-attr"/>
+			<arg value="--remove-link-attr"/> 
+			<arg value="--remove-script-attr"/> 
+			<arg value="--remove-form-attr"/> 
+			<arg value="--remove-input-attr"/> 
+			<arg value="--simple-bool-attr"/>
+			<arg value="--remove-js-protocol"/>
+			<classpath>
+			    <pathelement location="../yui/htmlcompressor-1.5.3.jar"/>
+				<pathelement location="../yui/yuicompressor-2.4.8.jar" />
+			</classpath>
+		</java>
+	</target>
 
 	<target name="copy" description="copy">
 		<echo message="Copying ${builddir}/${min.file} to ${test.dir}/${min.file}"/>
@@ -134,8 +166,8 @@
 		<echo message="Copying ${srcdir}/${in.file} to ${builddir}/${out.file}"/>
 		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" />
 		<echo message="Editing ${builddir}/${out.file}"/>
-		<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js?v=${vinc}"/>
-		<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css?v=${vinc}"/>
+		<replace file="${builddir}/${out.file}" token="view.js?v=1" value="view-${ver}.min.js${vincstr}"/>
+		<replace file="${builddir}/${out.file}" token="view.css?v=1" value="view-${ver}.min.css${vincstr}"/>
 	</target>
 	
 	<target name="copyversion" description="copyversion">

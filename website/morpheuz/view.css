@@ -392,6 +392,8 @@ input#save2.save {
     margin-right: 5px;
     top: 3px;
     position: relative;
+    width: 16px;
+    height: 16px;
 }
 
 .licollapse.liopen .liright {
@@ -432,4 +434,11 @@ input#save2.save {
     position:relative;
     top:-15px;
     cursor: pointer;
+}
+
+.m24x24 {
+    width:24px;
+    height:24px;
+}
+
 }
