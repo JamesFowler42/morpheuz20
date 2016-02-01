@@ -23,19 +23,6 @@
  */
 
 /*
- * Constants
- */
-function mUtil() {
-  return {
-    emailUrl : "json_email.php",
-    emailToken : "morpheuz20",
-    okResponse : "Sent OK",
-    failResponse : "Failed to send with ",
-    failGeneral : "Failed to send"
-  };
-}
-
-/*
  * Extract parameters from URL
  */
 function getParameterByName(name) {
@@ -99,35 +86,6 @@ function scaleToViewport() {
 function adjustForViewport() {
   scaleToViewport();
   $(window).resize(scaleToViewport);
-}
-
-/*
- * Send an email via the server php
- */
-function sendMailViaServer(email, resp) {
-  try {
-    var msg = "email=" + encodeURIComponent(JSON.stringify(email));
-
-    var req = new XMLHttpRequest();
-    req.open("POST", mUtil().emailUrl, true);
-    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
-    req.setRequestHeader("X-Client-token", mUtil().emailToken);
-    req.onreadystatechange = function(e) {
-      if (req.readyState == 4) {
-        if (req.status == 200) {
-          resp(1, mUtil().okResponse);
-        } else {
-          resp(0, mUtil().failResponse + req.status);
-        }
-      }
-    }
-    req.onerror = function(ex) {
-      resp(0, mUtil().failGeneral);
-    }
-    req.send(msg);
-  } catch (err) {
-    resp(0, mUtil().failResponse + err.message);
-  }
 }
 
 /*

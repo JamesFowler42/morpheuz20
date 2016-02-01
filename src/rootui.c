@@ -408,6 +408,8 @@ EXTFN void progress_layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_context_set_fill_color(ctx, BAR_CHART_MARKS);
 
   graphics_context_set_stroke_color(ctx, BAR_CHART_MARKS);
+  
+  graphics_context_set_stroke_width(ctx, 2);
 
   for (uint8_t i = 0; i <= 120; i += 12) {
     graphics_draw_pixel(ctx, GPoint(i, 8));

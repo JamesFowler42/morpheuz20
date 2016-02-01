@@ -33,14 +33,9 @@ function mConst() {
     displayDateFmt : "WWW, NNN dd, yyyy hh:mm",
     iosDateFormat : "dd N yyyy hh:mm",
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
-    emailHeader : "<h2>CSV Sleep data</h2>",
-    emailHeader2 : "<h2>Chart Display</h2>",
-    emailFooter1 : "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
-    emailFooter2 : "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
     emailAddressMandatory : "valid email address is required",
     sendingEmail : "Sending...",
-    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
-    report : "Report"
+    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-"
   };
 }
 
@@ -244,6 +239,8 @@ $("document").ready(function() {
   var ifserver = decodeURIComponent(getParameterByName("ifserver"));
   var ifstat = decodeURIComponent(getParameterByName("ifstat"));
   var age = getParameterByName("age");
+  var doemail = decodeURIComponent(getParameterByName("doemail"));
+  var estat = decodeURIComponent(getParameterByName("estat"));
   var returnTo = getParameterByName("return_to");
   if (returnTo === "") {
     returnTo = "pebblejs://close#";
@@ -274,6 +271,20 @@ $("document").ready(function() {
   $("#ifserver").val(ifserver);
   $("#ifstat").text(ifstat);
   $("#age").val(age);
+  $("#doemail").prop("checked", doemail === "Y");
+  $("#estat").text(estat);
+  
+  // Set the status bullets for automatic email export
+  if (estat === "OK") {
+    $("#liemail").addClass("green");
+    $("#estat").addClass("green");
+  } else if (estat === "" || estat === null || estat === "Disabled") {
+    $("#liemail").addClass("blue");
+    $("#estat").addClass("blue");
+  } else {
+    $("#liemail").addClass("red");
+    $("#estat").addClass("red");
+  }
 
   // Set the status bullets for pushover
   if (postat === "OK") {
@@ -343,7 +354,7 @@ $("document").ready(function() {
   $("li.red").removeClass("liclosed").addClass("liopen");
 
   // Set version
-  $("#version").text(parseInt(vers, 10) / 10);
+  $("#version").text((parseFloat(vers) / 10).toFixed(1));
   $("#sleep-time").text(new Date(base).format(mConst().displayDateFmt));
 
   if ((new Date().valueOf()) % 10 === 0) {
@@ -539,7 +550,8 @@ $("document").ready(function() {
       testsettings : $("#testsettings").is(':checked') ? "Y" : "N",
       ifkey : safeTrim($("#ifkey").val()),
       ifserver : safeTrim($("#ifserver").val()),
-      age : safeTrim($("#age").val())
+      age : safeTrim($("#age").val()),
+      doemail : $("#doemail").is(':checked') ? "Y" : "N"
     };
     document.location = returnTo + encodeURIComponent(JSON.stringify(configData));
   });
@@ -561,16 +573,10 @@ $("document").ready(function() {
     // Extract data
     var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
 
-    var url = "<a href='" + mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age +
-    "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "'>" + mConst().report + "</a><br/>";
+    var url = mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age +
+              "&emailto=" + encodeURIComponent(emailto) + "&noset=Y";
 
-    // Build email json
-    var email = {
-      "from" : "Morpheuz <noreply@morpheuz.co.uk>",
-      "to" : emailto,
-      "subject" : "Morpheuz-" + new Date(base).format("yyyy-MM-dd"),
-      "message" : mConst().emailHeader2 + url + mConst().emailHeader + cpy.body + mConst().emailFooter1 + mConst().emailFooter2
-    };
+    var email = buildEmailJsonString(emailto, base, url, cpy);
 
     // Disable button and put out sending text
     $("#mail").attr("disabled", "disabled");

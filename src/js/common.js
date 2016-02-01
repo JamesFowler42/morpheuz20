@@ -24,7 +24,7 @@
 
 /* COMMON ROUTINES DEPLOYED IN PEBBLEKIT.JS and WEBSERVER. WRITE IN PEBBLEKIT.JS. ANT DEPLOYS INTO WEBSERVER. */
 
-/*exported nvl, fixLen, getUserAgent, hrsmin, mThres, mCommonLang, buildRecommendationPhrase, calculateStats, mCommonConst, generateCopyLinkData */
+/*exported nvl, fixLen, getUserAgent, hrsmin, mThres, mCommonLang, buildRecommendationPhrase, calculateStats, mCommonConst, generateCopyLinkData, sendMailViaServer, buildEmailJsonString */
 
 /*
  * Constants
@@ -32,6 +32,8 @@
 function mCommonConst() {
   return {
     sampleIntervalMins : 10,
+    emailUrl : "http://ui.morpheuz.net/morpheuz/json_email.php",
+    emailToken : "morpheuz20",
   };
 }
 
@@ -50,7 +52,15 @@ function mCommonLang() {
     none: "none",
     tooLittle: "too little",
     tooMuch: "too much",
-    ideal: "ideal"
+    ideal: "ideal",
+    okResponse : "Sent OK",
+    failResponse : "Failed to send with ",
+    failGeneral : "Failed to send", 
+    emailHeader : "<h2>CSV Sleep data</h2>",
+    emailHeader2 : "<h2>Chart Display</h2>",
+    emailFooter1 : "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
+    emailFooter2 : "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
+    report : "Report"
   };
 }
 
@@ -393,4 +403,48 @@ function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tom
   return {
     "body" : body + "</pre>",
   };
+}
+
+/*
+ * Send an email via the server php
+ */
+function sendMailViaServer(email, resp) {
+  try {
+    var msg = "email=" + encodeURIComponent(JSON.stringify(email));
+
+    var req = new XMLHttpRequest();
+    req.open("POST", mCommonConst().emailUrl, true);
+    req.setRequestHeader("Content-type", "application/x-www-form-urlencoded");
+    req.setRequestHeader("X-Client-token", mCommonConst().emailToken);
+    req.onreadystatechange = function(e) {
+      if (req.readyState == 4) {
+        if (req.status == 200) {
+          resp(1, mCommonLang().okResponse);
+        } else {
+          resp(0, mCommonLang().failResponse + req.status);
+        }
+      }
+    };
+    req.onerror = function(ex) {
+      resp(0, mCommonLang().failGeneral);
+    };
+    req.send(msg);
+  } catch (err) {
+    resp(0, mCommonLang().failResponse + err.message);
+  }
+}
+
+/*
+ * Build the email json string
+ */
+function buildEmailJsonString(emailto, base, url, cpy) {
+  var reportHtml = "<a href='" + url + "'>" + mCommonLang().report + "</a><br/>";
+  // Build email json
+  var email = {
+    "from" : "Morpheuz <noreply@morpheuz.co.uk>",
+    "to" : emailto,
+    "subject" : "Morpheuz-" + new Date(base).format("yyyy-MM-dd"),
+    "message" : mCommonLang().emailHeader2 + reportHtml + mCommonLang().emailHeader + cpy.body + mCommonLang().emailFooter1 + mCommonLang().emailFooter2
+  };
+  return email;
 }

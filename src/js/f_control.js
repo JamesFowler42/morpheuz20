@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime, automaticEmailExport */
 
 /*
  * Reset log
@@ -55,6 +55,8 @@ function resetWithPreserve() {
   var ifserver = window.localStorage.getItem("ifserver");
   var ifstat = window.localStorage.getItem("ifstat");
   var age = window.localStorage.getItem("age");
+  var doEmail = window.localStorage.getItem("doemail");
+  var estat = window.localStorage.getItem("estat");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -82,6 +84,8 @@ function resetWithPreserve() {
   window.localStorage.setItem("ifserver", nvl(ifserver, ""));
   window.localStorage.setItem("ifstat", nvl(ifstat, ""));
   window.localStorage.setItem("age", nvl(age, ""));
+  window.localStorage.setItem("doemail", nvl(doEmail, ""));
+  window.localStorage.setItem("estat", nvl(estat, ""));
 }
 
 /*
@@ -282,6 +286,7 @@ function transmitMethods() {
   iftttMakerInterfaceData();
   addSummaryPin(false);
   addBedTimePin();
+  automaticEmailExport();
 
   // Protect and report time
   window.localStorage.setItem("transmitDone", "done");
@@ -326,6 +331,7 @@ Pebble.addEventListener("webviewclosed", function(e) {
     window.localStorage.setItem("ifkey", configData.ifkey);
     window.localStorage.setItem("ifserver", configData.ifserver);
     window.localStorage.setItem("age", configData.age);
+    window.localStorage.setItem("doemail", configData.doemail);
 
     // Test if requested
     if (configData.testsettings === "Y") {
@@ -336,6 +342,7 @@ Pebble.addEventListener("webviewclosed", function(e) {
       iftttMakerInterfaceAlarm();
       iftttMakerInterfaceData();
       iftttMakerInterfaceBedtime();
+      automaticEmailExport();
     }
   }
 });
@@ -394,12 +401,15 @@ function buildUrl(noset) {
     var ifkey = nvl(window.localStorage.getItem("ifkey"), "");
     var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
     var ifstat = nvl(window.localStorage.getItem("ifstat"), "");
+    var doEmail = nvl(window.localStorage.getItem("doemail"), "");
+    var estat = nvl(window.localStorage.getItem("estat"), "");
     extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
            "&potoken=" + encodeURIComponent(potoken) +  
            "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
            "&usage=" + usage + "&lazarus=" + lazarus + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime +
            "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid +
-           "&ifkey=" + ifkey + "&ifserver=" + encodeURIComponent(ifserver) + "&ifstat=" + encodeURIComponent(ifstat);
+           "&ifkey=" + ifkey + "&ifserver=" + encodeURIComponent(ifserver) + "&ifstat=" + encodeURIComponent(ifstat) +
+           "&doemail=" + doEmail + "&estat=" + encodeURIComponent(estat);
   }
   
   var url = mConst().url + version + ".html" + 
