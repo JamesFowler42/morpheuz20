@@ -29,6 +29,13 @@
 
 static uint16_t biggest_movement_in_one_minute = 0;
 
+// This would be unnecessary but it seems that certain users are not getting callbacks on accelerometer or it has did_vibrate stuck
+// Need a definitive answer on this. Since this problem also occurred early in 2.x it would now seem prudent to never remove it.
+#define MAX_ALLOWED_TIME_WITHOUT_ACCEL_CALLBACK 60
+#define MAX_VIBRATES_IN_A_ROW 48
+static time_t last_sample;
+static uint8_t vibrates_in_a_row = 0;
+
 /*
  * Set the on-screen status text
  */
@@ -40,9 +47,24 @@ EXTFN void set_smart_status() {
 }
 
 /*
- * Do something with samples every minute
+ * Accumumate samples every minute
  */
 EXTFN uint16_t every_minute_processing() {
+  
+  // Self monitoring routines
+  time_t now = time(NULL);
+  if ((now - last_sample) > MAX_ALLOWED_TIME_WITHOUT_ACCEL_CALLBACK) {
+    // accel_data_service_subscribe is not happening when it should
+    set_error_code(ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_DEAD);
+  }
+  
+  if (vibrates_in_a_row > MAX_VIBRATES_IN_A_ROW) {
+    vibrates_in_a_row = 0;
+    // did_vibrate flag stuck as true
+    set_error_code(ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_STUCK_VIBE);
+  }
+  
+  // Accumulate samples, fire every minute processing
   uint16_t last_biggest = biggest_movement_in_one_minute;
   power_nap_check(biggest_movement_in_one_minute);
   server_processing(biggest_movement_in_one_minute);
@@ -86,6 +108,9 @@ static void do_axis(int16_t val, uint16_t *biggest, uint32_t avg) {
  * Process accelerometer data
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
+  
+  // Last time callback was invoked
+  last_sample = time(NULL);
 
   // Average the data
   uint32_t avg_x = 0;
@@ -94,14 +119,19 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
   AccelData *dx = data;
   for (uint32_t i = 0; i < num_samples; i++, dx++) {
     // If vibe went off then discount everything - we're only loosing a 2.5 second set of samples, better than an
-    // unwanted spike
+    // unwanted spike. We count these as more than 48 (i.e. 2 minutes) in a row this might indicate a problem. We disregard if we are sounding the alarm.
     if (dx->did_vibrate) {
+      if (!get_icon(IS_ALARM_RING)) {
+        vibrates_in_a_row++;
+      }
       return;
     }
     avg_x += scale_accel(dx->x);
     avg_y += scale_accel(dx->y);
     avg_z += scale_accel(dx->z);
   }
+  
+  vibrates_in_a_row = 0;
 
   avg_x /= num_samples;
   avg_y /= num_samples;

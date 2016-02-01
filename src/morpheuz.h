@@ -27,8 +27,8 @@
 
 #include "pebble.h"
 
-#define VERSION 39
-#define VERSION_TXT "3.9"
+#define VERSION 40
+#define VERSION_TXT "4.0"
 
 // Comment out for production build - leaves errors on BASALT/CHALK and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -126,6 +126,7 @@
 #define CENTRE_COLOR                 PBL_IF_COLOR_ELSE(GColorPictonBlue,GColorWhite)
 #define MINUTE_MARK_COLOR            PBL_IF_COLOR_ELSE(GColorDarkGray,GColorWhite)
 #define HOUR_MARK_COLOR              PBL_IF_COLOR_ELSE(GColorWhite,GColorWhite)
+#define ERROR_COLOR                  PBL_IF_COLOR_ELSE(GColorRed,GColorWhite)
 
 // Colour only colours
 #ifdef PBL_COLOR 
@@ -188,6 +189,11 @@ typedef enum {
   IS_BLUETOOTH,
   IS_EXPORT
 } IconState;
+
+enum ErrorCodes {
+  ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_DEAD = 1,
+  ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_STUCK_VIBE = 2
+};
 
 /*
  * Thresholds
@@ -333,6 +339,7 @@ void revive_clock_on_movement(uint16_t last_movement);
 void save_config_data(void *data);
 void save_internal_data();
 void server_processing(uint16_t biggest);
+void set_error_code(uint8_t new_error_code);
 void set_icon(bool enabled, IconState icon);
 void set_ignore_on_current_time_segment();
 void set_next_wakeup();
