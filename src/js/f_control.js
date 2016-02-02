@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime, automaticEmailExport */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime, automaticEmailExport, googleAnalytics */
 
 /*
  * Reset log
@@ -281,6 +281,7 @@ function transmitMethods() {
   }
 
   // Sends
+  googleAnalytics();
   pushoverTransmit();
   smartwatchProTransmit();
   iftttMakerInterfaceData();
