@@ -75,10 +75,13 @@ function googleAnalytics() {
       console.log("googleAnalytics: unable to get active watch info");
     }
     
+    // User agent
+    var userAgent = getUserAgent(model);
+    
     // Build the google analytics api
     var msg = "v=1" +
               "&tid=UA-72769045-3" + 
-              "&ds=app" +
+              "&ds=" + userAgent +
               "&cid=" + accountToken + 
               "&t=event" +
               "&cd=" + platform +
@@ -110,4 +113,23 @@ function googleAnalytics() {
     console.log("googleAnalytics: Failed to call google Analytics with " + err);
   }
   
+}
+
+/*
+ * Work out user agent
+ */
+function getUserAgent(model) {
+  if (model.match(/qemu/i)) {
+    return "Emulator";
+  }
+  try {
+    if (navigator && navigator.userAgent) {
+      console.log("userAgent=" + navigator.userAgent);
+      return (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i)) ? "iOS" : "Android";
+    } else {
+      return "unknown";
+    }
+  } catch (err) {
+    return "unknown";
+  }
 }
