@@ -55,6 +55,7 @@ function googleAnalytics() {
     var model = "unknown";
     var language = "unknown";
     var depth = "unknown";
+    var screenres = "unknown";
     try {
       var wi = Pebble.getActiveWatchInfo();
       if (wi && wi.platform) {
@@ -63,6 +64,11 @@ function googleAnalytics() {
           depth = "bw";
         } else {
           depth = "colour";
+        }
+        if (platform === "chalk") {
+          screenres = "180x180";
+        } else {
+          screenres = "144x168";
         }
       }
       if (wi && wi.model) {
@@ -81,17 +87,18 @@ function googleAnalytics() {
     // Build the google analytics api
     var msg = "v=1" +
               "&tid=UA-72769045-3" + 
-              "&ds=" + userAgent +
+              "&ds=app" +
               "&cid=" + accountToken + 
               "&t=event" +
               "&cd=" + platform +
               "&an=Morpheuz" +
-              "&ec=Usage" +
-              "&ea=Log" +
+              "&ec=" + userAgent +
+              "&ea= " + platform +
               "&el=" + model + 
               "&ul=" + language + 
               "&av=" + version + 
-              "&sd=" + depth;
+              "&sd=" + depth +
+              "&sr=" + screenres;
     
     console.log("googleAnalytics: " + msg);
 
@@ -116,7 +123,8 @@ function googleAnalytics() {
 }
 
 /*
- * Work out user agent
+ * Work out user agent - if the model says qemu then it is emulator. Otherwise check the userAgent. If we cannot then it is probably Android.
+ * iOS seems to always return a reasonable value.
  */
 function getUserAgent(model) {
   if (model.match(/qemu/i)) {
@@ -127,9 +135,9 @@ function getUserAgent(model) {
       console.log("userAgent=" + navigator.userAgent);
       return (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i)) ? "iOS" : "Android";
     } else {
-      return "unknown";
+      return "Android";
     }
   } catch (err) {
-    return "unknown";
+    return "Android";
   }
 }
