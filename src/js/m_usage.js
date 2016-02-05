@@ -51,11 +51,13 @@ function googleAnalytics() {
     }
     
     // Pick up as much platform information as possible
+    // This will enable decisions on what features to add and what should take priority
     var platform = "unknown";
     var model = "unknown";
     var language = "unknown";
     var depth = "unknown";
     var screenres = "unknown";
+    var firmware = "unknown";
     try {
       var wi = Pebble.getActiveWatchInfo();
       if (wi && wi.platform) {
@@ -77,10 +79,16 @@ function googleAnalytics() {
       if (wi && wi.language) {
         language = wi.language;
       }
+      if (wi && wi.firmware && wi.firmware.major && wi.firmware.minor && wi.firmware.patch) {
+        firmware = "v" + wi.firmware.major + "." + wi.firmware.minor + "." + wi.firmware.patch;
+        if (wi.firmware.suffix) {
+          firmware += "." + firmware.suffix;
+        }
+      }
     } catch (e) {
       console.log("googleAnalytics: unable to get active watch info");
     }
-    
+   
     // User agent
     var userAgent = getUserAgent(model);
     
@@ -98,7 +106,8 @@ function googleAnalytics() {
               "&ul=" + language + 
               "&av=" + version + 
               "&sd=" + depth +
-              "&sr=" + screenres;
+              "&sr=" + screenres +
+              "&dh=" + firmware;
     
     console.log("googleAnalytics: " + msg);
 
