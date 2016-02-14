@@ -27,8 +27,8 @@
  */
 function mConst() {
 	var cfg = {
-		url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
-		currentVersUrl : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/currentversion.json?v=",
+		url : "http://ui.morpheuz.net/morpheuz/view-",
+		currentVersUrl : "http://ui.morpheuz.net/morpheuz/currentversion.json?v=",
 		awakeAbove : 1000,
 		lightAbove : 120,
 		sampleIntervalMins : 10

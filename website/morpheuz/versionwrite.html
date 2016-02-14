@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="initial-scale=1.0, user-scalable=no">
+<script type="text/javascript" src="jqplot/jquery.min.js"></script>
+<meta charset="utf-8">
+<title>Version</title>
+<script>
+  $.getJSON("currentversion.json?v=" + new Date().getTime(), function(data) {
+    if (typeof data !== "undefined" && typeof data.version !== "undefined") {
+      var currentVer = (parseFloat(data.version) / 10).toFixed(1);
+      $("#version").text(currentVer);
+    }
+  });
+</script>
+</head>
+<body>
+  <span id="version" style="font-weight: bold; color: red;"></span>
+</body>
+</html>
+

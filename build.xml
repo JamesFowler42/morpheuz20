@@ -62,6 +62,10 @@
 			<param name="in.file" value="json_email.php" />
 			<param name="out.file" value="json_email.php" />
 		</antcall>
+		<antcall target="copyquote" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="versionwrite.html" />
+			<param name="out.file" value="versionwrite.html" />
+		</antcall>
 		<antcall target="shrinkhtml" inheritrefs="true" inheritall="true">
 			<param name="max.html" value="view-${ver}.max.html" />
 			<param name="min.html" value="view-${ver}.html" />
@@ -83,6 +87,9 @@
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="json_email.php" />
+		</antcall>
+		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="versionwrite.html" />
 		</antcall>
 		<antcall target="copyimages" inheritrefs="true" inheritall="true" />
 		<antcall target="archive" inheritrefs="true" inheritall="true"/>

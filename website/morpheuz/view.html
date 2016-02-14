@@ -321,6 +321,7 @@
   ga('create', 'UA-72769045-4', 'auto');
   ga('set', 'forceSSL', true);
   ga('set', 'location', location.origin + location.pathname);
+  ga('set', 'title', getParameterByName('noset') !== 'Y' ? document.title : document.title + " (review)");
   ga('send', 'pageview');
   </script>
 </body>
