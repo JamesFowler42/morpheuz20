@@ -392,7 +392,7 @@ EXTFN void icon_bar_update_callback(Layer *layer, GContext *ctx) {
 /*
  * Battery state change
  */
-EXTFN void battery_state_handler(BatteryChargeState charge) {
+static void battery_state_handler(BatteryChargeState charge) {
   ui.battery_level = charge.charge_percent;
   ui.battery_plugged = charge.is_plugged;
   layer_mark_dirty(ui.icon_bar);
@@ -433,7 +433,7 @@ EXTFN void progress_layer_update_callback(Layer *layer, GContext *ctx) {
 /*
  * Process clockface
  */
-EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
+static void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 
   #ifndef TESTING_MEMORY_LEAK
     // Only update the date if the day has changed
@@ -469,7 +469,7 @@ EXTFN void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed) {
 /*
  * Bluetooth connection status
  */
-EXTFN void bluetooth_state_handler(bool connected) {
+static void bluetooth_state_handler(bool connected) {
   set_icon(connected, IS_BLUETOOTH);
   if (!connected)
     set_icon(false, IS_COMMS); // because we only set comms state on NAK/ACK it can be at odds with BT state - do this else that is confusing
@@ -498,4 +498,25 @@ EXTFN void show_alarm_visuals(bool value) {
   set_icon(value, IS_ALARM_RING);
   layer_set_hidden(bitmap_layer_get_layer_jf(ui.alarm_button_top.layer), !value);
   layer_set_hidden(bitmap_layer_get_layer_jf(ui.alarm_button_button.layer), !value);
+}
+
+/*
+ * Common stuff we always do at the end of setup
+ */
+EXTFN void morpheuz_load_standard_postamble() {
+  read_internal_data();
+  read_config_data();
+  
+  // Start clock
+  tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
+  
+  battery_state_handler(battery_state_service_peek());
+  battery_state_service_subscribe(&battery_state_handler);
+
+  bluetooth_state_handler(bluetooth_connection_service_peek());
+  bluetooth_connection_service_subscribe(bluetooth_state_handler);
+
+  init_morpheuz();
+
+  light_enable_interaction();
 }

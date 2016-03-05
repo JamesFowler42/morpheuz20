@@ -414,6 +414,7 @@ input#save2.save {
 
 .tsummary {
     border-collapse: collapse;
+    padding-bottom: 3px;
 }
 
 .stat2 td {
@@ -441,4 +442,22 @@ input#save2.save {
     height:24px;
 }
 
+.twitterdiv {
+    padding-top: 5px;
+    padding-bottom: 5px;
+}
+
+.twitterdiv a {
+  text-decoration: none;
+  background-color: white;
+  border: 4px solid white;
+  border-radius: 3px;
+  color: #55acee;
+}
+
+.twitterdiv a img {
+  width: 16px;
+  height: 16px;
+  vertical-align: middle;
+  margin-right: 5px;
 }

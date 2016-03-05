@@ -35,7 +35,9 @@ function mConst() {
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
     emailAddressMandatory : "valid email address is required",
     sendingEmail : "Sending...",
-    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-"
+    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
+    twitterWebIntentUrl : "https://twitter.com/intent/tweet?hashtags=morpheuz,tweetMySleep&text=",
+    unableToFindTweetText : "Meh"
   };
 }
 
@@ -184,6 +186,30 @@ function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
   return stats;
 }
 
+/*
+ * Set the tweet reference
+ */
+function setTweet(rec) {
+  $.ajaxSetup({ scriptCharset: "utf-8" , contentType: "application/json; charset=utf-8"});
+  $.getJSON("tweetmysleep.json?v=" + new Date().getTime(), function(data) {
+    if (typeof data !== "undefined" && typeof data.tweets !== "undefined") {
+      console.log("rec.stars=" + rec.stars);
+      var tweetsForStar = data.tweets.star[rec.stars];
+      console.log("tweetsForStar=" + tweetsForStar);
+      var ind = Math.floor(Math.random() * tweetsForStar.length);
+      console.log("ind=" + ind);
+      var tweet = rec.totalStr + " (" + rec.deepStr + ") - " + tweetsForStar[ind];
+      var tweetHref = mConst().twitterWebIntentUrl + encodeURIComponent(tweet);
+      $("#tweet").attr("href", tweetHref);
+      console.log("twitter=" + tweetHref);
+    }
+  }).error(function(args) {
+    var tweetHref = mConst().twitterWebIntentUrl + encodeURIComponent(mConst().unableToFindTweetText);
+    $("#tweet").attr("href", tweetHref);
+    console.log("twitter=" + tweetHref);
+  });
+}
+
 
 /*******************************************************************************
  * 
@@ -219,28 +245,29 @@ $("document").ready(function() {
   var smart = getParameterByName("smart");
   var vers = getParameterByName("vers");
   var goneoff = getParameterByName("goneoff");
-  var emailto = decodeURIComponent(getParameterByName("emailto"));
-  var potoken = decodeURIComponent(getParameterByName("potoken"));
-  var pouser = decodeURIComponent(getParameterByName("pouser"));
-  var postat = decodeURIComponent(getParameterByName("postat"));
-  var swpdo = decodeURIComponent(getParameterByName("swpdo"));
-  var lifxToken = decodeURIComponent(getParameterByName("lifxtoken"));
-  var lifxTime = decodeURIComponent(getParameterByName("lifxtime"));
-  var swpstat = decodeURIComponent(getParameterByName("swpstat"));
+  var emailto = getParameterByName("emailto");
+  var potoken = getParameterByName("potoken");
+  var pouser = getParameterByName("pouser");
+  var postat = getParameterByName("postat");
+  var swpdo = getParameterByName("swpdo");
+  var lifxToken = getParameterByName("lifxtoken");
+  var lifxTime = getParameterByName("lifxtime");
+  var swpstat = getParameterByName("swpstat");
   var noset = getParameterByName("noset");
   var token = getParameterByName("token");
-  var exptime = decodeURIComponent(getParameterByName("exptime"));
+  var exptime = getParameterByName("exptime");
   var usage = getParameterByName("usage");
   var lazarus = getParameterByName("lazarus");
   var hueip = getParameterByName("hueip");
   var hueusername = getParameterByName("hueuser");
   var hueid = getParameterByName("hueid");
-  var ifkey = decodeURIComponent(getParameterByName("ifkey"));
-  var ifserver = decodeURIComponent(getParameterByName("ifserver"));
-  var ifstat = decodeURIComponent(getParameterByName("ifstat"));
+  var ifkey = getParameterByName("ifkey");
+  var ifserver = getParameterByName("ifserver");
+  var ifstat = getParameterByName("ifstat");
   var age = getParameterByName("age");
-  var doemail = decodeURIComponent(getParameterByName("doemail"));
-  var estat = decodeURIComponent(getParameterByName("estat"));
+  var doemail = getParameterByName("doemail");
+  var estat = getParameterByName("estat");
+  var snoozes = getParameterByName("zz");
   var returnTo = getParameterByName("return_to");
   if (returnTo === "") {
     returnTo = "pebblejs://close#";
@@ -394,15 +421,22 @@ $("document").ready(function() {
 
   // Return stats
   var out = calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf);
-  
+ 
   // Populate the statistics area
-  var rec = buildRecommendationPhrase(age, out);
+  var snoozes = parseInt(snoozes,10);
+  if (isNaN(snoozes)) {
+    snoozes = 0;
+  }
+  var rec = buildRecommendationPhrase(age, out, snoozes);
   $("#stats").text(rec.summary);
   $("#ttotal").text(rec.total);
   $("#tawake").text(rec.awake);
   $("#tlight").text(rec.light);
   $("#tdeep").text(rec.deep);
   $("#tignore").text(rec.ignore);
+  if (!nosetOn) {
+    setTweet(rec);
+  }
 
   // If we have a begin and an end then show this in our 'HealthKit' datapoint
   // section and
@@ -571,10 +605,10 @@ $("document").ready(function() {
     }
 
     // Extract data
-    var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
+    var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
     var url = mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age +
-              "&emailto=" + encodeURIComponent(emailto) + "&noset=Y";
+              "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes;
 
     var email = buildEmailJsonString(emailto, base, url, cpy);
 
@@ -601,7 +635,11 @@ $("document").ready(function() {
   $("#age").keyup(function() {
     // Populate the statistics area
     var age = $("#age").val();
-    $("#stats").text(buildRecommendationPhrase(age, out).summary);
+    var rec = buildRecommendationPhrase(age, out, snoozes);
+    $("#stats").text(rec.summary);
+    if (!nosetOn) {
+      setTweet(rec);
+    }
   });
   
   // Show less summary

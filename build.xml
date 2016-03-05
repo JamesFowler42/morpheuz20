@@ -1,10 +1,10 @@
 <?xml version="1.0"?>
 <project name="morpheuz" basedir="." default="all">
 
-	<property name="ver" value="40"/>
-	<property name="verdec" value="4.0"/>
-	<property name="inc" value="11"/> <!-- Cloudpebble download inc -->
-	<property name="vinc" value="8"/> <!-- Version marker on urls v=?? -->
+	<property name="ver" value="41"/>
+	<property name="verdec" value="4.1"/>
+	<property name="inc" value="20"/> <!-- Cloudpebble download inc -->
+	<property name="vinc" value="20"/> <!-- Version marker on urls v=?? -->
 	<!--<property name="vincstr" value="?v=${vinc}"/>-->
 	<property name="vincstr" value=""/>
 	
@@ -59,6 +59,10 @@
 			<param name="out.file" value="quotes.json" />
 		</antcall>
 		<antcall target="copyquote" inheritrefs="true" inheritall="true">
+			<param name="in.file" value="tweetmysleep.json" />
+			<param name="out.file" value="tweetmysleep.json" />
+		</antcall>
+		<antcall target="copyquote" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="json_email.php" />
 			<param name="out.file" value="json_email.php" />
 		</antcall>
@@ -86,6 +90,9 @@
 			<param name="min.file" value="quotes.json" />
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
+			<param name="min.file" value="tweetmysleep.json" />
+		</antcall>
+		<antcall target="copy" inheritrefs="true" inheritall="true">
 			<param name="min.file" value="json_email.php" />
 		</antcall>
 		<antcall target="copy" inheritrefs="true" inheritall="true">
@@ -100,16 +107,10 @@
 		    	</not>
 		    </condition>
 		</fail>
-		<fail message="morpheuz.h has incorrect version">
-		    <condition>
-		    	<not>
-		    		<resourcecontains resource="src/morpheuz.h" substring="&quot;${verdec}&quot;"/>
-		    	</not>
-		    </condition>
-		</fail>
 	</target>
 	
 	<target name="concatjqplot" description="concatjqplot">
+		<echo message="All jqplot javascript into ${jqplot}/jqplotbundle.min.js"/>
 		<concat destfile="${jqplot}/jqplotbundle.min.js">
 	     <fileset file="${jqplot}/jquery.min.js" />
          <fileset file="${jqplot}/jquery.jqplot.min.js" />
@@ -132,7 +133,7 @@
 
 	<target name="shrink" description="shrink">
 		<delete file="${builddir}/${min.file}"/>
-		<echo message="Minifying ${srcdir}/${in.file} to ${builddir}/${min.file}"/>
+		<echo message="Minifying ${in.file} to ${builddir}/${min.file}"/>
 		<java jar="../yui/yuicompressor-2.4.8.jar" fork="true">
 			<arg value="${in.file}" />
 			<arg value="-o" />
@@ -188,6 +189,13 @@
 		<echo message="Copying ${srcdir}/${in.file} to ${builddir}/${out.file}"/>
 		<copy file="${srcdir}/${in.file}" tofile="${builddir}/${out.file}" overwrite="true" force="true" outputencoding="US-ASCII"/>
 	</target>
+	
+	<target name="shrinkjson" description="shrinkjson">
+	  <echo message="Shrink JSON on ${builddir}/${min.file}"/>
+	  <exec executable="/usr/local/bin/json-minify">
+	    <arg value="${maindir}/${builddir}/${min.file}"/>
+	  </exec>
+	</target>	
 	
 	<target name="copyimages" description="copyimages">
 		<echo message="Copying images from ${srcdir}${img} to ${test.dir}${img}"/>

@@ -34,6 +34,8 @@
 <link rel="stylesheet" type="text/css" href="jqplot/jquery.jqplot.css" />
 <link rel="stylesheet" type="text/css" href="view.css?v=1" />
 
+<script type="text/javascript" async src="https://platform.twitter.com/widgets.js"></script>
+
 </head>
 <body>
   <div class="outer">
@@ -68,6 +70,9 @@
         </table>
         <span id="lesssummary" class="lessismore">Less</span>
         <span id="moresummary" class="lessismore" style="display:none;">More</span>
+        <div class="twitterdiv noset">
+         <a id="tweet" href="#" onClick="ga('send','event','feature','tweetMySleep');"><img src="img/Twitter_logo_blue_16.png"/>#tweetMySleep</a>
+        </div>
         </div>
         <h3 class="movement-head">Sleep Movement</h3>
         <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>

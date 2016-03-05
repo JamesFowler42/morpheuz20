@@ -26,9 +26,7 @@
 #define MORPHEUZ_H_
 
 #include "pebble.h"
-
-#define VERSION 40
-#define VERSION_TXT "4.0"
+#include "pebble_process_info.h"
 
 // Comment out for production build - leaves errors on BASALT/CHALK and nothing on APLITE as this is much tighter for memory
 //#define TESTING_BUILD
@@ -168,7 +166,8 @@ enum MorpKey {
   KEY_VERSION = 6,
   KEY_GONEOFF = 7,
   KEY_TRANSMIT = 8,
-  KEY_AUTO_RESET = 9
+  KEY_AUTO_RESET = 9,
+  KEY_SNOOZES = 10
 };
 
 enum CtrlValues {
@@ -177,7 +176,8 @@ enum CtrlValues {
   CTRL_GONEOFF_DONE = 4,
   CTRL_DO_NEXT = 8,
   CTRL_SET_LAST_SENT = 16,
-  CTRL_LAZARUS = 32
+  CTRL_LAZARUS = 32,
+  CTRL_SNOOZES_DONE = 64
 };
 
 typedef enum {
@@ -236,7 +236,7 @@ enum Thresholds {
 #define LATE_PRESET 2
 
 // Change INTERNAL_VER only if the InternalData struct changes
-#define INTERNAL_VER 43
+#define INTERNAL_VER 44
 typedef struct {
   uint8_t internal_ver;
   uint32_t base;
@@ -249,6 +249,8 @@ typedef struct {
   bool gone_off_sent;
   bool transmit_sent;
   bool stopped;
+  uint8_t snoozes;
+  bool snoozes_sent;
 } InternalData;
 
 // Change the CONFIG_VER only if the ConfigData struct changes
@@ -276,6 +278,11 @@ typedef struct {
   GBitmap *bitmap;
 } BitmapLayerComp;
 
+// Version from App Info stuff (undocumented)
+#define VERSION_EXTERNAL extern const PebbleProcessInfo __pbl_app_info
+#define VERSION_MAJOR (__pbl_app_info.process_version.major)
+#define VERSION_MINOR (__pbl_app_info.process_version.minor)
+#define APP_NAME (__pbl_app_info.name)
 
 // Externals
 ConfigData *get_config_data();
@@ -304,9 +311,7 @@ void analogue_set_smart_times();
 void analogue_visible(bool visible, bool call_post_init);
 void analogue_window_load(Window *window);
 void analogue_window_unload();
-void battery_state_handler(BatteryChargeState charge);
 void bed_visible(bool value);
-void bluetooth_state_handler(bool connected);
 void cancel_alarm();
 void close_morpheuz();
 #ifndef PBL_PLATFORM_APLITE
@@ -314,7 +319,6 @@ void copy_time_range_into_field(char *field, size_t fsize, uint8_t fromhr, uint8
 #endif
 void copy_alarm_time_range_into_field(char *field, size_t fsize);
 void fire_alarm();
-void handle_minute_tick(struct tm *tick_time, TimeUnits units_changed);
 void hide_notice_layer(void *data);
 void icon_bar_update_callback(Layer *layer, GContext *ctx);
 void init_morpheuz();
@@ -324,6 +328,7 @@ void macro_bitmap_layer_create(BitmapLayerComp *comp, GRect frame, Layer *parent
 void macro_bitmap_layer_destroy(BitmapLayerComp *comp);
 void manual_shutdown_request();
 void morpheuz_load(Window *window);
+void morpheuz_load_standard_postamble();
 void morpheuz_unload(Window *window);
 void open_comms();
 void post_init_hook(void *data);

@@ -107,8 +107,9 @@ function iftttMakerInterfaceData() {
     var frommin = nvl(window.localStorage.getItem("frommin"), mConst().fromminDef);
     var tomin = nvl(window.localStorage.getItem("tomin"), mConst().tominDef);
     var smartOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
+    var snoozes = nvl(window.localStorage.getItem("snoozes"), "0");
     
-    var csvData = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
+    var csvData = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
   
     var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData.body };
 

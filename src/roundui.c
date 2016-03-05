@@ -29,6 +29,8 @@
 
 #ifdef PBL_ROUND
 
+VERSION_EXTERNAL;
+
 // Constants
 #define HOUR_RADIUS 8
 #define HOUR_COLOR GColorVividCerulean
@@ -40,6 +42,7 @@
 static BitmapLayerComp round_background;
 static Layer *analogue_time_layer;
 static int current_hour, current_minutes; 
+static char version_txt[5];
 
 // Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
 extern UiCommon ui;
@@ -157,7 +160,8 @@ EXTFN void morpheuz_load(Window *window) {
   layer_set_hidden(text_layer_get_layer_jf(ui.powernap_layer), true);
   
   ui.version_text = macro_text_layer_create(GRect(90 - 15, 125, 30, 25), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentCenter);
-  text_layer_set_text(ui.version_text, VERSION_TXT);
+  snprintf(version_txt, sizeof version_txt, "%d.%d", VERSION_MAJOR, VERSION_MINOR);
+  text_layer_set_text(ui.version_text, version_txt);
   
   ui.text_date_smart_alarm_range_layer = macro_text_layer_create(GRect(15, 74, 150, 25), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
   layer_set_hidden(text_layer_get_layer_jf(ui.text_date_smart_alarm_range_layer), true);
@@ -172,11 +176,6 @@ EXTFN void morpheuz_load(Window *window) {
   ui.icon_bar = macro_layer_create(GRect(47, ICON_TOPS, ICON_BAR_WIDTH, 12), window_layer, &icon_bar_update_callback);
   layer_set_hidden(ui.icon_bar, true);
 
-  BatteryChargeState initial = battery_state_service_peek();
-  ui.battery_level = initial.charge_percent;
-  ui.battery_plugged = initial.is_plugged;
-  bluetooth_state_handler(bluetooth_connection_service_peek());
-
   ui.progress_layer = macro_layer_create(GRect(29, 105, 121, 9), window_layer, &progress_layer_update_callback);
   layer_set_hidden(ui.progress_layer, true);
   
@@ -186,19 +185,7 @@ EXTFN void morpheuz_load(Window *window) {
   macro_bitmap_layer_create(&ui.alarm_button_top, GRect(138, 39, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
   macro_bitmap_layer_create(&ui.alarm_button_button, GRect(138, 108, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
  
-  read_internal_data();
-  read_config_data();
-  
-  // Start clock
-  tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
-
-  battery_state_service_subscribe(&battery_state_handler);
-
-  bluetooth_connection_service_subscribe(bluetooth_state_handler);
-
-  init_morpheuz();
-
-  set_icon(get_internal_data()->transmit_sent, IS_EXPORT);
+  morpheuz_load_standard_postamble();
 
   // Wait for version display
   app_timer_register(ROUND_SPLASH_TIME, load_complete, NULL);

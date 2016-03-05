@@ -89,6 +89,12 @@ EXTFN void snooze_alarm() {
 
   // Reset alarm sequence
   alarm_count = 0;
+  
+  // Send the snoozes to the outside world
+  if (get_icon(IS_RECORD)) {
+    get_internal_data()->snoozes++;
+    get_internal_data()->snoozes_sent = false;
+  }
 }
 
 /*

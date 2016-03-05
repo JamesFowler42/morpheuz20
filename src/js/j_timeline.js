@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup, hrsmin */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin, addSummaryPin */
 
 /*
@@ -187,8 +187,12 @@ function addSummaryPin(atAlarmTime) {
   var summaryTime = stats.tends.addMinutes(1);
 
   var age = nvl(window.localStorage.getItem("age"), "");
+  var snoozes = parseInt(nvl(window.localStorage.getItem("snoozes"), "0"),10);
+  if (isNaN(snoozes)) {
+    snoozes = 0;
+  }
 
-  var rec = buildRecommendationPhrase(age, stats);
+  var rec = buildRecommendationPhrase(age, stats, snoozes);
 
   var pin = {
     "id" : getPinId(base,"su"),
@@ -219,7 +223,7 @@ function getQuoteOfTheDay() {
   makeGetAjaxCall(mConst().quotesUrl + "?v=" + new Date().getTime(), function(resp) {
     if (resp && resp.status === 1) {
       var obj = JSON.parse(resp.data);
-      var ind = Math.round(Math.random() * obj.length);
+      var ind = Math.floor(Math.random() * obj.length);
       var quote = obj[ind];
       console.log('quote:' + quote);
       window.localStorage.setItem("quote", quote);

@@ -68,6 +68,6 @@
 
 #define COPYRIGHT "\n© 2016\nJames Fowler"
 
-#define MORPHEUZ "Morpheuz"
+//#define MORPHEUZ "Morpheuz"
 
 #endif /* LANGUAGE_H_ */

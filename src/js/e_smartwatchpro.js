@@ -23,7 +23,7 @@
  */
 
 /*global window, nvl, mLang, mConst, makeGetAjaxCall, calculateStats */
-/*exported smartwatchProConfigured, smartwatchProTransmit, generateCopyLinkData, */
+/*exported smartwatchProConfigured, smartwatchProTransmit */
 
 /*
  * Is Smartwatch Pro configured?

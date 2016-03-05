@@ -36,6 +36,8 @@
   #define BUFFER_SIZE 50
 #endif
 
+VERSION_EXTERNAL;
+
 static AppTimer *notice_timer;
 
 static BitmapLayerComp notice_moon;
@@ -156,7 +158,7 @@ EXTFN void show_notice_with_message(uint32_t resource_id, char *message) {
 
   #ifndef PBL_ROUND
   notice_name_layer = macro_text_layer_create(GRect(5, 15, 134, 30), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentRight);
-  text_layer_set_text(notice_name_layer, MORPHEUZ);
+  text_layer_set_text(notice_name_layer, APP_NAME);
   #endif
 
   notice_text = macro_text_layer_create(GRect(7, 55, width - 14, 110), window_layer, GColorWhite, GColorClear, fonts_get_system_font(FONT_KEY_GOTHIC_24_BOLD), GTextAlignmentCenter);

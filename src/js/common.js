@@ -60,7 +60,10 @@ function mCommonLang() {
     emailHeader2 : "<h2>Chart Display</h2>",
     emailFooter1 : "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
     emailFooter2 : "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
-    report : "Report"
+    report : "Report", 
+    snoozeText : " You hit snooze {0} times.",
+    snoozeTextOnce : " You hit snooze once.",
+    snoozeTextTwice : " You hit snooze twice."
   };
 }
 
@@ -183,17 +186,6 @@ function hrsmin(value) {
     }
   }
   return result;
-}
-
-/*
- * Work out user agent
- */
-function getUserAgent() {
-  if (typeof navigator === "undefined" || typeof navigator.userAgent === "undefined") {
-    return "unknown";
-  } else {
-    return (navigator.userAgent.match(/iPhone/i) || navigator.userAgent.match(/iPad/i) || navigator.userAgent.match(/iPod/i)) ? "iOS" : "Android";
-  }
 }
 
 /*
@@ -338,24 +330,61 @@ function generateRecommendation(age, total) {
   var actual =  Math.floor(total / 60);
   
   var view = "";
+  var diff = 0;
   if (actual < min) {
     view = mCommonLang().tooLittle;
+    diff = total - min * 60;
   } else if (actual > max) {
     view = mCommonLang().tooMuch;
+    diff = total - max * 60;
   } else {
     view = mCommonLang().ideal;
   }
   
-  return { "min": min, "max": max, "view": view };
+  
+  return { "min": min, "max": max, "view": view, "diff": diff };
+}
+
+/*
+ * Determine a sleep star rating
+ */
+function determineStars(trex, snoozes) {
+  if (trex === null) {
+    return 0;
+  }
+  
+  var stars = 5;
+  
+  if (snoozes > 0) {
+    stars--;
+  }
+  
+  if (trex.diff <= -90) {
+    stars--;
+  } 
+  if (trex.diff <= -60) {
+    stars--;
+  }
+  if (trex.diff <= -30) {
+    stars--;
+  }
+  if (trex.diff >= 60) {
+    stars--;
+  }
+
+  // Return 1 to 5 stars
+  return stars;
+  
 }
 
 /*
  * Build the recommendation phrase
  */
-function buildRecommendationPhrase(age, stats) {
+function buildRecommendationPhrase(age, stats, snoozes) {
   
   if (stats.total === 0) {
-    return { "summary" : mCommonLang().noSleep, "total": "-", "awake": "-", "light": "-", "deep": "-", "ignore": "-" };
+    return { "summary" : mCommonLang().noSleep, "total": "-", "awake": "-", "light": "-", "deep": "-", "ignore": "-", "stars": 0, 
+            "totalStr" : "-", "deepStr" : "-"};
   }
   
   var trex = generateRecommendation(age, stats.total);
@@ -366,20 +395,30 @@ function buildRecommendationPhrase(age, stats) {
   var deepStr = hrsmin(stats.deep);
   var ignoreStr = hrsmin(stats.ignore);
   
+  var stars = determineStars(trex, snoozes);
+  
   var summaryTxt;
   if (trex !== null) {
     summaryTxt = mCommonLang().sleepSummary.format(trex.min, trex.max, trex.view, totalStr, awakeStr, lightStr, deepStr, ignoreStr);
   } else {
     summaryTxt = mCommonLang().sleepSummaryNoRecommend.format(totalStr, awakeStr, lightStr, deepStr, ignoreStr);
   } 
+  if (snoozes > 2) {
+    summaryTxt += mCommonLang().snoozeText.format(snoozes);
+  } else if (snoozes == 1) {
+    summaryTxt += mCommonLang().snoozeTextOnce;
+  } else if (snoozes == 2) {
+    summaryTxt += mCommonLang().snoozeTextTwice;
+  }
   
-  return { "summary" : summaryTxt, "total": totalStr, "awake": awakeStr, "light": lightStr, "deep": deepStr, "ignore": ignoreStr };
+  return { "summary" : summaryTxt, "total": totalStr, "awake": awakeStr, "light": lightStr, "deep": deepStr, "ignore": ignoreStr, "stars":  stars,
+           "totalStr" : totalStr, "deepStr" : deepStr};
 }
 
 /*
  * Prepare the data for the mail links
  */
-function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff) {
+function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes) {
 
   var timePoint = new Date(base);
   var body = "<pre>";
@@ -399,6 +438,7 @@ function generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tom
       var goneoffstr = goneoff.substr(0, 2) + ":" + goneoff.substr(2, 2);
       body = body + goneoffstr + ",ALARM<br/>";
     }
+    body = body + snoozes + ",SNOOZES<br/>";
   }
   return {
     "body" : body + "</pre>",

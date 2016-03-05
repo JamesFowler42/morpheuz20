@@ -131,7 +131,13 @@ function callWatchApp(ctrlVal) {
   function decodeKeyCtrl(ctrlVal, keyVal, name) {
     return (ctrlVal & keyVal) ? name + " " : "";
   }
-  console.log("ACK " + decodeKeyCtrl(ctrlVal, mConst().ctrlTransmitDone, "ctrlTransmitDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlVersionDone, "ctrlVersionDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlGoneOffDone, "ctrlGoneOffDone") + decodeKeyCtrl(ctrlVal, mConst().ctrlDoNext, "ctrlDoNext") + decodeKeyCtrl(ctrlVal, mConst().ctrlSetLastSent, "ctrlSetLastSent")+ decodeKeyCtrl(ctrlVal, mConst().ctrlLazarus, "ctrlLazarus"));
+  console.log("ACK " + decodeKeyCtrl(ctrlVal, mConst().ctrlTransmitDone, "ctrlTransmitDone") + 
+              decodeKeyCtrl(ctrlVal, mConst().ctrlVersionDone, "ctrlVersionDone") + 
+              decodeKeyCtrl(ctrlVal, mConst().ctrlGoneOffDone, "ctrlGoneOffDone") + 
+              decodeKeyCtrl(ctrlVal, mConst().ctrlSnoozesDone, "ctrlSnoozesDone") + 
+              decodeKeyCtrl(ctrlVal, mConst().ctrlDoNext, "ctrlDoNext") + 
+              decodeKeyCtrl(ctrlVal, mConst().ctrlSetLastSent, "ctrlSetLastSent")+ 
+              decodeKeyCtrl(ctrlVal, mConst().ctrlLazarus, "ctrlLazarus"));
   Pebble.sendAppMessage({
     "keyCtrl" : ctrlVal
   });
@@ -227,13 +233,18 @@ Pebble.addEventListener("appmessage", function(e) {
       goneoff = hoursStr + minutesStr;
     }
     console.log("MSG goneoff=" + goneoff);
+    var previousGoneOff = window.localStorage.getItem("goneOff");
     window.localStorage.setItem("goneOff", goneoff);
     ctrlVal = ctrlVal | mConst().ctrlGoneOffDone | mConst().ctrlDoNext;
-    addSmartAlarmPin();
     addSummaryPin(true);
-    turnLifxLightsOn();
-    turnHueLightsOn();
-    iftttMakerInterfaceAlarm();
+    if (goneoff !== previousGoneOff) {
+      addSmartAlarmPin();
+      turnLifxLightsOn();
+      turnHueLightsOn();
+      iftttMakerInterfaceAlarm();
+    } else {
+      console.log("Only summary pin redone - gone off repeated");
+    }
   }
 
   // Incoming data point
@@ -245,6 +256,14 @@ Pebble.addEventListener("appmessage", function(e) {
     storePointInfo(top, bottom);
     ctrlVal = ctrlVal | mConst().ctrlDoNext | mConst().ctrlSetLastSent;
   }
+  
+  // Store the snoozes
+  if (typeof e.payload.keySnoozes !== "undefined") {
+    var snoozes = parseInt(e.payload.keySnoozes, 10);
+    console.log("MSG snoozes=" + snoozes);
+    window.localStorage.setItem("snoozes", snoozes);
+    ctrlVal = ctrlVal | mConst().ctrlSnoozesDone | mConst().ctrlDoNext;
+  }
 
   // Incoming transmit to automatics
   if (typeof e.payload.keyTransmit !== "undefined") {
@@ -253,7 +272,7 @@ Pebble.addEventListener("appmessage", function(e) {
     ctrlVal = ctrlVal | mConst().ctrlTransmitDone;
   }
 
-  // Incoming transmit to automatics
+  // What auto reset are we doing today?
   if (typeof e.payload.keyAutoReset !== "undefined") {
     var autoReset = parseInt(e.payload.keyAutoReset, 10);
     console.log("MSG keyAutoReset=" + autoReset);
@@ -380,6 +399,7 @@ function buildUrl(noset) {
   var emailto = nvl(window.localStorage.getItem("emailto"), "");
   var token = Pebble.getAccountToken();
   var age = nvl(window.localStorage.getItem("age"), "");
+  var snoozes = nvl(window.localStorage.getItem("snoozes"), 0);
 
   var extra = "";
   if (noset === "N") {
@@ -404,6 +424,7 @@ function buildUrl(noset) {
     var ifstat = nvl(window.localStorage.getItem("ifstat"), "");
     var doEmail = nvl(window.localStorage.getItem("doemail"), "");
     var estat = nvl(window.localStorage.getItem("estat"), "");
+
     extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + 
            "&potoken=" + encodeURIComponent(potoken) +  
            "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + 
@@ -416,7 +437,7 @@ function buildUrl(noset) {
   var url = mConst().url + version + ".html" + 
            "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
            "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token + "&age=" + age + 
-           "&noset=" + noset + extra;
+           "&noset=" + noset + "&zz=" + snoozes + extra;
   
   console.log("url=" + url + " (len=" + url.length + ")");
   return url;

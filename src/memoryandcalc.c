@@ -27,6 +27,8 @@
 #include "language.h"
 #include "analogue.h"
 
+VERSION_EXTERNAL;
+
 static InternalData internal_data;
 static ConfigData config_data;
 static bool save_config_requested = false;
@@ -124,6 +126,11 @@ static void in_received_handler(DictionaryIterator *iter, void *context) {
     if (ctrl_value & CTRL_GONEOFF_DONE) {
       internal_data.gone_off_sent = true;
     }
+    
+    // If snoozes have been registered is done then mark that
+    if (ctrl_value & CTRL_SNOOZES_DONE) {
+      internal_data.snoozes_sent = true;
+    }
 
     // Only let the last sent become it's new value after confirmation
     // from the JS
@@ -151,7 +158,8 @@ static void send_version(void *data) {
   if (!version_sent) {
      if (bluetooth_connection_service_peek()) {
        app_timer_register(VERSION_SEND_INTERVAL_MS, send_version, NULL);
-       send_to_phone(KEY_VERSION, VERSION);
+       int32_t version = VERSION_MAJOR * 10 + VERSION_MINOR;
+       send_to_phone(KEY_VERSION, version);
      } else {
        app_timer_register(VERSION_SEND_SLOW_INTERVAL_MS, send_version, NULL);
      }
@@ -241,6 +249,7 @@ EXTFN void read_internal_data() {
   }
   analogue_set_base(internal_data.base);
   set_progress_based_on_persist();
+  set_icon(internal_data.transmit_sent, IS_EXPORT);
   app_timer_register(PERSIST_MEMORY_MS, save_internal_data_timer, NULL);
 }
 
@@ -365,6 +374,7 @@ EXTFN void resend_all_data(bool invoked_by_change_of_time) {
   internal_data.last_sent = LAST_SENT_INIT;
   internal_data.gone_off_sent = false;
   internal_data.transmit_sent = false;
+  internal_data.snoozes_sent = false;
   set_icon(false, IS_EXPORT);
   previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
 }
@@ -551,9 +561,12 @@ static void transmit_next_data(void *data) {
   
   // Have we already caught up - if so then finish with the gone off time, if present
   if (internal_data.last_sent >= internal_data.highest_entry) {
-    if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
+    if (internal_data.snoozes > 0 && !internal_data.snoozes_sent) {
+      send_to_phone(KEY_SNOOZES, internal_data.snoozes);
+      internal_data.gone_off_sent = false;
+    } else if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
       send_to_phone(KEY_GONEOFF, internal_data.gone_off);
-    } else if (!internal_data.transmit_sent  && internal_data.has_been_reset && at_limit(calc_offset())) {
+    } else if (!internal_data.transmit_sent && internal_data.has_been_reset && at_limit(calc_offset())) {
       send_to_phone(KEY_TRANSMIT, 0);
     }
     return;

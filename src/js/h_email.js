@@ -51,9 +51,10 @@ function automaticEmailExport() {
     var tohr = nvl(window.localStorage.getItem("tohr"), mConst().tohrDef);
     var tomin = nvl(window.localStorage.getItem("tomin"), mConst().tominDef);
     var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
+    var snoozes = nvl(window.localStorage.getItem("snoozes"), "0");
     
     // Extract data
-    var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff);
+    var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
     var url = buildUrl("Y");
 

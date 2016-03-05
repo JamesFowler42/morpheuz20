@@ -29,6 +29,8 @@
 
 #ifdef PBL_RECT
 
+VERSION_EXTERNAL;
+
 // Constants
 #define BED_FINISH GRect(8, 17, 127, 70)
 #define SLEEPER_FINISH GRect(25, 24, 110, 29)
@@ -58,6 +60,7 @@ static struct PropertyAnimation *animations[MAX_ANIMATIONS];
 #ifdef PBL_COLOR
 static uint8_t text_color_count = 0;
 #endif
+static char version_txt[5];
 
 // Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
 extern UiCommon ui;
@@ -141,7 +144,8 @@ EXTFN void morpheuz_load(Window *window) {
   macro_bitmap_layer_create(&logo_head, HEAD_START, window_layer, RESOURCE_ID_IMAGE_LOGO_HEAD, true);
 
   ui.version_text = macro_text_layer_create(GRect(26, 43, 92, 30), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentCenter);
-  text_layer_set_text(ui.version_text, VERSION_TXT);
+  snprintf(version_txt, sizeof version_txt, "%d.%d", VERSION_MAJOR, VERSION_MINOR);
+  text_layer_set_text(ui.version_text, version_txt);
   
   #ifdef PBL_COLOR
       ui.text_time_shadow_layer = macro_text_layer_create(GRect(4, 113, 144, 42), window_layer, GColorOxfordBlue, BACKGROUND_COLOR, ui.time_font, GTextAlignmentCenter);
@@ -154,11 +158,6 @@ EXTFN void morpheuz_load(Window *window) {
   init_icon_cache();
   ui.icon_bar = macro_layer_create(GRect(26, ICON_TOPS, ICON_BAR_WIDTH, 12), window_layer, &icon_bar_update_callback);
 
-  BatteryChargeState initial = battery_state_service_peek();
-  ui.battery_level = initial.charge_percent;
-  ui.battery_plugged = initial.is_plugged;
-  bluetooth_state_handler(bluetooth_connection_service_peek());
-
   ui.progress_layer = macro_layer_create(GRect(11, 157, 121, 9), window_layer, &progress_layer_update_callback);
 
   block_layer = macro_text_layer_create(BLOCK_START, window_layer, COPYRIGHT_COLOR, BACKGROUND_COLOR, ui.notice_font, GTextAlignmentCenter);
@@ -169,21 +168,7 @@ EXTFN void morpheuz_load(Window *window) {
   macro_bitmap_layer_create(&ui.alarm_button_top, GRect(114, 17, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_TOP, false);
   macro_bitmap_layer_create(&ui.alarm_button_button, GRect(114, 120, 30, 30), window_layer, RESOURCE_ID_BUTTON_ALARM_BOTTOM, false);
   
-  read_internal_data();
-  read_config_data();
-  
-  // Start clock
-  tick_timer_service_subscribe(MINUTE_UNIT, handle_minute_tick);
-  
-  battery_state_service_subscribe(&battery_state_handler);
-
-  bluetooth_connection_service_subscribe(bluetooth_state_handler);
-
-  init_morpheuz();
-
-  set_icon(get_internal_data()->transmit_sent, IS_EXPORT);
-
-  light_enable_interaction();
+  morpheuz_load_standard_postamble();
 
   #ifndef PBL_COLOR
     app_timer_register(PRE_ANIMATE_DELAY, start_animate, NULL);
@@ -198,11 +183,16 @@ EXTFN void morpheuz_load(Window *window) {
 EXTFN void morpheuz_unload(Window *window) {
 
   hide_notice_layer(NULL);
+  
+  // Save space by not clearing up on close on aplite. Feels bad, but so do crashes for no heap.
+  #ifndef PBL_PLATFORM_APLITE 
 
   tick_timer_service_unsubscribe();
   battery_state_service_unsubscribe();
   bluetooth_connection_service_unsubscribe();
   accel_data_service_unsubscribe();
+  
+  #endif
 
   save_config_data(NULL);
   save_internal_data();
