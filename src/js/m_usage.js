@@ -22,13 +22,48 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl,  */
+/*global window, nvl, mConst */
 /*exported googleAnalytics */
 
 /*
- * Store usage information using google analytics
+ * Call googleAnalytics gathering which features of Morpheuz are being used
+ * No personal data is collected, but the usage informs further development directions
  */
 function googleAnalytics() {
+ 
+  // morpheuz_smart_alarm
+  var smartAlarmOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef) !== mConst().smartDef;
+  // morpheuz_ifttt
+  var iftttOn = nvl(window.localStorage.getItem("ifkey"), "") !== "";
+  // morpheuz_lifx
+  var lifxOn = nvl(window.localStorage.getItem("lifx-token"), "") !== "";
+  // morpheuz_hue
+  var hueOn =  nvl(window.localStorage.getItem("hueip"), "") !== "";
+  // morpheuz_email_address
+  var emailOn = nvl(window.localStorage.getItem("emailto"), "") !== "";
+  // morpheuz_pushover
+  var pushoverOn = nvl(window.localStorage.getItem("potoken"), "") !== "";
+  // morpheuz_auto_email
+  var autoEmailOn = nvl(window.localStorage.getItem("doemail"), "") === "Y";
+  // morpheuz_auto_healthkit
+  var healthKitAutoExportOn = nvl(window.localStorage.getItem("swpdo"), "") === "Y";
+  // morpheuz_age_entered
+  var ageSupplied = nvl(window.localStorage.getItem("age"), "") !== "";
+  // morpheuz_lazarus
+  var lazarusActive = nvl(window.localStorage.getItem("lazarus"), "Y") === "Y";
+  
+  // Pass this as a custom dimension array
+  var customDimension = [smartAlarmOn,iftttOn,lifxOn,hueOn,emailOn,pushoverOn,autoEmailOn,healthKitAutoExportOn,ageSupplied,lazarusActive];
+  
+  // Call analytics - this has been done like this so the analytics function can be spun off as a separate library later
+  googleAnalyticsCall(customDimension);
+}
+
+/*
+ * Store usage information using google analytics (only if the user permits)
+ * customDimension is an array that is passed as cd1=xxx&cd2=yyy...
+ */
+function googleAnalyticsCall(customDimension) {
   
   try {
     
@@ -41,6 +76,19 @@ function googleAnalytics() {
     
     // Pick up the version
     var version = nvl(window.localStorage.getItem("version"), "unknown");
+    
+    // Use the custom dimensions supplied to provide extra information
+    var cd = "";
+    try {
+    if (customDimension && customDimension.constructor == Array) {
+      for (var i = 0; i < customDimension.length; i++) {
+        var dimensionIndex = i + 1;
+        cd += "&cd" + dimensionIndex + "=" + customDimension[i];   
+      }
+    }
+    } catch (e) {
+      console.log("googleAnalytics: failed to get custom dimensions");
+    }
     
     // Uniquely identify by account token
     var accountToken = "unknown";
@@ -79,10 +127,13 @@ function googleAnalytics() {
       if (wi && wi.language) {
         language = wi.language;
       }
-      if (wi && wi.firmware && wi.firmware.major && wi.firmware.minor && wi.firmware.patch) {
-        firmware = "v" + wi.firmware.major + "." + wi.firmware.minor + "." + wi.firmware.patch;
-        if (wi.firmware.suffix) {
-          firmware += "." + firmware.suffix;
+      if (wi && wi.firmware && wi.firmware.major && wi.firmware.minor) {
+        firmware = "v" + wi.firmware.major + "." + wi.firmware.minor;
+        if (wi.firmware.patch) {
+          firmware += "." + firmware.patch;
+          if (wi.firmware.suffix) {
+            firmware += "." + firmware.suffix;
+          }
         }
       }
     } catch (e) {
@@ -107,7 +158,8 @@ function googleAnalytics() {
               "&av=" + version + 
               "&sd=" + depth +
               "&sr=" + screenres +
-              "&dh=" + firmware;
+              "&dh=" + firmware +
+              cd;
     
     console.log("googleAnalytics: " + msg);
 

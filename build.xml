@@ -3,7 +3,7 @@
 
 	<property name="ver" value="41"/>
 	<property name="verdec" value="4.1"/>
-	<property name="inc" value="20"/> <!-- Cloudpebble download inc -->
+	<property name="inc" value="21"/> <!-- Cloudpebble download inc -->
 	<property name="vinc" value="20"/> <!-- Version marker on urls v=?? -->
 	<!--<property name="vincstr" value="?v=${vinc}"/>-->
 	<property name="vincstr" value=""/>
@@ -38,12 +38,6 @@
 		</antcall>
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
 			<param name="in.file" value="${builddir}/view-${ver}.js" />
-			<param name="min.file" value="view-${ver}.min.js" />
-		</antcall>
-		<antcall target="concat" inheritrefs="true" inheritall="true">
-			<param name="in.file.1" value="view-temp.min.js" />
-			<param name="in.file.2" value="utils-temp.min.js" />
-			<param name="in.file.3" value="common-temp.min.js" />
 			<param name="min.file" value="view-${ver}.min.js" />
 		</antcall>
 		<antcall target="copyedit" inheritrefs="true" inheritall="true">
