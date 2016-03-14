@@ -130,9 +130,9 @@ function googleAnalyticsCall(customDimension) {
       if (wi && wi.firmware && wi.firmware.major && wi.firmware.minor) {
         firmware = "v" + wi.firmware.major + "." + wi.firmware.minor;
         if (wi.firmware.patch) {
-          firmware += "." + firmware.patch;
+          firmware += "." + wi.firmware.patch;
           if (wi.firmware.suffix) {
-            firmware += "." + firmware.suffix;
+            firmware += "." + wi.firmware.suffix;
           }
         }
       }
@@ -152,7 +152,7 @@ function googleAnalyticsCall(customDimension) {
               "&cd=" + platform +
               "&an=Morpheuz" +
               "&ec=" + userAgent +
-              "&ea= " + platform +
+              "&ea=" + platform +
               "&el=" + model + 
               "&ul=" + language + 
               "&av=" + version + 

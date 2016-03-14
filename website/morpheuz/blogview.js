@@ -119,7 +119,7 @@ function getVersion(result) {
 /*
  * Build the url for the config and report display @param noset
  */
-function buildUrl(version, base, fromhr, tohr, frommin, tomin, smart, goneOff, graphIn) {
+function buildUrl(version, base, fromhr, tohr, frommin, tomin, smart, goneOff, graphIn, snoozes) {
   var graph = "";
   for (var i = 0; i < graphIn.length; i++) {
 	  graph += graphIn[i] + "!";
@@ -128,7 +128,7 @@ function buildUrl(version, base, fromhr, tohr, frommin, tomin, smart, goneOff, g
   var url = mConst().url + version + ".html" + 
            "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
            "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" +
-           "&noset=Y";
+           "&noset=Y&zz=" + snoozes;
   
   return url;
 }
@@ -170,6 +170,7 @@ document.getElementById('plot').onclick = function() {
 	var tomin = "00";
 	var smart = "N";
 	var goneoff = "N";
+	var snoozes = 0;
 
 	for (var i = 0; i < breakup.length; i++) {
 		if (breakup[i] == null || breakup[i].trim() === '')
@@ -197,13 +198,15 @@ document.getElementById('plot').onclick = function() {
 			smart = 'Y';
 		} else if (valueComp == 'ALARM') {
 			goneoff = getHrFromDate(timeComp) + getMinFromDate(timeComp);
+		} else if (valueComp == 'SNOOZES') {
+		  snoozes = parseInt(timeComp, 10);
 		} else {
 			graph[i] = valueComp;
 		}
 	}
 	
 	getVersion(function(version) {
-		var url = buildUrl(version, base, fromhr, tohr, frommin, tomin, smart, goneoff, graph);
+		var url = buildUrl(version, base, fromhr, tohr, frommin, tomin, smart, goneoff, graph, snoozes);
 		$("#output").attr("src", url).show();
 	});
 
