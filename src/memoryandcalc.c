@@ -565,6 +565,7 @@ static void transmit_next_data(void *data) {
       send_to_phone(KEY_SNOOZES, internal_data.snoozes);
       internal_data.gone_off_sent = false;
     } else if (internal_data.gone_off > 0 && !internal_data.gone_off_sent) {
+      store_chart_data();
       send_to_phone(KEY_GONEOFF, internal_data.gone_off);
     } else if (!internal_data.transmit_sent && internal_data.has_been_reset && at_limit(calc_offset())) {
       send_to_phone(KEY_TRANSMIT, 0);

@@ -59,6 +59,7 @@
 // APLITE is optimised for space, BASALT/CHALK and above are optimised for battery life
 #ifndef PBL_PLATFORM_APLITE
   #define CACHE_ICONS
+  #define ENABLE_CHART_VIEWER
 #endif
   
 // Only do this to make greping for external functions easier (lot of space to be saved with statics)
@@ -78,6 +79,7 @@
 #define TIMELINE_LAUNCH_USE 0
 #define TIMELINE_LAUNCH_SLEEP_NOW 1
 #define TIMELINE_LAUNCH_CLEAR_AUTOSLEEP 2
+#define TIMELINE_LAUNCH_CHART 3
 
 #define DUMMY_PREVIOUS_TO_PHONE 0xFFFFFFFF
 
@@ -126,13 +128,22 @@
 #define HOUR_MARK_COLOR              PBL_IF_COLOR_ELSE(GColorWhite,GColorWhite)
 #define ERROR_COLOR                  PBL_IF_COLOR_ELSE(GColorRed,GColorWhite)
 
-// Colour only colours
+// Colour only colours (it's not my fault I only wrote the comment)
 #ifdef PBL_COLOR 
   #define BATTERY_BAR_COLOR_CRITICAL GColorRed
   #define BATTERY_BAR_COLOR_WARN GColorRajah
   #define MENU_TEXT_COLOR GColorWhite
   #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorBlack
   #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
+  #define CHART_BACKGROUND_COLOR GColorBlack
+  #define CHART_AWAKE_COLOR GColorPictonBlue
+  #define CHART_LIGHT_COLOR GColorBlueMoon
+  #define CHART_DEEP_COLOR GColorDukeBlue
+  #define CHART_IGNORE_COLOR GColorLightGray
+  #define CHART_SLEEP_AWAKE_MARKER_COLOR GColorIcterine
+  #define CHART_TRIM_COLOR GColorWhite
+  #define CHART_SLEEP_SMART_EARLIEST_COLOR GColorGreen
+  #define CHART_SLEEP_SMART_LATEST_COLOR GColorRed
 #endif
 
 // Animates
@@ -208,11 +219,13 @@ enum Thresholds {
 #define PERSIST_MEMORY_KEY 12121
 #define PERSIST_CONFIG_KEY 12122
 #define PERSIST_PRESET_KEY 12123
+#define PERSIST_CHART_KEY 12124
 #define PERSIST_MEMORY_MS (5*60*1000)
 #define PERSIST_CONFIG_MS 30000
 #define SHORT_RETRY_MS 200
 #define LONG_RETRY_MS 60000
 #define NOTICE_DISPLAY_MS 7000
+#define CHART_DISPLAY_MS (5*60*1000)
 #define FIVE_MINUTES_MS (5*60*1000)
 #define TEN_SECONDS_MS (10*1000)
 #define COMPLETE_OUTSTANDING_MS (15*1000)
@@ -223,6 +236,9 @@ enum Thresholds {
 
 #define LIMIT 60
 #define DIVISOR 600
+#define MINS_PER_SEGMENT 10
+
+#define MINS_IN_DAY 1440
 
 #define TWENTY_FOUR_HOURS_IN_SECONDS (24*60*60)
 #define ELEVEN_HOURS_IN_SECONDS (11*60*60)
@@ -378,6 +394,16 @@ void destroy_icon_cache();
 #else
 #define init_icon_cache() 
 #define destroy_icon_cache() 
+#endif
+
+#ifdef ENABLE_CHART_VIEWER
+  void store_chart_data();
+  void show_chart();
+  bool is_chart_showing();
+#else
+  #define store_chart_data()
+  #define show_chart()
+  #define is_chart_showing() false
 #endif
 
 #endif /* MORPHEUZ_H_ */

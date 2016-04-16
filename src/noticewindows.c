@@ -123,7 +123,7 @@ static void notice_click_config_provider(Window *window) {
 EXTFN void show_notice_with_message(uint32_t resource_id, char *message) {
   
   // If the menu or voice is showing then it is rude to interup
-  if (menu_live || is_voice_system_active()) {
+  if (menu_live || is_voice_system_active() || is_chart_showing()) {
     return;
   }
 

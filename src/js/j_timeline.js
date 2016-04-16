@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup */
+/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup, getPlatform */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin, addSummaryPin */
 
 /*
@@ -193,6 +193,16 @@ function addSummaryPin(atAlarmTime) {
   }
 
   var rec = buildRecommendationPhrase(age, stats, snoozes);
+  
+  var actions = [];
+  
+  if (getPlatform() !== "aplite") {
+    actions.push({
+        "title" : mLang().showChart,
+        "type" : "openWatchApp",
+        "launchCode" : 3
+      });
+  }
 
   var pin = {
     "id" : getPinId(base,"su"),
@@ -204,7 +214,8 @@ function addSummaryPin(atAlarmTime) {
       "tinyIcon" : "system://images/GLUCOSE_MONITOR",
       "backgroundColor" : "#00AAFF",
       "body" : rec.summary
-    }
+    },
+    "actions": actions
   };
 
   console.log('Inserting pin: ' + JSON.stringify(pin));

@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project name="morpheuz" basedir="." default="all">
 
-	<property name="ver" value="42"/>
-	<property name="verdec" value="4.2"/>
-	<property name="inc" value="2"/> <!-- Cloudpebble download inc -->
+	<property name="ver" value="43"/>
+	<property name="verdec" value="4.3"/>
+	<property name="inc" value="4"/> <!-- Cloudpebble download inc -->
 	<property name="vinc" value="1"/> <!-- Version marker on urls v=?? -->
 	<!--<property name="vincstr" value="?v=${vinc}"/>-->
 	<property name="vincstr" value=""/>

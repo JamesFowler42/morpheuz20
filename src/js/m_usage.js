@@ -30,6 +30,15 @@
  * No personal data is collected, but the usage informs further development directions
  */
 function googleAnalytics() {
+  
+  try {
+  
+  // If the user doesn't want to do this then don't do it.
+  var usage = nvl(window.localStorage.getItem("usage"), "Y");
+  if (usage !== "Y") {
+      console.log("googleAnalytics: disabled by user request");
+      return;
+  }
  
   // morpheuz_smart_alarm
   var smartAlarmOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef) !== mConst().smartDef;
@@ -57,6 +66,10 @@ function googleAnalytics() {
   
   // Call analytics - this has been done like this so the analytics function can be spun off as a separate library later
   googleAnalyticsCall(customDimension);
+    
+  } catch (err) {
+    console.log("googleAnalytics: Failed to call google Analytics with " + err);
+  }
 }
 
 /*
@@ -66,13 +79,6 @@ function googleAnalytics() {
 function googleAnalyticsCall(customDimension) {
   
   try {
-    
-    // If the user doesn't want to do this then don't do it.
-    var usage = nvl(window.localStorage.getItem("usage"), "Y");
-    if (usage !== "Y") {
-      console.log("googleAnalytics: disabled by user request");
-      return;
-    }
     
     // Pick up the version
     var version = nvl(window.localStorage.getItem("version"), "unknown");
@@ -178,7 +184,7 @@ function googleAnalyticsCall(customDimension) {
     req.send(msg);
     
   } catch (err) {
-    console.log("googleAnalytics: Failed to call google Analytics with " + err);
+    console.log("googleAnalyticsCall: Failed to call google Analytics with " + err);
   }
   
 }

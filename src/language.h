@@ -50,12 +50,18 @@
 #define MENU_PRESET_DES "Alarm time memories"
 #define MENU_TOGGLE_ALARM "Alarm on/off"
 #define MENU_TOGGLE_ALARM_DES "Turn alarm on/off"
+#define MENU_CHART "Chart"
+#define MENU_CHART_DES "Last night's chart"
   
 #define MENU_SMART_ALARM_TIME_FORMAT "%d:%02d%s - %d:%02d%s"
 #define MENU_SMART_ALARM_END_TIME_FORMAT "%d:%02d%s"
 #define TIME_RANGE_LEN 20
+
+#define NO_CHART_RECORDED "No chart recorded"
   
 #define DATE_FORMAT "%a, %b %e"
+#define DATE_TIME_FORMAT_24 "%a, %b %e - %H:%M"
+#define DATE_TIME_FORMAT_12 "%a, %b %e - %I:%M"
 #define DATE_FORMAT_LEN 12
   
 #define TEXT_AM "AM"

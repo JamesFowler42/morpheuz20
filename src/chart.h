@@ -1,8 +1,8 @@
-/* 
+/*
  * Morpheuz Sleep Monitor
  *
  * Copyright (c) 2013-2016 James Fowler
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
@@ -10,7 +10,7 @@
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
  *
- * The above copyright notice and this permission notice shall be included in
+ * The above copyright chart and this permission chart shall be included in
  * all copies or substantial portions of the Software.
  *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
@@ -22,17 +22,22 @@
  * THE SOFTWARE.
  */
 
-/*exported getPlatform */
+#include "pebble.h"
+#include "morpheuz.h"
 
-function getPlatform() {
-    try {
-      var wi = Pebble.getActiveWatchInfo();
-      if (wi && wi.platform) {
-        return wi.platform;
-      } else {
-        return "unknown";
-      }
-  } catch (err) {
-    return "unknown";
-  }
-}
+// Change CHART_VER only if the ChartData struct changes
+#define CHART_VER 42
+typedef struct {
+  uint8_t chart_ver;
+  uint32_t base;
+  uint16_t gone_off;
+  uint8_t highest_entry;
+  uint16_t points[LIMIT];
+  bool ignore[LIMIT];
+  uint8_t snoozes;
+  uint32_t from;
+  uint32_t to;
+  bool smart;
+} ChartData;
+
+

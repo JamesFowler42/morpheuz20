@@ -127,6 +127,9 @@ EXTFN void wakeup_init() {
       set_next_wakeup();
       app_timer_register(TEN_SECONDS_MS, close_morpheuz_timer, NULL);
       break;
+      case TIMELINE_LAUNCH_CHART:
+         show_chart();
+         break;
     }
   } 
   requested_exit = time(NULL) - 100;

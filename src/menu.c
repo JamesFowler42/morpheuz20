@@ -88,6 +88,9 @@ static MenuDef menu_def[] = {
 #ifdef PBL_RECT
   { MENU_ANALOGUE, MENU_ANALOGUE_DES, &analogue_state, menu_analogue, FEATURE_AUTO_HIDE},
 #endif
+#ifdef ENABLE_CHART_VIEWER
+  { MENU_CHART, MENU_CHART_DES, NULL, show_chart, FEATURE_AUTO_HIDE},
+#endif
   { MENU_RESEND, MENU_RESEND_DES, NULL, menu_resend, FEATURE_AUTO_HIDE},
   { MENU_QUIT, MENU_QUIT_DES, NULL, close_morpheuz, FEATURE_AUTO_HIDE}};
 

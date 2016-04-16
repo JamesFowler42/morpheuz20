@@ -81,6 +81,7 @@ function mLang() {
     suggested: "Suggested",
     automatic: "Automatic",
     bedtimeIn30Mins: "Bed time",
-    summary: "Morpheuz Summary"
+    summary: "Morpheuz Summary",
+    showChart: "Show Chart"
   };
 }

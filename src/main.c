@@ -69,7 +69,7 @@ static void handle_init() {
   #ifdef PBL_RECT
   LOG_INFO("PBL_RECT");
   #endif
-   
+  
   // Create primary window
   ui.primary_window = window_create();
   window_set_window_handlers(ui.primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, .appear = show_main });
