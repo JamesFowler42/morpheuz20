@@ -200,10 +200,10 @@ static int32_t x_from_position(uint8_t position) {
 /*
  * Draw a bar for a particular 10 minute slice
  */
-static void draw_bar_sector(GContext *ctx, GColor color, uint8_t position, bool thin) {
+static void draw_bar_sector(GContext *ctx, GColor color, uint8_t position, int32_t stroke_width) {
   int32_t x = x_from_position(position);
 
-  graphics_context_set_stroke_width(ctx, thin ? 1 : calc_stroke_width());
+  graphics_context_set_stroke_width(ctx, stroke_width);
   graphics_context_set_stroke_color(ctx, color);
   graphics_draw_line(ctx, GPoint(x, 0), GPoint(x, bar_height-7));
 }
@@ -219,20 +219,22 @@ static void bar_layer_update_callback(Layer *layer, GContext *ctx) {
   
   // Only do this if there is a chart to display
   if (chart_data.base != 0) {
+    
+    int32_t stroke_width = calc_stroke_width();
 
     // Paint restless, light, deep and ignore
     for (uint8_t i = 0; i <= chart_data.highest_entry; i++) {
       if (!chart_data.ignore[i]) {
         uint16_t height = chart_data.points[i];
         if (height > AWAKE_ABOVE) {
-          draw_bar_sector(ctx, CHART_AWAKE_COLOR, i, false);
+          draw_bar_sector(ctx, CHART_AWAKE_COLOR, i, stroke_width);
         } else if (height > LIGHT_ABOVE) {
-          draw_bar_sector(ctx, CHART_LIGHT_COLOR, i, false);
+          draw_bar_sector(ctx, CHART_LIGHT_COLOR, i, stroke_width);
         } else if (height > 0) {
-          draw_bar_sector(ctx, CHART_DEEP_COLOR, i, false);
+          draw_bar_sector(ctx, CHART_DEEP_COLOR, i, stroke_width);
         }
       } else {
-        draw_bar_sector(ctx, CHART_IGNORE_COLOR, i, false);
+        draw_bar_sector(ctx, CHART_IGNORE_COLOR, i, stroke_width);
       }
     }
   
@@ -270,10 +272,10 @@ static void bar_layer_update_callback(Layer *layer, GContext *ctx) {
       for (uint8_t i = 0; i <= LIMIT; i++) {
         uint32_t after = next_after(before);
         if (chart_data.from >= before && chart_data.from <= after) {
-          int32_t early_left = x_from_position(i);
+          int32_t early_left = x_from_position(i) - stroke_width;
           graphics_context_set_stroke_color(ctx, CHART_SLEEP_SMART_EARLIEST_COLOR);
           graphics_context_set_fill_color(ctx, CHART_SLEEP_SMART_EARLIEST_COLOR);
-          graphics_fill_rect(ctx, GRect(early_left,bar_height - 5, calc_stroke_width(), 2), 0, GCornerNone);
+          graphics_fill_rect(ctx, GRect(early_left,bar_height - 5, stroke_width * 2, 5), 0, GCornerNone);
           break;
         }
         before = after;
@@ -284,10 +286,10 @@ static void bar_layer_update_callback(Layer *layer, GContext *ctx) {
       for (uint8_t i = 0; i <= LIMIT; i++) {
         uint32_t after = next_after(before);
         if (chart_data.to >= before && chart_data.to <= after) {
-          int32_t late_left = x_from_position(i);
+          int32_t late_left = x_from_position(i) - stroke_width;
           graphics_context_set_stroke_color(ctx, CHART_SLEEP_SMART_LATEST_COLOR);
           graphics_context_set_fill_color(ctx, CHART_SLEEP_SMART_LATEST_COLOR);
-          graphics_fill_rect(ctx, GRect(late_left,bar_height - 5, calc_stroke_width(), 2), 0, GCornerNone);
+          graphics_fill_rect(ctx, GRect(late_left,bar_height - 5, stroke_width * 2, 5), 0, GCornerNone);
           break;
         }
         before = after;
@@ -323,11 +325,11 @@ static void bar_layer_update_callback(Layer *layer, GContext *ctx) {
     // Now is a good time to record a horizontal bar for time spent asleep
     graphics_context_set_stroke_width(ctx, 1);
     int32_t sleep_left = x_from_position(gone_to_sleep_i);
-    int32_t sleep_width = x_from_position(woke_up_i) - sleep_left + calc_stroke_width();
+    int32_t sleep_width = x_from_position(woke_up_i) - sleep_left + stroke_width;
 
     graphics_context_set_stroke_color(ctx, CHART_SLEEP_AWAKE_MARKER_COLOR);
     graphics_context_set_fill_color(ctx, CHART_SLEEP_AWAKE_MARKER_COLOR);
-    graphics_fill_rect(ctx, GRect(sleep_left,bar_height - 3, sleep_width, 2), 0, GCornerNone);
+    graphics_fill_rect(ctx, GRect(sleep_left,bar_height - 4, sleep_width, 2), 0, GCornerNone);
 
   } else {
     
