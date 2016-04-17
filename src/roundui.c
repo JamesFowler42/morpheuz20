@@ -188,7 +188,7 @@ EXTFN void morpheuz_load(Window *window) {
   morpheuz_load_standard_postamble();
 
   // Wait for version display
-  app_timer_register(ROUND_SPLASH_TIME, load_complete, NULL);
+  app_timer_register(ANIMATION_TIME_CONTROL(ROUND_SPLASH_TIME), load_complete, NULL);
   
 }
   

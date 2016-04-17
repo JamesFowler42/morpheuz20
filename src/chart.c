@@ -66,7 +66,7 @@ static int16_t bar_width;
 static char date_text[25];
 
 #ifdef TESTING_BUILD
-static int16_t dummy_data[] = { 1835, 2300, 775, 806, 1112, 1102, 1142, 826, 815, 2210, 1190, 998, 1053, 1388, 1177, 1033, 1532, 1366, 96, 147, 2736, 310, 92, 1806, 790, 992, 33, 2174, 382, 117, 519, 177, 452, 690, 532, 773, 878, 1413, 1175, 1187, 863, 223, 1805, 960, 83, 2053, 1050, 484, 913, 784, 1784, 54, 117, 792, 129, 3559, -1, -1, -1, -1 };
+static int16_t dummy_data[] = { 1835, 2300, 775, 806, 1112, -2, 1142, 826, 815, 2210, 1190, 998, 1053, 1388, 1177, 1033, 1532, 1366, 96, 147, 2736, 310, 92, 1806, 790, 992, 33, 2174, 382, 117, 519, 177, 452, 690, 532, 773, 878, 1413, 1175, 1187, 863, 223, 1805, 960, 83, 2053, 1050, 484, 913, 784, 1784, 54, -1, -1, -1, -1, -1, -1, -1, -1 };
 #endif
 
 static void reset_chart_data() {
@@ -74,7 +74,11 @@ static void reset_chart_data() {
   #ifdef TESTING_BUILD
   for (int i = 0; i < LIMIT; i++) {
     if (dummy_data[i] != -2) {
+      if (dummy_data[i] != -1) {
       chart_data.points[i] = dummy_data[i];
+      } else {
+        chart_data.points[i] = 0;
+      }
       chart_data.ignore[i] = false;
     } else {
       chart_data.points[i] = 0;
@@ -216,6 +220,9 @@ static void bar_layer_update_callback(Layer *layer, GContext *ctx) {
   // Fill background
   graphics_context_set_fill_color(ctx, CHART_BACKGROUND_COLOR);
   graphics_fill_rect(ctx, layer_get_bounds(layer), 0, GCornerNone);
+  
+  graphics_context_set_fill_color(ctx, CHART_INDICATOR_BACKGROUND_COLOR);
+  graphics_fill_rect(ctx, GRect(0,bar_height - 5, bar_width, 5), 0, GCornerNone);
   
   // Only do this if there is a chart to display
   if (chart_data.base != 0) {

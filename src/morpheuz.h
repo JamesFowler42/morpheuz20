@@ -60,6 +60,9 @@
 #ifndef PBL_PLATFORM_APLITE
   #define CACHE_ICONS
   #define ENABLE_CHART_VIEWER
+  #define ANIMATION_TIME_CONTROL(x) (ui.timeline_launch ? (x) / 4 : (x))
+#else
+  #define ANIMATION_TIME_CONTROL(x) (x)
 #endif
   
 // Only do this to make greping for external functions easier (lot of space to be saved with statics)
@@ -135,7 +138,8 @@
   #define MENU_TEXT_COLOR GColorWhite
   #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorBlack
   #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
-  #define CHART_BACKGROUND_COLOR GColorBlack
+  #define CHART_BACKGROUND_COLOR GColorWhite
+  #define CHART_INDICATOR_BACKGROUND_COLOR GColorBlack
   #define CHART_AWAKE_COLOR GColorPictonBlue
   #define CHART_LIGHT_COLOR GColorBlueMoon
   #define CHART_DEEP_COLOR GColorDukeBlue

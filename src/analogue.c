@@ -25,6 +25,7 @@
 #include "pebble.h"
 #include "analogue.h"
 #include "morpheuz.h"
+#include "rootui.h"
   
 #ifdef PBL_RECT
 
@@ -52,6 +53,12 @@ static int16_t progress_1;
 static int16_t progress_2;
 static bool is_visible = false;
 static bool g_call_post_init;
+
+#ifndef PBL_PLATFORM_APLITE
+// Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
+// Only included here to mess with the animation speed when doing a timeline boot
+extern UiCommon ui;
+#endif
 
 /*
  * Draws marks around the circumference of the clock face
@@ -262,7 +269,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
  */
 static void start_animation(GRect *start, GRect *finish) {
   analogue_animation = property_animation_create_layer_frame(analogue_layer, start, finish);
-  animation_set_duration((Animation*) analogue_animation, ANIMATE_ANALOGUE_DURATION);
+  animation_set_duration((Animation*) analogue_animation, ANIMATION_TIME_CONTROL(ANIMATE_ANALOGUE_DURATION));
   animation_set_handlers((Animation*) analogue_animation, (AnimationHandlers ) { .stopped = (AnimationStoppedHandler) animation_stopped, }, NULL /* callback data */);
   animation_schedule((Animation*) analogue_animation);
 }

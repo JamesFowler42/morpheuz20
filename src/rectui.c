@@ -84,7 +84,7 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
   ui.animation_count++;
   if (ui.animation_count == 4) {
     light_enable_interaction();
-    build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, ANIMATE_HEAD_DURATION, LOGO_HEAD_ANIMATION);
+    build_an_animate(bitmap_layer_get_layer_jf(logo_head.layer), &HEAD_START, &HEAD_FINISH, ANIMATION_TIME_CONTROL(ANIMATE_HEAD_DURATION), LOGO_HEAD_ANIMATION);
   } else if (ui.animation_count == 5) {
     analogue_visible(get_config_data()->analogue, true);
   }
@@ -96,10 +96,10 @@ static void animation_stopped(Animation *animation, bool finished, void *data) {
 static void start_animate(void *data) {
   light_enable_interaction();
 
-  build_an_animate(bitmap_layer_get_layer_jf(logo_bed.layer), &BED_START, &BED_FINISH, ANIMATE_MAIN_DURATION, LOGO_BED_ANIMATION);
-  build_an_animate(bitmap_layer_get_layer_jf(logo_sleeper.layer), &SLEEPER_START, &SLEEPER_FINISH, ANIMATE_MAIN_DURATION, LOGO_SLEEPER_ANIMATION);
-  build_an_animate(bitmap_layer_get_layer_jf(logo_text.layer), &TEXT_START, &TEXT_FINISH, ANIMATE_MAIN_DURATION, LOGO_TEXT_ANIMATION);
-  build_an_animate(text_layer_get_layer_jf(block_layer), &BLOCK_START, &BLOCK_FINISH, ANIMATE_MAIN_DURATION, BLOCK_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_bed.layer), &BED_START, &BED_FINISH, ANIMATION_TIME_CONTROL(ANIMATE_MAIN_DURATION), LOGO_BED_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_sleeper.layer), &SLEEPER_START, &SLEEPER_FINISH, ANIMATION_TIME_CONTROL(ANIMATE_MAIN_DURATION), LOGO_SLEEPER_ANIMATION);
+  build_an_animate(bitmap_layer_get_layer_jf(logo_text.layer), &TEXT_START, &TEXT_FINISH, ANIMATION_TIME_CONTROL(ANIMATE_MAIN_DURATION), LOGO_TEXT_ANIMATION);
+  build_an_animate(text_layer_get_layer_jf(block_layer), &BLOCK_START, &BLOCK_FINISH, ANIMATION_TIME_CONTROL(ANIMATE_MAIN_DURATION), BLOCK_ANIMATION);
   text_layer_destroy(ui.version_text);
   text_layer_set_text(block_layer, "");
 }
@@ -115,7 +115,7 @@ static void text_color_cycle(void *data) {
   }
   text_layer_set_text_color(block_layer, bar_color(text_color_count));
   text_color_count++;
-  app_timer_register(INTER_TEXT_COLOR_MS, text_color_cycle, NULL);
+  app_timer_register(ANIMATION_TIME_CONTROL(INTER_TEXT_COLOR_MS), text_color_cycle, NULL);
 }
 #endif
 
@@ -171,9 +171,9 @@ EXTFN void morpheuz_load(Window *window) {
   morpheuz_load_standard_postamble();
 
   #ifndef PBL_COLOR
-    app_timer_register(PRE_ANIMATE_DELAY, start_animate, NULL);
+    app_timer_register(ANIMATION_TIME_CONTROL(PRE_ANIMATE_DELAY), start_animate, NULL);
   #else
-    app_timer_register(INTER_TEXT_COLOR_MS, text_color_cycle, NULL);
+    app_timer_register(ANIMATION_TIME_CONTROL(INTER_TEXT_COLOR_MS), text_color_cycle, NULL);
   #endif    
 }
 

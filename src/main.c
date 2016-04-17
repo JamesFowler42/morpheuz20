@@ -73,6 +73,14 @@ static void handle_init() {
   // Create primary window
   ui.primary_window = window_create();
   window_set_window_handlers(ui.primary_window, (WindowHandlers ) { .load = morpheuz_load, .unload = morpheuz_unload, .appear = show_main });
+  
+  // Catch whether it is a timeline launch so as we get to what is wanted quickly without a lot of "noise"
+  // Animations on aplite remain sedate
+  #ifndef PBL_PLATFORM_APLITE
+    ui.timeline_launch = (launch_reason() == APP_LAUNCH_TIMELINE_ACTION);
+  #endif
+  
+  // And we're off...
   window_stack_push(ui.primary_window, true);
 }
 

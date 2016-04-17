@@ -47,6 +47,7 @@ typedef struct {
   GFont notice_font;
   GFont time_font;
   TextLayer *version_text;
+  bool timeline_launch;
 } UiCommon;
 
 #endif
