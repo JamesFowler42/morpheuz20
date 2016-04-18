@@ -118,18 +118,15 @@ EXTFN void wakeup_init() {
   } else if (launch_reason() == APP_LAUNCH_TIMELINE_ACTION) {
     switch (launch_get_args()) {
       case TIMELINE_LAUNCH_USE:
-      break;
+        break;
       case TIMELINE_LAUNCH_SLEEP_NOW:
-      reset_sleep_period();
-      break;
+        reset_sleep_period();
+        break;
       case TIMELINE_LAUNCH_CLEAR_AUTOSLEEP:
-      get_config_data()->auto_reset = false;
-      set_next_wakeup();
-      app_timer_register(TEN_SECONDS_MS, close_morpheuz_timer, NULL);
-      break;
-      case TIMELINE_LAUNCH_CHART:
-         show_chart();
-         break;
+        get_config_data()->auto_reset = false;
+        set_next_wakeup();
+        app_timer_register(TEN_SECONDS_MS, close_morpheuz_timer, NULL);
+        break;
     }
   } 
   requested_exit = time(NULL) - 100;

@@ -153,6 +153,9 @@ static void accel_data_handler(AccelData *data, uint32_t num_samples) {
  * Initialise comms and accelerometer
  */
 EXTFN void init_morpheuz() {
+  
+  // Last time callback was invoked (avoid first time situations)
+  last_sample = time(NULL);
 
   open_comms();
 

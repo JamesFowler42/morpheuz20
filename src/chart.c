@@ -40,9 +40,6 @@ static AppTimer *chart_timer;
 
 static BitmapLayerComp chart_moon;
 
-// Shared with rootui, rectui, roundui, primary_window with main and chart_font with chartwindows
-extern UiCommon ui;
-
 #ifndef PBL_ROUND
 static TextLayer *chart_name_layer;
 #endif
@@ -50,6 +47,8 @@ static TextLayer *chart_name_layer;
 static TextLayer *chart_text;
 
 static Window *chart_window;
+
+static GFont notice_font;
 
 static bool chart_showing = false;
 
@@ -139,8 +138,14 @@ EXTFN void store_chart_data() {
 /*
  * Remove the chart window
  */
-EXTFN void hide_chart_layer(void *data) {
-  if (chart_showing) {
+static void hide_chart_layer(void *data) {
+    if (chart_showing) {
+      window_stack_remove(chart_window, true);
+      window_destroy(chart_window);
+    }
+}
+
+EXTFN void chart_unload(Window *window) {
     window_stack_remove(chart_window, true);
     macro_bitmap_layer_destroy(&chart_moon);
 #ifndef PBL_ROUND
@@ -148,10 +153,10 @@ EXTFN void hide_chart_layer(void *data) {
 #endif
     text_layer_destroy(chart_text);
     layer_destroy(bar_layer);
-    window_destroy(chart_window);
+    fonts_unload_custom_font(notice_font);
     chart_showing = false;
-  }
 }
+  
 
 /*
  * End of chart window animation
@@ -352,17 +357,12 @@ static void bar_layer_update_callback(Layer *layer, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(0, bar_height - 6), GPoint(bar_width, bar_height - 6));
 }
 
-/*
- * Show the chart window
- */
-EXTFN void show_chart() {
-
+EXTFN void chart_load(Window *window) {
   // Bring up chart
   chart_showing = true;
+  chart_window = window;
+  
   read_chart_data();
-
-  chart_window = window_create();
-  window_stack_push(chart_window, true);
 
   window_set_background_color(chart_window, BACKGROUND_COLOR);
 
@@ -377,7 +377,8 @@ EXTFN void show_chart() {
   macro_bitmap_layer_create(&chart_moon, MOON_START, window_layer, RESOURCE_ID_KEYBOARD_BG, true);
 
 #ifndef PBL_ROUND
-  chart_name_layer = macro_text_layer_create(GRect(5, 15, 134, 30), window_layer, GColorWhite, GColorClear, ui.notice_font, GTextAlignmentRight);
+  notice_font = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_FONT_DIGITAL_16));
+  chart_name_layer = macro_text_layer_create(GRect(5, 15, 134, 30), window_layer, GColorWhite, GColorClear, notice_font, GTextAlignmentRight);
   text_layer_set_text(chart_name_layer, APP_NAME);
 #endif
 
@@ -408,6 +409,15 @@ EXTFN void show_chart() {
  */
 EXTFN bool is_chart_showing() {
   return chart_showing;
+}
+
+/*
+ * Show the chart window
+ */
+EXTFN void show_chart() {
+  chart_window = window_create();
+  window_set_window_handlers(chart_window, (WindowHandlers ) { .load = chart_load, .unload = chart_unload });
+  window_stack_push(chart_window, true);
 }
 
 #endif

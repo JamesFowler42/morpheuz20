@@ -60,9 +60,6 @@
 #ifndef PBL_PLATFORM_APLITE
   #define CACHE_ICONS
   #define ENABLE_CHART_VIEWER
-  #define ANIMATION_TIME_CONTROL(x) (ui.timeline_launch ? (x) / 4 : (x))
-#else
-  #define ANIMATION_TIME_CONTROL(x) (x)
 #endif
   
 // Only do this to make greping for external functions easier (lot of space to be saved with statics)
@@ -138,8 +135,8 @@
   #define MENU_TEXT_COLOR GColorWhite
   #define MENU_HIGHLIGHT_BACKGROUND_COLOR GColorBlack
   #define MENU_BACKGROUND_COLOR BACKGROUND_COLOR
-  #define CHART_BACKGROUND_COLOR GColorWhite
-  #define CHART_INDICATOR_BACKGROUND_COLOR GColorBlack
+  #define CHART_BACKGROUND_COLOR GColorDarkGray
+  #define CHART_INDICATOR_BACKGROUND_COLOR GColorDarkGray
   #define CHART_AWAKE_COLOR GColorPictonBlue
   #define CHART_LIGHT_COLOR GColorBlueMoon
   #define CHART_DEEP_COLOR GColorDukeBlue
@@ -232,6 +229,7 @@ enum Thresholds {
 #define CHART_DISPLAY_MS (5*60*1000)
 #define FIVE_MINUTES_MS (5*60*1000)
 #define TEN_SECONDS_MS (10*1000)
+#define HALF_SECOND_MS (500)
 #define COMPLETE_OUTSTANDING_MS (15*1000)
 #define FIVE_MINUTES (5*60)
 #define FIVE_SECONDS 5
@@ -404,6 +402,8 @@ void destroy_icon_cache();
   void store_chart_data();
   void show_chart();
   bool is_chart_showing();
+  void chart_load(Window *window);
+  void chart_unload(Window *window);
 #else
   #define store_chart_data()
   #define show_chart()
