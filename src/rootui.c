@@ -224,7 +224,6 @@ EXTFN bool is_animation_complete() {
 EXTFN void post_init_hook(void *data) {
   wakeup_init();
   ui.animation_count = 6; // Make it 6 so we consider is_animation_complete() will return true
-  ui.timeline_launch = false; // Animation speed back to normal
   layer_mark_dirty(ui.icon_bar);
  
   // Set click provider
