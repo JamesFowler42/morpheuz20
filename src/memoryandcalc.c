@@ -568,6 +568,7 @@ static void transmit_next_data(void *data) {
       store_chart_data();
       send_to_phone(KEY_GONEOFF, internal_data.gone_off);
     } else if (!internal_data.transmit_sent && internal_data.has_been_reset && at_limit(calc_offset())) {
+      store_chart_data();
       send_to_phone(KEY_TRANSMIT, 0);
     }
     return;

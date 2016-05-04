@@ -31,7 +31,7 @@
 
 #include "rootui.h"
 
-#define MOON_START GRect(width+6, 72, 58, 46)  
+#define MOON_START GRect(centre - 29, -80, 58, 46)  
 #define MOON_FINISH PBL_IF_ROUND_ELSE(GRect(centre - 29, 5, 58, 46), GRect(6, 5, 58, 46))
 
 VERSION_EXTERNAL;
@@ -370,9 +370,7 @@ EXTFN void chart_load(Window *window) {
 
   GRect bounds = layer_get_bounds(window_layer);
   uint16_t width = bounds.size.w;
-#ifdef PBL_ROUND
   int16_t centre = bounds.size.w / 2;
-#endif
 
   macro_bitmap_layer_create(&chart_moon, MOON_START, window_layer, RESOURCE_ID_KEYBOARD_BG, true);
 
@@ -386,12 +384,16 @@ EXTFN void chart_load(Window *window) {
 
   int16_t v_centre = bounds.size.h / 2;
   int16_t h_centre = bounds.size.w / 2;
-  bar_height = bounds.size.h * 2 / 5;
-  int16_t bar_top = v_centre - bar_height / 2 + 5;
+  bar_height = bounds.size.h * 2 / 5 - 5;
+  int16_t bar_top = v_centre - bar_height / 2;
   bar_width = bounds.size.w;
   int16_t bar_left = h_centre - bar_width / 2;
 
-  chart_date = macro_text_layer_create(GRect(0, bar_top + bar_height - 2, width, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
+#ifndef PBL_ROUND
+  bar_top += 5;
+#endif
+
+  chart_date = macro_text_layer_create(GRect(0, bar_top + bar_height - 5, width, 31), window_layer, GColorWhite, BACKGROUND_COLOR, fonts_get_system_font(FONT_KEY_GOTHIC_24), GTextAlignmentCenter);
 
   bar_layer = macro_layer_create(GRect(bar_left, bar_top, bar_width, bar_height), window_layer, &bar_layer_update_callback);
 
