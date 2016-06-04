@@ -229,8 +229,18 @@ table.jqplot-table-legend {
 #chart1 {
     color: white;
     background-color: #2066C7;
+    xborder-bottom-right-radius: 5px;
+    xborder-bottom-left-radius: 5px;
+}
+
+#chart1bar {
+    padding-top: 5px;
+    padding-bottom: 5px;
+    color: white;
+    background-color: #2066C7;
     border-bottom-right-radius: 5px;
-    border-bottom-left-radius: 5px;
+    border-bottom-left-radius: 5px;  
+
 }
 
 div.jqplot-pie-series.jqplot-data-label {
@@ -414,7 +424,7 @@ input#save2.save {
 
 .tsummary {
     border-collapse: collapse;
-    padding-bottom: 3px;
+    margin-bottom: 3px;
 }
 
 .stat2 td {
@@ -461,3 +471,43 @@ input#save2.save {
   vertical-align: middle;
   margin-right: 5px;
 }
+
+.environment-head {
+    border-top-right-radius: 5px;
+    border-top-left-radius: 5px;
+    color: white;
+    background-color: rgb(33,210,42);
+    padding-top: 5px;
+}
+
+.env-div {
+    background-color: rgb(33,210,42);
+    padding-top: 5px;
+}
+
+.env-div-last {
+    border-bottom-right-radius: 5px;
+    border-bottom-left-radius: 5px;  
+    padding-bottom: 5px;
+}
+
+.sunimg, .moonimg, .bedimg {
+    width: 30px;
+    height: 30px;
+    position: absolute;
+    padding-left:3px;
+}
+
+#sunbar, #moonbar, #sleepBar {
+    border-radius: 5px;
+}
+
+.notopmargin {
+    margin-top: 0px;
+}
+
+#save2, #save3 {
+    margin-bottom: 3px;
+}
+
+

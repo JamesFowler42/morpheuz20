@@ -36,7 +36,10 @@ function getParameterByName(name) {
  */
 function setScreenMessageBasedOnVersion(vers) {
   $(".versproblem").show();
-  $.ajaxSetup({ scriptCharset: "utf-8" , contentType: "application/json; charset=utf-8"});
+  $.ajaxSetup({
+    scriptCharset : "utf-8",
+    contentType : "application/json; charset=utf-8"
+  });
   $.getJSON("currentversion.json?v=" + new Date().getTime(), function(data) {
     if (typeof data !== "undefined" && typeof data.version !== "undefined") {
       var currentVer = parseInt(data.version, 10);
@@ -74,6 +77,8 @@ function scaleToViewport() {
   // Ask the charts to replot
   if (typeof document.plot1 !== "undefined") {
     document.plot1.replot();
+    buildStripeChart(document.morpheuzInfo.splitup);
+    buildEnvironment(document.morpheuzInfo.base, document.morpheuzInfo.pLat, document.morpheuzInfo.pLong, document.morpheuzInfo.havePosition);
   }
   if (typeof document.plot2 !== "undefined") {
     document.plot2.replot();
@@ -91,10 +96,9 @@ function adjustForViewport() {
 /*
  * Validate email address
  */
-function validateEmail(email) 
-{
-    var re = /[^\s@]+@[^\s@]+\.[^\s@]+/;
-    return re.test(email);
+function validateEmail(email) {
+  var re = /[^\s@]+@[^\s@]+\.[^\s@]+/;
+  return re.test(email);
 }
 
 /*
@@ -106,4 +110,27 @@ function safeTrim(strval) {
   } catch (err) {
     return strval;
   }
+}
+
+/**
+ * Convert graphx to splitup format (old graph split on "!")
+ * 
+ * @param graphx
+ */
+function splitupFromGraphx(graphx) {
+  var splitup = [];
+  var hexStrings = graphx.match(/.{1,3}/g);
+  for (var i = 0; i < hexStrings.length; i++) {
+    var hexString = hexStrings[i];
+    var decimal = 0;
+    if (hexString === "fff") {
+      decimal = -1;
+    } else if (hexString === "ffe") {
+      decimal = -2;
+    } else {
+      decimal = parseInt(hexString, 16);
+    }
+    splitup.push(decimal.toString());
+  }
+  return splitup;
 }

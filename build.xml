@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project name="morpheuz" basedir="." default="all">
 
-	<property name="ver" value="44"/>
-	<property name="verdec" value="4.4"/>
-	<property name="inc" value="1"/> <!-- Cloudpebble download inc -->
+	<property name="ver" value="45"/>
+	<property name="verdec" value="4.5"/>
+	<property name="inc" value="3"/> <!-- Cloudpebble download inc -->
 	<property name="vinc" value="1"/> <!-- Version marker on urls v=?? -->
 	<!--<property name="vincstr" value="?v=${vinc}"/>-->
 	<property name="vincstr" value=""/>
@@ -30,6 +30,7 @@
 			<param name="in.file.1" value="view.js" />
 			<param name="in.file.2" value="utils.js" />
 			<param name="in.file.3" value="../../src/js/common.js" />
+			<param name="in.file.4" value="suncalc/suncalc.js" />
 			<param name="join.file" value="view-${ver}.js" />
 		</antcall>
 		<antcall target="shrink" inheritrefs="true" inheritall="true">
@@ -122,6 +123,7 @@
 	     <fileset file="${srcdir}/${in.file.1}" />
          <fileset file="${srcdir}/${in.file.2}" />
 	     <fileset file="${srcdir}/${in.file.3}" />
+		 <fileset file="${srcdir}/${in.file.4}" />
 	   </concat>
 	</target>
 

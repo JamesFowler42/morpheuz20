@@ -37,7 +37,8 @@ function mConst() {
     sendingEmail : "Sending...",
     url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
     twitterWebIntentUrl : "https://twitter.com/intent/tweet?hashtags=morpheuz,tweetMySleep&text=",
-    unableToFindTweetText : "Meh"
+    unableToFindTweetText : "Meh",
+    numberOfSamples: 60
   };
 }
 
@@ -157,28 +158,28 @@ function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
   var stats = calculateStats(base, goneoff, splitup);
   if (stats && stats.tbegin) {
     var beginOverlay = {
-        verticalLine : {
-          name : "begin",
-          x : stats.tbegin,
-          lineWidth : 1,
-          yOffset : 0,
-          color : "rgb(255, 149, 0)",
-          shadow : false
-        }
-      };
-      canvasOverlayConf.show = true;
-      canvasOverlayConf.objects.push(beginOverlay);
+      verticalLine : {
+        name : "begin",
+        x : stats.tbegin,
+        lineWidth : 1,
+        yOffset : 0,
+        color : "rgb(255, 149, 0)",
+        shadow : false
+      }
+    };
+    canvasOverlayConf.show = true;
+    canvasOverlayConf.objects.push(beginOverlay);
   }
   if (stats && stats.tends) {
     var endsStopOverlay = {
-        verticalLine : {
-          name : "endstop",
-          x : stats.tends,
-          lineWidth : 1,
-          yOffset : 0,
-          color : "rgb(255, 149, 0)",
-          shadow : false
-        }
+      verticalLine : {
+        name : "endstop",
+        x : stats.tends,
+        lineWidth : 1,
+        yOffset : 0,
+        color : "rgb(255, 149, 0)",
+        shadow : false
+      }
     };
     canvasOverlayConf.show = true;
     canvasOverlayConf.objects.push(endsStopOverlay);
@@ -190,7 +191,10 @@ function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
  * Set the tweet reference
  */
 function setTweet(rec) {
-  $.ajaxSetup({ scriptCharset: "utf-8" , contentType: "application/json; charset=utf-8"});
+  $.ajaxSetup({
+    scriptCharset : "utf-8",
+    contentType : "application/json; charset=utf-8"
+  });
   $.getJSON("tweetmysleep.json?v=" + new Date().getTime(), function(data) {
     if (typeof data !== "undefined" && typeof data.tweets !== "undefined") {
       console.log("rec.stars=" + rec.stars);
@@ -210,6 +214,207 @@ function setTweet(rec) {
   });
 }
 
+/*
+ * Build up the sleep depth strip
+ */
+function buildStripeChart(splitup) {
+  setTimeout(function() {
+
+    // Do the positioning work
+    var leftMainPlot = $("#chart1 .jqplot-event-canvas").css("left");
+    var widthMainPlot = $("#chart1 .jqplot-event-canvas").css("width");
+
+    var widthFloat = parseFloat(widthMainPlot);
+
+    $('#sleepBar').attr("width", widthFloat);
+    $('#sleepBar').css("left", leftMainPlot);
+    $('#sleepBar').css("width", widthMainPlot);
+
+    // Fill in the data
+    var c = document.getElementById("sleepBar");
+    var ctx = c.getContext("2d");
+    // Create gradient
+    var grd = ctx.createLinearGradient(0, 0, widthFloat, 0);
+
+    grd.addColorStop(0, "#555555");
+    for (var i = 0; i < splitup.length; i++) {
+      if (splitup[i] === "") {
+        continue;
+      }
+      var position = (i + 1) / 61.0;
+      var point = parseInt(splitup[i], 10);
+      if (point > mThres().awakeAbove) {
+        grd.addColorStop(position, "#55AAFF");
+      } else if (point > mThres().lightAbove) {
+        grd.addColorStop(position, "#0055FF");
+      } else if (point == -1 || point == -2) {
+        grd.addColorStop(position, "#AAAAAA");
+      } else {
+        grd.addColorStop(position, "#0000AA");
+      }
+    }
+    grd.addColorStop(1, "#555555");
+
+    // Fill with gradient
+    ctx.fillStyle = grd;
+    ctx.fillRect(0, 0, widthFloat, 30);
+
+  }, 500);
+}
+
+/*
+ * Build the environment section
+ */
+function buildEnvironment(baseDate, pLat, pLong, havePosition) {
+
+  // Only if we have position
+  if (!havePosition) {
+    return;
+  }
+
+  // Work out a colour stop
+  function setColourStop(baseDate, targetDate, colour, grd, stops) {
+    var baseDateInt = baseDate.getTime();
+    var targetDateInt = targetDate.getTime();
+
+    if (isNaN(targetDateInt)) {
+      return;
+    }
+
+    var diff = targetDateInt - baseDateInt;
+
+    var fsd = mCommonConst().sampleIntervalMins * 60 * 1000 * mConst().numberOfSamples;
+
+    var offset = diff / fsd;
+
+    if (offset < 0) {
+      if (stops.negCloseToZero < offset) {
+        stops.negCloseToZero = offset;
+        stops.zeroColor = colour;
+      }
+      return;
+    } else if (offset > 1) {
+      if (stops.valCloseToOne > offset) {
+        stops.valCloseToOne = offset;
+        stops.oneColor = colour;
+      }
+      return;
+    }
+
+    grd.addColorStop(offset, colour);
+
+  }
+
+  setTimeout(function() {
+
+    // Do the positioning work
+    var leftMainPlot = $("#chart1 .jqplot-event-canvas").css("left");
+    var widthMainPlot = $("#chart1 .jqplot-event-canvas").css("width");
+
+    var widthFloat = parseFloat(widthMainPlot);
+
+    $('#sunbar').attr("width", widthFloat);
+    $('#sunbar').css("left", leftMainPlot);
+    $('#sunbar').css("width", widthMainPlot);
+
+    $('#moonbar').attr("width", widthFloat);
+    $('#moonbar').css("left", leftMainPlot);
+    $('#moonbar').css("width", widthMainPlot);
+
+    // Work out the sun data
+    var sunTimes = SunCalc.getTimes(baseDate, pLat, pLong);
+    var sunTimes2 = SunCalc.getTimes(baseDate.addMinutes(60 * 24), pLat, pLong);
+
+    // Get the canvas
+    var cs = document.getElementById("sunbar");
+    var ctxs = cs.getContext("2d");
+
+    // Create gradient
+    var grds = ctxs.createLinearGradient(0, 0, widthFloat, 0);
+
+    // Define the pallet
+    var cSunUp = "#FBF6D9";
+    var cSunRise = "#FFE87C";
+    var cSunSet = "red";
+    var cNadir = "#151B54";
+    var cNight = "darkblue"
+
+    // Define end stop data area
+    var stops = {
+      "negCloseToZero" : -9999,
+      "zeroColor" : cNight,
+      "oneColor" : cNight,
+      "valCloseToOne" : 9999
+    }
+
+    // Set the color stops
+    setColourStop(baseDate, sunTimes.sunrise, cSunRise, grds, stops);
+    setColourStop(baseDate, sunTimes.sunriseEnd, cSunUp, grds, stops);
+    setColourStop(baseDate, sunTimes.sunsetStart, cSunSet, grds, stops);
+    setColourStop(baseDate, sunTimes.sunset, cNight, grds, stops);
+    setColourStop(baseDate, sunTimes.solarNoon, cSunUp, grds, stops);
+    setColourStop(baseDate, sunTimes.nadir, cNadir, grds, stops);
+    setColourStop(baseDate, sunTimes2.sunrise, cSunRise, grds, stops);
+    setColourStop(baseDate, sunTimes2.sunriseEnd, cSunUp, grds, stops);
+    setColourStop(baseDate, sunTimes2.sunsetStart, cSunSet, grds, stops);
+    setColourStop(baseDate, sunTimes2.sunset, cNight, grds, stops);
+    setColourStop(baseDate, sunTimes2.solarNoon, cSunUp, grds, stops);
+    setColourStop(baseDate, sunTimes2.nadir, cNadir, grds, stops);
+    setColourStop(baseDate, sunTimes.night, cNight, grds, stops);
+    setColourStop(baseDate, sunTimes.nightEnd, cNight, grds, stops);
+    setColourStop(baseDate, sunTimes2.night, cNight, grds, stops);
+    setColourStop(baseDate, sunTimes2.nightEnd, cNight, grds, stops);
+
+    // And the start and end
+    grds.addColorStop(0, stops.zeroColor);
+    grds.addColorStop(1, stops.oneColor);
+
+    // Fill with gradient
+    ctxs.fillStyle = grds;
+    ctxs.fillRect(0, 0, widthFloat, 30);
+
+    // Moon phase
+    var moonIllum = SunCalc.getMoonIllumination(baseDate);
+    var phaseNo = Math.round(moonIllum.phase * 8);
+    if (phaseNo >= 8) {
+      phaseNo = 0;
+    }
+    $('#moonimg').attr("src", "img/moon-" + phaseNo + ".png");
+
+    // Moon rise and set times
+    var moonTimes = SunCalc.getMoonTimes(baseDate, pLat, pLong);
+    var moonTimes2 = SunCalc.getMoonTimes(baseDate.addMinutes(60 * 24), pLat, pLong);
+
+    var cm = document.getElementById("moonbar");
+    var ctxm = cm.getContext("2d");
+    // Create gradient
+    var grdm = ctxm.createLinearGradient(0, 0, widthFloat, 0);
+
+    // Moon phase has an effect on brightness
+    var cMoonUp = (phaseNo === 3 || phaseNo === 4 || phaseNo === 5) ? "white" : ((phaseNo === 0) ? "black" : "silver");
+    var cMoonDown = "black";
+
+    stops = {
+      "negCloseToZero" : -9999,
+      "zeroColor" : cMoonDown,
+      "oneColor" : cMoonDown,
+      "valCloseToOne" : 9999
+    }
+
+    setColourStop(baseDate, moonTimes.rise, cMoonUp, grdm, stops);
+    setColourStop(baseDate, moonTimes2.rise, cMoonUp, grdm, stops);
+    setColourStop(baseDate, moonTimes.set, cMoonDown, grdm, stops);
+    setColourStop(baseDate, moonTimes2.set, cMoonDown, grdm, stops);
+
+    grdm.addColorStop(0, stops.zeroColor);
+    grdm.addColorStop(1, stops.oneColor);
+
+    // Fill with gradient
+    ctxm.fillStyle = grdm;
+    ctxm.fillRect(0, 0, widthFloat, 30);
+
+  }, 500);
+}
 
 /*******************************************************************************
  * 
@@ -238,6 +443,7 @@ $("document").ready(function() {
     base = parseInt(baseStr, 10);
   }
   var graph = getParameterByName("graph");
+  var graphx = getParameterByName("graphx");
   var fromhr = getParameterByName("fromhr");
   var frommin = getParameterByName("frommin");
   var tohr = getParameterByName("tohr");
@@ -268,6 +474,8 @@ $("document").ready(function() {
   var doemail = getParameterByName("doemail");
   var estat = getParameterByName("estat");
   var snoozes = getParameterByName("zz");
+  var latStr = getParameterByName("lat");
+  var longStr = getParameterByName("long");
   var returnTo = getParameterByName("return_to");
   if (returnTo === "") {
     returnTo = "pebblejs://close#";
@@ -300,7 +508,7 @@ $("document").ready(function() {
   $("#age").val(age);
   $("#doemail").prop("checked", doemail === "Y");
   $("#estat").text(estat);
-  
+
   // Set the status bullets for automatic email export
   if (estat === "OK") {
     $("#liemail").addClass("green");
@@ -350,21 +558,21 @@ $("document").ready(function() {
   } else {
     $("#lihue").addClass("green");
   }
-  
+
   // Set the usage bullet to indicate active or not
   if (usage !== "N") {
     $("#liusage").addClass("green");
   } else {
     $("#liusage").addClass("blue");
   }
-  
+
   // Set the lazarus bullet to indicate active or not
   if (lazarus !== "N") {
     $("#lilazarus").addClass("green");
   } else {
     $("#lilazarus").addClass("blue");
   }
-  
+
   // Set the status bullets for pushover
   if (ifstat === "OK") {
     $("#liif").addClass("green");
@@ -376,7 +584,7 @@ $("document").ready(function() {
     $("#liif").addClass("red");
     $("#ifstat").addClass("red");
   }
-  
+
   // Any failed exports are automatically opened on load
   $("li.red").removeClass("liclosed").addClass("liopen");
 
@@ -401,7 +609,16 @@ $("document").ready(function() {
     setScreenMessageBasedOnVersion(vers);
   }
 
-  var splitup = graph.split("!");
+  // Handle graph or graphx formats
+  var splitup = [];
+  if (graph === "" && graphx !== "") {
+    splitup = splitupFromGraphx(graphx);
+  } else if (graph !== "" && graphx === "") {
+    splitup = graph.split("!");
+  } else {
+    console.log("No graph or graphx supplied (or both!)");
+  }
+
   var more = new Array();
 
   // Build graph data
@@ -421,9 +638,23 @@ $("document").ready(function() {
 
   // Return stats
   var out = calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf);
- 
+
+  // Retain stuff for timed redraw
+  document.morpheuzInfo = {
+    "splitup" : splitup,
+    "base" : new Date(base),
+    "pLat" : parseFloat(latStr),
+    "pLong" : parseFloat(longStr),
+    "havePosition" : (latStr !== "" && longStr !== "")
+  }
+
+  // No position, no environment
+  if (!document.morpheuzInfo.havePosition) {
+    $(".environment").hide();
+  }
+
   // Populate the statistics area
-  var snoozes = parseInt(snoozes,10);
+  var snoozes = parseInt(snoozes, 10);
   if (isNaN(snoozes)) {
     snoozes = 0;
   }
@@ -564,6 +795,10 @@ $("document").ready(function() {
       }
     });
 
+    buildStripeChart(document.morpheuzInfo.splitup);
+
+    buildEnvironment(document.morpheuzInfo.base, document.morpheuzInfo.pLat, document.morpheuzInfo.pLong, document.morpheuzInfo.havePosition);
+
   });
 
   // Handle the Save and reset option
@@ -607,8 +842,7 @@ $("document").ready(function() {
     // Extract data
     var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
-    var url = mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age +
-              "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes;
+    var url = mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes;
 
     var email = buildEmailJsonString(emailto, base, url, cpy);
 
@@ -641,7 +875,7 @@ $("document").ready(function() {
       setTweet(rec);
     }
   });
-  
+
   // Show less summary
   $("#lesssummary").click(function() {
     $("#summarytable").hide();
@@ -651,7 +885,7 @@ $("document").ready(function() {
       window.localStorage.setItem("lesssummary", "true");
     }
   });
-  
+
   // Show more summary
   $("#moresummary").click(function() {
     $("#summarytable").show();
@@ -661,13 +895,12 @@ $("document").ready(function() {
       window.localStorage.setItem("lesssummary", "false");
     }
   });
-  
+
   // Set summary to last remembered position
   if (window.localStorage && window.localStorage.getItem("lesssummary") === "true") {
     $("#summarytable").hide();
     $("#lesssummary").hide();
     $("#moresummary").show();
   }
- 
-});
 
+});

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime, automaticEmailExport, googleAnalytics */
+/*global window, nvl, mConst, fixLen, pushoverTransmit, smartwatchProTransmit, addBedTimePin, addSmartAlarmPin, addSummaryPin, getQuoteOfTheDay, turnLifxLightsOn, turnHueLightsOn, iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime, automaticEmailExport, googleAnalytics, toHexStr */
 
 /*
  * Reset log
@@ -57,6 +57,8 @@ function resetWithPreserve() {
   var age = window.localStorage.getItem("age");
   var doEmail = window.localStorage.getItem("doemail");
   var estat = window.localStorage.getItem("estat");
+  var pLat = window.localStorage.getItem("lat");
+  var pLong = window.localStorage.getItem("long");
   window.localStorage.clear();
   window.localStorage.setItem("version", nvl(version, mConst().versionDef));
   window.localStorage.setItem("smart", nvl(smart, mConst().smartDef));
@@ -86,6 +88,8 @@ function resetWithPreserve() {
   window.localStorage.setItem("age", nvl(age, ""));
   window.localStorage.setItem("doemail", nvl(doEmail, ""));
   window.localStorage.setItem("estat", nvl(estat, ""));
+  window.localStorage.setItem("lat", nvl(pLat, ""));
+  window.localStorage.setItem("long", nvl(pLong, ""));
 }
 
 /*
@@ -108,10 +112,31 @@ function storePointInfo(point, biggest) {
 }
 
 /*
+ * Found location
+ */
+function locationSuccess(pos) {
+  var pLat = pos.coords.latitude.toFixed(1);
+  var pLong = pos.coords.longitude.toFixed(1);
+  console.log('lat= ' + pLat + ' long= ' + pLong);
+  window.localStorage.setItem("lat", pLat);
+  window.localStorage.setItem("long", pLong);
+}
+
+/*
+ * No location, or forbidden
+ */
+function locationError(err) {
+  console.log('location error (' + err.code + '): ' + err.message);
+  window.localStorage.setItem("lat", "");
+  window.localStorage.setItem("long", "");
+}
+
+/*
  * Process ready from the watch
  */
 Pebble.addEventListener("ready", function(e) {
   console.log("ready");
+  
   var smartStr = window.localStorage.getItem("smart");
   if (smartStr === null || smartStr === "null") {
     resetWithPreserve();
@@ -122,6 +147,17 @@ Pebble.addEventListener("ready", function(e) {
     window.localStorage.setItem("tomin", mConst().tominDef);
   }
   getQuoteOfTheDay();
+  
+  // Choose options about the data returned
+  var options = {
+    enableHighAccuracy: true,
+    maximumAge: 10000,
+    timeout: 10000
+  };
+
+  // Request current position
+  navigator.geolocation.getCurrentPosition(locationSuccess, locationError, options);
+  
 });
 
 /*
@@ -379,14 +415,19 @@ function buildUrl(noset) {
   
   // Gather the chart together
   var base = window.localStorage.getItem("base");
-  var graph = "";
+
+  // Graph data passed as hex as this is shorter in urls
+  // Pushover has a limited url length
+  var graphx = "";
   for (var i = 0; i < mConst().limit; i++) {
     var entry = "P" + i;
     var valueStr = window.localStorage.getItem(entry);
-    if (valueStr === null) {
-      graph = graph + "-1!";
+    if (valueStr === null || valueStr === -1) {
+      graphx += "fff";
+    } else if (valueStr === -2) {
+      graphx += "ffe";
     } else {
-      graph = graph + valueStr + "!";
+      graphx += toHexStr(valueStr,3);
     }
   }
 
@@ -400,6 +441,8 @@ function buildUrl(noset) {
   var token = Pebble.getAccountToken();
   var age = nvl(window.localStorage.getItem("age"), "");
   var snoozes = nvl(window.localStorage.getItem("snoozes"), 0);
+  var pLat = nvl(window.localStorage.getItem("lat"), "");
+  var pLong = nvl(window.localStorage.getItem("long"), "");
 
   var extra = "";
   if (noset === "N") {
@@ -435,9 +478,10 @@ function buildUrl(noset) {
   }
   
   var url = mConst().url + version + ".html" + 
-           "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
+           "?base=" + base + "&graphx=" + graphx + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + 
            "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token + "&age=" + age + 
-           "&noset=" + noset + "&zz=" + snoozes + extra;
+           "&noset=" + noset + "&zz=" + snoozes + "&lat=" + pLat + "&long=" + pLong +
+           extra;
   
   console.log("url=" + url + " (len=" + url.length + ")");
   return url;

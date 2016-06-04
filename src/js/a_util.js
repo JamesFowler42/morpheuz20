@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*exported getPlatform */
+/*exported getPlatform, toHexStr */
 
 function getPlatform() {
     try {
@@ -35,4 +35,10 @@ function getPlatform() {
   } catch (err) {
     return "unknown";
   }
+}
+
+function toHexStr(number, length) {
+    var str = '' + parseInt(number,10).toString(16);
+    while (str.length < length) str = '0' + str;
+    return str;
 }
