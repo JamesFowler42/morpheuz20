@@ -445,6 +445,9 @@ input#save2.save {
     position:relative;
     top:-15px;
     cursor: pointer;
+    background: rgba(255,255,255,0.2);
+    padding: 1px;
+    border-radius: 2px;
 }
 
 .m24x24 {

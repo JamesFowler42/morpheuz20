@@ -38,7 +38,7 @@ function mConst() {
     url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
     twitterWebIntentUrl : "https://twitter.com/intent/tweet?hashtags=morpheuz,tweetMySleep&text=",
     unableToFindTweetText : "Meh",
-    numberOfSamples: 60
+    numberOfSamples : 60
   };
 }
 
@@ -82,7 +82,7 @@ function populateIgnore(base, canvasOverlayConf, splitup, totalWidth) {
           x : startPoint,
           lineWidth : lineW,
           yOffset : 0,
-          color : "#184E99",
+          color : "#AAAAAA",
           shadow : false
         }
       };
@@ -197,20 +197,15 @@ function setTweet(rec) {
   });
   $.getJSON("tweetmysleep.json?v=" + new Date().getTime(), function(data) {
     if (typeof data !== "undefined" && typeof data.tweets !== "undefined") {
-      console.log("rec.stars=" + rec.stars);
       var tweetsForStar = data.tweets.star[rec.stars];
-      console.log("tweetsForStar=" + tweetsForStar);
       var ind = Math.floor(Math.random() * tweetsForStar.length);
-      console.log("ind=" + ind);
       var tweet = rec.totalStr + " (" + rec.deepStr + ") - " + tweetsForStar[ind];
       var tweetHref = mConst().twitterWebIntentUrl + encodeURIComponent(tweet);
       $("#tweet").attr("href", tweetHref);
-      console.log("twitter=" + tweetHref);
     }
   }).error(function(args) {
     var tweetHref = mConst().twitterWebIntentUrl + encodeURIComponent(mConst().unableToFindTweetText);
     $("#tweet").attr("href", tweetHref);
-    console.log("twitter=" + tweetHref);
   });
 }
 
@@ -322,96 +317,108 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
     $('#moonbar').css("width", widthMainPlot);
 
     // Work out the sun data
-    var sunTimes = SunCalc.getTimes(baseDate, pLat, pLong);
-    var sunTimes2 = SunCalc.getTimes(baseDate.addMinutes(60 * 24), pLat, pLong);
+    try {
 
-    // Get the canvas
-    var cs = document.getElementById("sunbar");
-    var ctxs = cs.getContext("2d");
+      var sunTimes = SunCalc.getTimes(baseDate, pLat, pLong);
+      var sunTimes2 = SunCalc.getTimes(baseDate.addMinutes(60 * 24), pLat, pLong);
 
-    // Create gradient
-    var grds = ctxs.createLinearGradient(0, 0, widthFloat, 0);
+      // Get the canvas
+      var cs = document.getElementById("sunbar");
+      var ctxs = cs.getContext("2d");
 
-    // Define the pallet
-    var cSunUp = "#FBF6D9";
-    var cSunRise = "#FFE87C";
-    var cSunSet = "red";
-    var cNadir = "#151B54";
-    var cNight = "darkblue"
+      // Create gradient
+      var grds = ctxs.createLinearGradient(0, 0, widthFloat, 0);
 
-    // Define end stop data area
-    var stops = {
-      "negCloseToZero" : -9999,
-      "zeroColor" : cNight,
-      "oneColor" : cNight,
-      "valCloseToOne" : 9999
+      // Define the pallet
+      var cSunUp = "#FBF6D9";
+      var cSunRise = "#FFE87C";
+      var cSunSet = "red";
+      var cNadir = "#151B54";
+      var cNight = "darkblue"
+
+      // Define end stop data area
+      var stops = {
+        "negCloseToZero" : -9999,
+        "zeroColor" : cNight,
+        "oneColor" : cNight,
+        "valCloseToOne" : 9999
+      }
+
+      // Set the color stops
+      setColourStop(baseDate, sunTimes.sunrise, cSunRise, grds, stops);
+      setColourStop(baseDate, sunTimes.sunriseEnd, cSunUp, grds, stops);
+      setColourStop(baseDate, sunTimes.sunsetStart, cSunSet, grds, stops);
+      setColourStop(baseDate, sunTimes.sunset, cNight, grds, stops);
+      setColourStop(baseDate, sunTimes.solarNoon, cSunUp, grds, stops);
+      setColourStop(baseDate, sunTimes.nadir, cNadir, grds, stops);
+      setColourStop(baseDate, sunTimes2.sunrise, cSunRise, grds, stops);
+      setColourStop(baseDate, sunTimes2.sunriseEnd, cSunUp, grds, stops);
+      setColourStop(baseDate, sunTimes2.sunsetStart, cSunSet, grds, stops);
+      setColourStop(baseDate, sunTimes2.sunset, cNight, grds, stops);
+      setColourStop(baseDate, sunTimes2.solarNoon, cSunUp, grds, stops);
+      setColourStop(baseDate, sunTimes2.nadir, cNadir, grds, stops);
+      setColourStop(baseDate, sunTimes.night, cNight, grds, stops);
+      setColourStop(baseDate, sunTimes.nightEnd, cNight, grds, stops);
+      setColourStop(baseDate, sunTimes2.night, cNight, grds, stops);
+      setColourStop(baseDate, sunTimes2.nightEnd, cNight, grds, stops);
+
+      // And the start and end
+      grds.addColorStop(0, stops.zeroColor);
+      grds.addColorStop(1, stops.oneColor);
+
+      // Fill with gradient
+      ctxs.fillStyle = grds;
+      ctxs.fillRect(0, 0, widthFloat, 30);
+
+    } catch (err) {
+      comsole.log("Sun calc failed " + err.message);
     }
-
-    // Set the color stops
-    setColourStop(baseDate, sunTimes.sunrise, cSunRise, grds, stops);
-    setColourStop(baseDate, sunTimes.sunriseEnd, cSunUp, grds, stops);
-    setColourStop(baseDate, sunTimes.sunsetStart, cSunSet, grds, stops);
-    setColourStop(baseDate, sunTimes.sunset, cNight, grds, stops);
-    setColourStop(baseDate, sunTimes.solarNoon, cSunUp, grds, stops);
-    setColourStop(baseDate, sunTimes.nadir, cNadir, grds, stops);
-    setColourStop(baseDate, sunTimes2.sunrise, cSunRise, grds, stops);
-    setColourStop(baseDate, sunTimes2.sunriseEnd, cSunUp, grds, stops);
-    setColourStop(baseDate, sunTimes2.sunsetStart, cSunSet, grds, stops);
-    setColourStop(baseDate, sunTimes2.sunset, cNight, grds, stops);
-    setColourStop(baseDate, sunTimes2.solarNoon, cSunUp, grds, stops);
-    setColourStop(baseDate, sunTimes2.nadir, cNadir, grds, stops);
-    setColourStop(baseDate, sunTimes.night, cNight, grds, stops);
-    setColourStop(baseDate, sunTimes.nightEnd, cNight, grds, stops);
-    setColourStop(baseDate, sunTimes2.night, cNight, grds, stops);
-    setColourStop(baseDate, sunTimes2.nightEnd, cNight, grds, stops);
-
-    // And the start and end
-    grds.addColorStop(0, stops.zeroColor);
-    grds.addColorStop(1, stops.oneColor);
-
-    // Fill with gradient
-    ctxs.fillStyle = grds;
-    ctxs.fillRect(0, 0, widthFloat, 30);
 
     // Moon phase
-    var moonIllum = SunCalc.getMoonIllumination(baseDate);
-    var phaseNo = Math.round(moonIllum.phase * 8);
-    if (phaseNo >= 8) {
-      phaseNo = 0;
+    try {
+
+      var moonIllum = SunCalc.getMoonIllumination(baseDate);
+      var phaseNo = Math.round(moonIllum.phase * 8);
+      if (phaseNo >= 8) {
+        phaseNo = 0;
+      }
+      $('#moonimg').attr("src", "img/moon-" + phaseNo + ".png");
+
+      // Moon rise and set times
+      var moonTimes = SunCalc.getMoonTimes(baseDate, pLat, pLong);
+      var moonTimes2 = SunCalc.getMoonTimes(baseDate.addMinutes(60 * 24), pLat, pLong);
+
+      var cm = document.getElementById("moonbar");
+      var ctxm = cm.getContext("2d");
+      // Create gradient
+      var grdm = ctxm.createLinearGradient(0, 0, widthFloat, 0);
+
+      // Moon phase has an effect on brightness
+      var cMoonUp = (phaseNo === 3 || phaseNo === 4 || phaseNo === 5) ? "white" : ((phaseNo === 0) ? "black" : "silver");
+      var cMoonDown = "black";
+
+      stops = {
+        "negCloseToZero" : -9999,
+        "zeroColor" : cMoonDown,
+        "oneColor" : cMoonDown,
+        "valCloseToOne" : 9999
+      }
+
+      setColourStop(baseDate, moonTimes.rise, cMoonUp, grdm, stops);
+      setColourStop(baseDate, moonTimes2.rise, cMoonUp, grdm, stops);
+      setColourStop(baseDate, moonTimes.set, cMoonDown, grdm, stops);
+      setColourStop(baseDate, moonTimes2.set, cMoonDown, grdm, stops);
+
+      grdm.addColorStop(0, stops.zeroColor);
+      grdm.addColorStop(1, stops.oneColor);
+
+      // Fill with gradient
+      ctxm.fillStyle = grdm;
+      ctxm.fillRect(0, 0, widthFloat, 30);
+
+    } catch (err) {
+      comsole.log("Moon calc failed " + err.message);
     }
-    $('#moonimg').attr("src", "img/moon-" + phaseNo + ".png");
-
-    // Moon rise and set times
-    var moonTimes = SunCalc.getMoonTimes(baseDate, pLat, pLong);
-    var moonTimes2 = SunCalc.getMoonTimes(baseDate.addMinutes(60 * 24), pLat, pLong);
-
-    var cm = document.getElementById("moonbar");
-    var ctxm = cm.getContext("2d");
-    // Create gradient
-    var grdm = ctxm.createLinearGradient(0, 0, widthFloat, 0);
-
-    // Moon phase has an effect on brightness
-    var cMoonUp = (phaseNo === 3 || phaseNo === 4 || phaseNo === 5) ? "white" : ((phaseNo === 0) ? "black" : "silver");
-    var cMoonDown = "black";
-
-    stops = {
-      "negCloseToZero" : -9999,
-      "zeroColor" : cMoonDown,
-      "oneColor" : cMoonDown,
-      "valCloseToOne" : 9999
-    }
-
-    setColourStop(baseDate, moonTimes.rise, cMoonUp, grdm, stops);
-    setColourStop(baseDate, moonTimes2.rise, cMoonUp, grdm, stops);
-    setColourStop(baseDate, moonTimes.set, cMoonDown, grdm, stops);
-    setColourStop(baseDate, moonTimes2.set, cMoonDown, grdm, stops);
-
-    grdm.addColorStop(0, stops.zeroColor);
-    grdm.addColorStop(1, stops.oneColor);
-
-    // Fill with gradient
-    ctxm.fillStyle = grdm;
-    ctxm.fillRect(0, 0, widthFloat, 30);
 
   }, 500);
 }
@@ -842,8 +849,13 @@ $("document").ready(function() {
     // Extract data
     var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
-    var url = mConst().url + vers + ".html" + "?base=" + base + "&graph=" + graph + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes;
-
+    var url = mConst().url + vers + ".html" + "?base=" + base + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes + "&lat" + latStr + "&long=" + longStr;
+    if (graph === "") {
+      url += "&graphx=" + graphx;
+    } else {
+      url += "&graph=" + graph;
+    }
+    
     var email = buildEmailJsonString(emailto, base, url, cpy);
 
     // Disable button and put out sending text
