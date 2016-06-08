@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global mConst, clearTimeout, nvl, window, btoa, FormData */
+/*global mConst, clearTimeout, nvl, btoa, FormData, getWithDef */
 /*exported makePostAjaxCall, makeGetAjaxCall, turnLifxLightsOn, makeAjaxCall */
 
 /*
@@ -109,11 +109,11 @@ function makeGetAjaxCall(url, resp) {
  * If LIFX values are set, this function will turn on all the lights with a custom fade-in time
  */
 function turnLifxLightsOn() {
-  
+
   // Find out config information
-  var token = nvl(window.localStorage.getItem("lifx-token"), "");
-  var fadeInTime = nvl(window.localStorage.getItem("lifx-time"), mConst().lifxTimeDef);
-  
+  var token = getWithDef("lifx-token", "");
+  var fadeInTime = getWithDef("lifx-time", mConst().lifxTimeDef);
+
   // Escape if not configured
   if (token === "" || fadeInTime === "") {
     console.log("lifx control deactivated");
@@ -178,7 +178,7 @@ function makeAjaxCall(mode, url, toTime, dataout, resp) {
   if (dataout === "") {
     req.send();
   } else {
-	  req.send(dataout);
+    req.send(dataout);
   }
 
 }

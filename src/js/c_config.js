@@ -53,18 +53,18 @@ function mConst() {
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
     timeout : 4000,
     quotesUrl : urlPrefix + "quotes.json",
-    hueTimeout: 3000,
-    urlNotReady: urlPrefix + "view-not-ready.html",
-    makerDefaultServer: "https://maker.ifttt.com/",
-    makerAlarmUrl: "trigger/morpheuz_alarm/with/key/",
-    makerDataUrl: "trigger/morpheuz_data/with/key/",
-    makerBedtimeUrl: "trigger/morpheuz_bedtime/with/key/",
-    lifxTimeDef: 60
+    hueTimeout : 3000,
+    urlNotReady : urlPrefix + "view-not-ready.html",
+    makerDefaultServer : "https://maker.ifttt.com/",
+    makerAlarmUrl : "trigger/morpheuz_alarm/with/key/",
+    makerDataUrl : "trigger/morpheuz_data/with/key/",
+    makerBedtimeUrl : "trigger/morpheuz_bedtime/with/key/",
+    lifxTimeDef : 60
   };
 }
 /*
  * Language strings
- */ 
+ */
 function mLang() {
   return {
     ok : "OK",
@@ -76,12 +76,12 @@ function mLang() {
     bedTime : "Bed time",
     bedNow : "Bed Now",
     cancelBed : "Cancel bed time",
-    earliest: "Earliest: ",
-    latest: "Latest: ",
-    suggested: "Suggested",
-    automatic: "Automatic",
-    bedtimeIn30Mins: "Bed time",
-    summary: "Morpheuz Summary",
-    showChart: "Show Chart"
+    earliest : "Earliest: ",
+    latest : "Latest: ",
+    suggested : "Suggested",
+    automatic : "Automatic",
+    bedtimeIn30Mins : "Bed time",
+    summary : "Morpheuz Summary",
+    showChart : "Show Chart"
   };
 }

@@ -22,14 +22,14 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mLang, mConst, makeGetAjaxCall, calculateStats */
+/*global mLang, mConst, makeGetAjaxCall, calculateStats, getWithDef, setNoDef, getNoDef */
 /*exported smartwatchProConfigured, smartwatchProTransmit */
 
 /*
  * Is Smartwatch Pro configured?
  */
 function smartwatchProConfigured() {
-  var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
+  var doSwp = getWithDef("swpdo", "N");
   return (doSwp === "Y");
 }
 
@@ -38,16 +38,16 @@ function smartwatchProConfigured() {
  */
 function smartwatchProTransmit() {
   try {
-    var doSwp = nvl(window.localStorage.getItem("swpdo"), "N");
+    var doSwp = getWithDef("swpdo", "N");
     if (doSwp !== "Y") {
-      window.localStorage.setItem("swpstat", mLang().disabled);
+      setNoDef("swpstat", mLang().disabled);
       console.log("smartwatchProTransmit: swpdo not set");
       return;
     }
-    window.localStorage.setItem("swpstat", mLang().sending);
-    var stats = calculateStats(parseInt(window.localStorage.getItem("base"), 10), nvl(window.localStorage.getItem("goneOff"), "N"), extractSplitup());
+    setNoDef("swpstat", mLang().sending);
+    var stats = calculateStats(parseInt(getNoDef("base"), 10), getWithDef("goneOff", "N"), extractSplitup());
     if (stats.tbegin === null || stats.tends === null) {
-      window.localStorage.setItem("swpstat", mLang().cnc);
+      setNoDef("swpstat", mLang().cnc);
       console.log("smartwatchProTransmit: stats couldn't be calculated");
       return;
     }
@@ -57,18 +57,17 @@ function smartwatchProTransmit() {
     makeGetAjaxCall(swpUrl, function(resp) {
       console.log("smartwatchProTransmit: " + JSON.stringify(resp));
       if (resp.status !== 1) {
-        window.localStorage.setItem("swpdo", "N"); // Turn off send on error
-        window.localStorage.setItem("swpstat", JSON.stringify(resp.errors));
+        setNoDef("swpdo", "N"); // Turn off send on error
+        setNoDef("swpstat", JSON.stringify(resp.errors));
       } else {
-        window.localStorage.setItem("swpstat", mLang().ok);
+        setNoDef("swpstat", mLang().ok);
       }
     });
   } catch (err) {
-    window.localStorage.setItem("swpdo", "N"); // Turn off send on error
-    window.localStorage.setItem("swpstat", err.message);
+    setNoDef("swpdo", "N"); // Turn off send on error
+    setNoDef("swpstat", err.message);
   }
 }
-
 
 /*
  * Extract splitup array from local storage
@@ -77,7 +76,7 @@ function extractSplitup() {
   var splitup = [];
   for (var j = 0; j < mConst().limit; j++) {
     var entry = "P" + j;
-    var valueStr = window.localStorage.getItem(entry);
+    var valueStr = getNoDef(entry);
     if (valueStr === null) {
       splitup[j] = "-1";
     } else {

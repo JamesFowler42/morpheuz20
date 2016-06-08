@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mConst */
+/*global mConst, getWithDef */
 /*exported googleAnalytics */
 
 /*
@@ -30,43 +30,43 @@
  * No personal data is collected, but the usage informs further development directions
  */
 function googleAnalytics() {
-  
+
   try {
-  
-  // If the user doesn't want to do this then don't do it.
-  var usage = nvl(window.localStorage.getItem("usage"), "Y");
-  if (usage !== "Y") {
+
+    // If the user doesn't want to do this then don't do it.
+    var usage = getWithDef("usage", "Y");
+    if (usage !== "Y") {
       console.log("googleAnalytics: disabled by user request");
       return;
-  }
- 
-  // morpheuz_smart_alarm
-  var smartAlarmOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef) !== mConst().smartDef;
-  // morpheuz_ifttt
-  var iftttOn = nvl(window.localStorage.getItem("ifkey"), "") !== "";
-  // morpheuz_lifx
-  var lifxOn = nvl(window.localStorage.getItem("lifx-token"), "") !== "";
-  // morpheuz_hue
-  var hueOn =  nvl(window.localStorage.getItem("hueip"), "") !== "";
-  // morpheuz_email_address
-  var emailOn = nvl(window.localStorage.getItem("emailto"), "") !== "";
-  // morpheuz_pushover
-  var pushoverOn = nvl(window.localStorage.getItem("potoken"), "") !== "";
-  // morpheuz_auto_email
-  var autoEmailOn = nvl(window.localStorage.getItem("doemail"), "") === "Y";
-  // morpheuz_auto_healthkit
-  var healthKitAutoExportOn = nvl(window.localStorage.getItem("swpdo"), "") === "Y";
-  // morpheuz_age_entered
-  var ageSupplied = nvl(window.localStorage.getItem("age"), "") !== "";
-  // morpheuz_lazarus
-  var lazarusActive = nvl(window.localStorage.getItem("lazarus"), "Y") === "Y";
-  
-  // Pass this as a custom dimension array
-  var customDimension = [smartAlarmOn,iftttOn,lifxOn,hueOn,emailOn,pushoverOn,autoEmailOn,healthKitAutoExportOn,ageSupplied,lazarusActive];
-  
-  // Call analytics - this has been done like this so the analytics function can be spun off as a separate library later
-  googleAnalyticsCall(customDimension);
-    
+    }
+
+    // morpheuz_smart_alarm
+    var smartAlarmOn = getWithDef("smart", mConst().smartDef) !== mConst().smartDef;
+    // morpheuz_ifttt
+    var iftttOn = getWithDef("ifkey", "") !== "";
+    // morpheuz_lifx
+    var lifxOn = getWithDef("lifx-token", "") !== "";
+    // morpheuz_hue
+    var hueOn = getWithDef("hueip", "") !== "";
+    // morpheuz_email_address
+    var emailOn = getWithDef("emailto", "") !== "";
+    // morpheuz_pushover
+    var pushoverOn = getWithDef("potoken", "") !== "";
+    // morpheuz_auto_email
+    var autoEmailOn = getWithDef("doemail", "") === "Y";
+    // morpheuz_auto_healthkit
+    var healthKitAutoExportOn = getWithDef("swpdo", "") === "Y";
+    // morpheuz_age_entered
+    var ageSupplied = getWithDef("age", "") !== "";
+    // morpheuz_lazarus
+    var lazarusActive = getWithDef("lazarus", "Y") === "Y";
+
+    // Pass this as a custom dimension array
+    var customDimension = [ smartAlarmOn, iftttOn, lifxOn, hueOn, emailOn, pushoverOn, autoEmailOn, healthKitAutoExportOn, ageSupplied, lazarusActive ];
+
+    // Call analytics - this has been done like this so the analytics function can be spun off as a separate library later
+    googleAnalyticsCall(customDimension);
+
   } catch (err) {
     console.log("googleAnalytics: Failed to call google Analytics with " + err);
   }
@@ -77,25 +77,25 @@ function googleAnalytics() {
  * customDimension is an array that is passed as cd1=xxx&cd2=yyy...
  */
 function googleAnalyticsCall(customDimension) {
-  
+
   try {
-    
+
     // Pick up the version
-    var version = nvl(window.localStorage.getItem("version"), "unknown");
-    
+    var version = getWithDef("version", "unknown");
+
     // Use the custom dimensions supplied to provide extra information
     var cd = "";
     try {
-    if (customDimension && customDimension.constructor == Array) {
-      for (var i = 0; i < customDimension.length; i++) {
-        var dimensionIndex = i + 1;
-        cd += "&cd" + dimensionIndex + "=" + customDimension[i];   
+      if (customDimension && customDimension.constructor == Array) {
+        for (var i = 0; i < customDimension.length; i++) {
+          var dimensionIndex = i + 1;
+          cd += "&cd" + dimensionIndex + "=" + customDimension[i];
+        }
       }
-    }
     } catch (e) {
       console.log("googleAnalytics: failed to get custom dimensions");
     }
-    
+
     // Uniquely identify by account token
     var accountToken = "unknown";
     try {
@@ -103,7 +103,7 @@ function googleAnalyticsCall(customDimension) {
     } catch (e) {
       console.log("googleAnalytics: unable to get accountToken");
     }
-    
+
     // Pick up as much platform information as possible
     // This will enable decisions on what features to add and what should take priority
     var platform = "unknown";
@@ -145,28 +145,13 @@ function googleAnalyticsCall(customDimension) {
     } catch (e) {
       console.log("googleAnalytics: unable to get active watch info");
     }
-   
+
     // User agent
     var userAgent = getUserAgent(model);
-    
+
     // Build the google analytics api
-    var msg = "v=1" +
-              "&tid=UA-72769045-3" + 
-              "&ds=app" +
-              "&cid=" + accountToken + 
-              "&t=event" +
-              "&cd=" + platform +
-              "&an=Morpheuz" +
-              "&ec=" + userAgent +
-              "&ea=" + platform +
-              "&el=" + model + 
-              "&ul=" + language + 
-              "&av=" + version + 
-              "&sd=" + depth +
-              "&sr=" + screenres +
-              "&dh=" + firmware +
-              cd;
-    
+    var msg = "v=1" + "&tid=UA-72769045-3" + "&ds=app" + "&cid=" + accountToken + "&t=event" + "&cd=" + platform + "&an=Morpheuz" + "&ec=" + userAgent + "&ea=" + platform + "&el=" + model + "&ul=" + language + "&av=" + version + "&sd=" + depth + "&sr=" + screenres + "&dh=" + firmware + cd;
+
     console.log("googleAnalytics: " + msg);
 
     // Send this across to google
@@ -182,11 +167,11 @@ function googleAnalyticsCall(customDimension) {
       }
     };
     req.send(msg);
-    
+
   } catch (err) {
     console.log("googleAnalyticsCall: Failed to call google Analytics with " + err);
   }
-  
+
 }
 
 /*

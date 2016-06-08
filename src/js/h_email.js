@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global generateCopyLinkData, window, mLang, buildUrl, mConst, nvl, buildEmailJsonString, extractSplitup, sendMailViaServer */
+/*global generateCopyLinkData, mLang, buildUrl, mConst, buildEmailJsonString, extractSplitup, sendMailViaServer, getWithDef, setNoDef, getNoDef */
 /*exported automaticEmailExport */
 
 /*
@@ -31,28 +31,28 @@
 function automaticEmailExport() {
 
   try {
-  
+
     // Find out config information
-    var emailto = nvl(window.localStorage.getItem("emailto"), "");
-    var doEmail = nvl(window.localStorage.getItem("doemail"), "N");
- 
+    var emailto = getWithDef("emailto", "");
+    var doEmail = getWithDef("doemail", "N");
+
     // Escape if not configured
     if (emailto === "" || doEmail === "N") {
       console.log("automatic email deactivated");
-      window.localStorage.setItem("estat", mLang().disabled);
+      setNoDef("estat", mLang().disabled);
       return;
     }
-   
-    var base = parseInt(window.localStorage.getItem("base"), 10);
+
+    var base = parseInt(getNoDef("base"), 10);
     var splitup = extractSplitup();
-    var smartOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
-    var fromhr = nvl(window.localStorage.getItem("fromhr"), mConst().fromhrDef);
-    var frommin = nvl(window.localStorage.getItem("frommin"), mConst().fromminDef);
-    var tohr = nvl(window.localStorage.getItem("tohr"), mConst().tohrDef);
-    var tomin = nvl(window.localStorage.getItem("tomin"), mConst().tominDef);
-    var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
-    var snoozes = nvl(window.localStorage.getItem("snoozes"), "0");
-    
+    var smartOn = getWithDef("smart", mConst().smartDef);
+    var fromhr = getWithDef("fromhr", mConst().fromhrDef);
+    var frommin = getWithDef("frommin", mConst().fromminDef);
+    var tohr = getWithDef("tohr", mConst().tohrDef);
+    var tomin = getWithDef("tomin", mConst().tominDef);
+    var goneoff = getWithDef("goneOff", "N");
+    var snoozes = getWithDef("snoozes", "0");
+
     // Extract data
     var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
@@ -61,16 +61,16 @@ function automaticEmailExport() {
     var email = buildEmailJsonString(emailto, base, url, cpy);
 
     // Send to server and await response
-    window.localStorage.setItem("estat", mLang().sending);
+    setNoDef("estat", mLang().sending);
     sendMailViaServer(email, function(stat, resp) {
       if (stat === 1) {
-        window.localStorage.setItem("estat", mLang().ok);
+        setNoDef("estat", mLang().ok);
       } else {
-        window.localStorage.setItem("estat", resp);
+        setNoDef("estat", resp);
       }
     });
-    
+
   } catch (err) {
-    window.localStorage.setItem("estat", err.message);
+    setNoDef("estat", err.message);
   }
 }

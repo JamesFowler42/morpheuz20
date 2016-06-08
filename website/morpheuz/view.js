@@ -35,7 +35,7 @@ function mConst() {
     swpUrlDate : "yyyy-MM-ddThh:mm:00",
     emailAddressMandatory : "valid email address is required",
     sendingEmail : "Sending...",
-    url : "http://ui.morpheuz.net/keith.j.fowler/morpheuz/view-",
+    url : "http://ui.morpheuz.net/morpheuz/view-",
     twitterWebIntentUrl : "https://twitter.com/intent/tweet?hashtags=morpheuz,tweetMySleep&text=",
     unableToFindTweetText : "Meh",
     numberOfSamples : 60
@@ -332,7 +332,7 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
       // Define the pallet
       var cSunUp = "#FBF6D9";
       var cSunRise = "#FFE87C";
-      var cSunSet = "red";
+      var cSunSet = cSunRise;
       var cNadir = "#151B54";
       var cNight = "darkblue"
 

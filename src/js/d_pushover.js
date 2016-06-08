@@ -22,15 +22,15 @@
  * THE SOFTWARE.
  */
 
-/*global window, nvl, mLang, mConst, buildUrl, makePostAjaxCall */
+/*global mLang, mConst, buildUrl, makePostAjaxCall, getWithDef, setNoDef, getNoDef */
 /*exported pushoverConfigured, pushoverTransmit */
 
 /*
  * Is Pushover configured?
  */
 function pushoverConfigured() {
-  var pouser = nvl(window.localStorage.getItem("pouser"), "");
-  var potoken = nvl(window.localStorage.getItem("potoken"), "");
+  var pouser = getWithDef("pouser", "");
+  var potoken = getWithDef("potoken", "");
   return (pouser !== "" && potoken !== "");
 }
 
@@ -39,15 +39,15 @@ function pushoverConfigured() {
  */
 function pushoverTransmit() {
   try {
-    var pouser = nvl(window.localStorage.getItem("pouser"), "");
-    var potoken = nvl(window.localStorage.getItem("potoken"), "");
+    var pouser = getWithDef("pouser", "");
+    var potoken = getWithDef("potoken", "");
     if (pouser === "" || potoken === "") {
-      window.localStorage.setItem("postat", mLang().disabled);
+      setNoDef("postat", mLang().disabled);
       console.log("pushoverTransmit: potoken and/or pouser not set");
       return;
     }
-    window.localStorage.setItem("postat", mLang().sending);
-    var base = window.localStorage.getItem("base");
+    setNoDef("postat", mLang().sending);
+    var base = getNoDef("base");
     var resetDate = new Date(parseInt(base, 10)).format(mConst().displayDateFmt);
     var urlToAttach = buildUrl("Y");
     var url = mConst().pushoverAPI;
@@ -56,12 +56,12 @@ function pushoverTransmit() {
     makePostAjaxCall(url, msg, function(resp) {
       console.log("pushoverTransmit: " + JSON.stringify(resp));
       if (resp.status !== 1) {
-        window.localStorage.setItem("postat", JSON.stringify(resp.errors));
+        setNoDef("postat", JSON.stringify(resp.errors));
       } else {
-        window.localStorage.setItem("postat", mLang().ok);
+        setNoDef("postat", mLang().ok);
       }
     });
   } catch (err) {
-    window.localStorage.setItem("postat", err.message);
+    setNoDef("postat", err.message);
   }
 }

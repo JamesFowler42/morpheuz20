@@ -39,28 +39,28 @@ function mCommonConst() {
 
 /*
  * Language strings
- */ 
+ */
 function mCommonLang() {
   return {
-    noSleep: "No sleep has been recorded yet. If this is incorrect, select the 'Resend' menu option on your watch and check again in a few minutes.",
-    sleepSummary: "Your body and brain requires {0} to {1} hours sleep every night. Last night was {2} as you slept for {3}. Of that sleep: {4} was restless; {5} was light; {6} was deep; {7} was excluded as it either wasn't recorded, or you marked it to be ignored.",
-    sleepSummaryNoRecommend: "You slept for {0}. Of that sleep: {1} was restless; {2} was light; {3} was deep; {4} was excluded as it either wasn't recorded, or you marked it to be ignored.",
-    minutes: " minutes",
-    minute: " minute",
-    hour: " hour",
-    hours: " hours",
-    none: "none",
-    tooLittle: "too little",
-    tooMuch: "too much",
-    ideal: "ideal",
+    noSleep : "No sleep has been recorded yet. If this is incorrect, select the 'Resend' menu option on your watch and check again in a few minutes.",
+    sleepSummary : "Your body and brain requires {0} to {1} hours sleep every night. Last night was {2} as you slept for {3}. Of that sleep: {4} was restless; {5} was light; {6} was deep; {7} was excluded as it either wasn't recorded, or you marked it to be ignored.",
+    sleepSummaryNoRecommend : "You slept for {0}. Of that sleep: {1} was restless; {2} was light; {3} was deep; {4} was excluded as it either wasn't recorded, or you marked it to be ignored.",
+    minutes : " minutes",
+    minute : " minute",
+    hour : " hour",
+    hours : " hours",
+    none : "none",
+    tooLittle : "too little",
+    tooMuch : "too much",
+    ideal : "ideal",
     okResponse : "Sent OK",
     failResponse : "Failed to send with ",
-    failGeneral : "Failed to send", 
+    failGeneral : "Failed to send",
     emailHeader : "<h2>CSV Sleep data</h2>",
     emailHeader2 : "<h2>Chart Display</h2>",
     emailFooter1 : "<br/>Note: -1 is no data captured, -2 is ignore set, ALARM, START and END nodes represent smart alarm actual, start and end",
     emailFooter2 : "<br/><br/><small>Please don't reply, this is an unmonitored mailbox</small><br/>",
-    report : "Report", 
+    report : "Report",
     snoozeText : " You hit snooze {0} times.",
     snoozeTextOnce : " You hit snooze once.",
     snoozeTextTwice : " You hit snooze twice."
@@ -73,7 +73,7 @@ function mCommonLang() {
 function mThres() {
   return {
     awakeAbove : 1000,
-    lightAbove : 120, 
+    lightAbove : 120,
   };
 }
 
@@ -124,15 +124,13 @@ Date.prototype.addMinutes = function(minutes) {
 /*
  * Provide string format method
  */
-String.prototype.format = function()
-{
-   var content = this;
-   for (var i=0; i < arguments.length; i++)
-   {
-        var replacement = '{' + i + '}';
-        content = content.replace(replacement, arguments[i]);  
-   }
-   return content;
+String.prototype.format = function() {
+  var content = this;
+  for (var i = 0; i < arguments.length; i++) {
+    var replacement = '{' + i + '}';
+    content = content.replace(replacement, arguments[i]);
+  }
+  return content;
 };
 
 /*
@@ -151,16 +149,9 @@ function fixLen(inStr) {
   return "0" + inStr;
 }
 
-
-
 /*
- * Format time as hours and minutes
- * 1 hour
- * 2 hours
- * 1 hour 10
- * 2 hours 20
- * 20 minutes
- * none
+ * Format time as hours and minutes 1 hour 2 hours 1 hour 10 2 hours 20 20
+ * minutes none
  */
 function hrsmin(value) {
   if (value === 0) {
@@ -233,8 +224,8 @@ function calculateStats(base, goneoff, splitup) {
     tends = tendsStop;
     iends = iendsStop;
   }
-  
-    // Compute the stats within the bounds of the start and stop times
+
+  // Compute the stats within the bounds of the start and stop times
   var awake = 0;
   var deep = 0;
   var light = 0;
@@ -257,15 +248,17 @@ function calculateStats(base, goneoff, splitup) {
     }
   }
 
-  // Note - the total should really be deep + light + awake + ignore. However begin and end times are calculated to an exact number of minutes
-  // (the smart alarm is accurate to the minute), whilst all other times are accurate to a 10 minute period. I'd prefer the time in the summary
+  // Note - the total should really be deep + light + awake + ignore. However
+  // begin and end times are calculated to an exact number of minutes
+  // (the smart alarm is accurate to the minute), whilst all other times are
+  // accurate to a 10 minute period. I'd prefer the time in the summary
   // to match the time recorded in Healthkit.
   var diff = tends - tbegin;
-  var total = Math.round((diff/1000)/60);
+  var total = Math.round((diff / 1000) / 60);
 
   return {
     "tbegin" : tbegin,
-    "tends" : tends, 
+    "tends" : tends,
     "deep" : deep * mCommonConst().sampleIntervalMins,
     "light" : light * mCommonConst().sampleIntervalMins,
     "awake" : awake * mCommonConst().sampleIntervalMins,
@@ -296,13 +289,13 @@ function generateRecommendation(age, total) {
   if (isNaN(age)) {
     return null;
   }
-  
+
   var nage = parseInt(age, 10);
-  
+
   if (isNaN(nage)) {
     return null;
   }
-  
+
   var min = 0;
   var max = 0;
   if (nage < 1) {
@@ -326,9 +319,9 @@ function generateRecommendation(age, total) {
     min = 7;
     max = 8;
   }
-  
-  var actual =  Math.floor(total / 60);
-  
+
+  var actual = Math.floor(total / 60);
+
   var view = "";
   var diff = 0;
   if (actual < min) {
@@ -340,9 +333,13 @@ function generateRecommendation(age, total) {
   } else {
     view = mCommonLang().ideal;
   }
-  
-  
-  return { "min": min, "max": max, "view": view, "diff": diff };
+
+  return {
+    "min" : min,
+    "max" : max,
+    "view" : view,
+    "diff" : diff
+  };
 }
 
 /*
@@ -352,16 +349,16 @@ function determineStars(trex, snoozes) {
   if (trex === null) {
     return 0;
   }
-  
+
   var stars = 5;
-  
+
   if (snoozes > 0) {
     stars--;
   }
-  
+
   if (trex.diff <= -90) {
     stars--;
-  } 
+  }
   if (trex.diff <= -60) {
     stars--;
   }
@@ -374,35 +371,44 @@ function determineStars(trex, snoozes) {
 
   // Return 1 to 5 stars
   return stars;
-  
+
 }
 
 /*
  * Build the recommendation phrase
  */
 function buildRecommendationPhrase(age, stats, snoozes) {
-  
+
   if (stats.total === 0) {
-    return { "summary" : mCommonLang().noSleep, "total": "-", "awake": "-", "light": "-", "deep": "-", "ignore": "-", "stars": 0, 
-            "totalStr" : "-", "deepStr" : "-"};
+    return {
+      "summary" : mCommonLang().noSleep,
+      "total" : "-",
+      "awake" : "-",
+      "light" : "-",
+      "deep" : "-",
+      "ignore" : "-",
+      "stars" : 0,
+      "totalStr" : "-",
+      "deepStr" : "-"
+    };
   }
-  
+
   var trex = generateRecommendation(age, stats.total);
-  
+
   var totalStr = hrsmin(stats.total);
   var awakeStr = hrsmin(stats.awake);
   var lightStr = hrsmin(stats.light);
   var deepStr = hrsmin(stats.deep);
   var ignoreStr = hrsmin(stats.ignore);
-  
+
   var stars = determineStars(trex, snoozes);
-  
+
   var summaryTxt;
   if (trex !== null) {
     summaryTxt = mCommonLang().sleepSummary.format(trex.min, trex.max, trex.view, totalStr, awakeStr, lightStr, deepStr, ignoreStr);
   } else {
     summaryTxt = mCommonLang().sleepSummaryNoRecommend.format(totalStr, awakeStr, lightStr, deepStr, ignoreStr);
-  } 
+  }
   if (snoozes > 2) {
     summaryTxt += mCommonLang().snoozeText.format(snoozes);
   } else if (snoozes == 1) {
@@ -410,9 +416,18 @@ function buildRecommendationPhrase(age, stats, snoozes) {
   } else if (snoozes == 2) {
     summaryTxt += mCommonLang().snoozeTextTwice;
   }
-  
-  return { "summary" : summaryTxt, "total": totalStr, "awake": awakeStr, "light": lightStr, "deep": deepStr, "ignore": ignoreStr, "stars":  stars,
-           "totalStr" : totalStr, "deepStr" : deepStr};
+
+  return {
+    "summary" : summaryTxt,
+    "total" : totalStr,
+    "awake" : awakeStr,
+    "light" : lightStr,
+    "deep" : deepStr,
+    "ignore" : ignoreStr,
+    "stars" : stars,
+    "totalStr" : totalStr,
+    "deepStr" : deepStr
+  };
 }
 
 /*

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global mConst, nvl, window, makeAjaxCall */
+/*global mConst, makeAjaxCall, getWithDef */
 /*exported turnHueLightsOn */
 
 /*
@@ -31,10 +31,10 @@
 function turnHueLightsOn() {
 
   // Find out config information
-  var ip =  nvl(window.localStorage.getItem("hueip"), "");
-  var username =  nvl(window.localStorage.getItem("hueusername"), "");
-  var id = nvl(window.localStorage.getItem("hueid"), "");
-  
+  var ip = getWithDef("hueip", "");
+  var username = getWithDef("hueusername", "");
+  var id = getWithDef("hueid", "");
+
   // Escape if not configured
   if (ip === "" || username === "" || id === "") {
     console.log("hue control deactivated");
@@ -47,26 +47,26 @@ function turnHueLightsOn() {
   /*
    * Perform the brightening
    */
-  function brightenHue() { 
+  function brightenHue() {
     // On, immediately and dim
     var state1 = {
-      "on": true,
-      "bri": 1,
-      "transitiontime":0
+      "on" : true,
+      "bri" : 1,
+      "transitiontime" : 0
     };
-  
+
     // Slowly raise to max brightness
     var state2 = {
-      "on": true,
-      "bri": 254,
-      "transitiontime":600
+      "on" : true,
+      "bri" : 254,
+      "transitiontime" : 600
     };
-	
+
     // Set the light on - minimum brightness	
     makeAjaxCall("PUT", baseurl + "/state", mConst().hueTimeout, JSON.stringify(state1), function(r1) {
       if (typeof r1.status !== 'undefined' && r1.status === 1) {
         console.log("Light on - minimum brightness:" + JSON.stringify(r1));
-        setInterval(function () {
+        setInterval(function() {
           // Set the light to brighten to max over a minute
           makeAjaxCall("PUT", baseurl + "/state", mConst().hueTimeout, JSON.stringify(state2), function(r2) {
             if (typeof r2.status !== 'undefined' && r2.status === 1) {
@@ -79,15 +79,13 @@ function turnHueLightsOn() {
       } else {
         console.log("Initial on state, min bright rejected:" + JSON.stringify(r1.errors));
       }
-    });	
+    });
   }
 
   // Check if the light is on
   makeAjaxCall("GET", baseurl, mConst().hueTimeout, "", function(r) {
     if (typeof r.status !== 'undefined' && r.status === 1) {
-      if (typeof r.data !== 'undefined' && 
-          typeof r.data.state !== 'undefined' &&
-          typeof r.data.state.on !== 'undefined') {
+      if (typeof r.data !== 'undefined' && typeof r.data.state !== 'undefined' && typeof r.data.state.on !== 'undefined') {
         if (!r.data.state.on) {
           brightenHue();
         } else {
@@ -101,4 +99,3 @@ function turnHueLightsOn() {
     }
   });
 }
-

@@ -22,7 +22,7 @@
  * THE SOFTWARE.
  */
 
-/*global calculateStats, window, mLang, makeGetAjaxCall, mConst, nvl, buildRecommendationPhrase, extractSplitup, getPlatform */
+/*global calculateStats, mLang, makeGetAjaxCall, mConst, buildRecommendationPhrase, extractSplitup, getPlatform, getNoDef, getWithDef, setNoDef */
 /*exported addSmartAlarmPin, addBedTimePin, getQuoteOfTheDay, deleteUserPin, addSummaryPin */
 
 /*
@@ -37,32 +37,32 @@ function getPinId(base, type) {
  * Add a smart alarm pin when wakeup occurs (triggered when the gone off data is sent)
  */
 function addSmartAlarmPin() {
-  
-  var baseStr = window.localStorage.getItem("base");
-  var base = new Date(parseInt(baseStr,10));
 
-  var stats = calculateStats(base, nvl(window.localStorage.getItem("goneOff"), "N"), extractSplitup());
+  var baseStr = getNoDef("base");
+  var base = new Date(parseInt(baseStr, 10));
+
+  var stats = calculateStats(base, getWithDef("goneOff", "N"), extractSplitup());
   if (stats.tends === null) {
     console.log("addSmartAlarmPin: stats couldn't be calculated");
     return;
   }
 
   var alarmTime = stats.tends;
-  var quote = window.localStorage.getItem("quote");
-  var fromhr = window.localStorage.getItem("fromhr");
-  var tohr = window.localStorage.getItem("tohr");
-  var frommin = window.localStorage.getItem("frommin");
-  var tomin = window.localStorage.getItem("tomin");
+  var quote = getNoDef("quote");
+  var fromhr = getNoDef("fromhr");
+  var tohr = getNoDef("tohr");
+  var frommin = getNoDef("frommin");
+  var tomin = getNoDef("tomin");
 
   var body = quote;
-  
+
   var pin = {
-    "id" : getPinId(base,"sa"),
+    "id" : getPinId(base, "sa"),
     "time" : alarmTime.toISOString(),
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().sa,
-      "subtitle" : parseInt(fromhr,10) + ":" + frommin + " - " + parseInt(tohr,10) + ":" + tomin,
+      "subtitle" : parseInt(fromhr, 10) + ":" + frommin + " - " + parseInt(tohr, 10) + ":" + tomin,
       "tinyIcon" : "system://images/ALARM_CLOCK",
       "backgroundColor" : "#00AAFF",
       "body" : body
@@ -86,24 +86,24 @@ function addSmartAlarmPin() {
  * Add a bed time pin when we're due to go to sleep (triggered on export functions)
  */
 function addBedTimePin() {
-  
-  var baseStr = window.localStorage.getItem("base");
-  var base = new Date(parseInt(baseStr,10));
 
-  var auto = window.localStorage.getItem("autoReset");
+  var baseStr = getNoDef("base");
+  var base = new Date(parseInt(baseStr, 10));
+
+  var auto = getNoDef("autoReset");
 
   var baseDt = new Date(base);
   var bedTime = baseDt.addMinutes(24 * 60);
   var reminderTime = baseDt.addMinutes(23 * 60 + 30);
 
-  var quote = window.localStorage.getItem("quote");
-  
+  var quote = getNoDef("quote");
+
   var pin = null;
-  
+
   if (auto === null || auto === "0") {
     // Suggested bed-time
     pin = {
-      "id" : getPinId(baseDt,"bt"),
+      "id" : getPinId(baseDt, "bt"),
       "time" : bedTime.toISOString(),
       "layout" : {
         "type" : "genericPin",
@@ -122,7 +122,7 @@ function addBedTimePin() {
   } else {
     // Automatic bed time pin
     pin = {
-      "id" : getPinId(baseDt,"bt"),
+      "id" : getPinId(baseDt, "bt"),
       "time" : bedTime.toISOString(),
       "layout" : {
         "type" : "genericPin",
@@ -132,16 +132,14 @@ function addBedTimePin() {
         "backgroundColor" : "#00AAFF",
         "body" : quote
       },
-      "reminders": [
-        {
-          "time": reminderTime.toISOString(),
-          "layout": {
-            "type": "genericReminder",
-            "tinyIcon": "system://images/SCHEDULED_EVENT",
-            "title": mLang().bedtimeIn30Mins
-          }
-        } 
-      ],
+      "reminders" : [ {
+        "time" : reminderTime.toISOString(),
+        "layout" : {
+          "type" : "genericReminder",
+          "tinyIcon" : "system://images/SCHEDULED_EVENT",
+          "title" : mLang().bedtimeIn30Mins
+        }
+      } ],
       "actions" : [ {
         "title" : mLang().bedNow,
         "type" : "openWatchApp",
@@ -166,56 +164,56 @@ function addBedTimePin() {
  * Add the sleep summary pin (called at the same time as the smart alarm pin and during summary for when the smart alarm is not set)
  */
 function addSummaryPin(atAlarmTime) {
-  
-  var goneOff = nvl(window.localStorage.getItem("goneOff"), "N");
-  
+
+  var goneOff = getWithDef("goneOff", "N");
+
   // At summary time and the alarm has gone off then this has already been done. Run away and don't tell anyone.
   if (!atAlarmTime && goneOff !== "N") {
     return;
   }
-  
-  var baseStr = window.localStorage.getItem("base");
-  var base = new Date(parseInt(baseStr,10));
-  
+
+  var baseStr = getNoDef("base");
+  var base = new Date(parseInt(baseStr, 10));
+
   var stats = calculateStats(base, goneOff, extractSplitup());
   if (stats.tends === null) {
     console.log("addSummaryPin: stats couldn't be calculated");
     return;
   }
-  
+
   // We add one minute, just so as the smart alarm and summary pin occur in the same order always
   var summaryTime = stats.tends.addMinutes(1);
 
-  var age = nvl(window.localStorage.getItem("age"), "");
-  var snoozes = parseInt(nvl(window.localStorage.getItem("snoozes"), "0"),10);
+  var age = getWithDef("age", "");
+  var snoozes = parseInt(getWithDef("snoozes", "0"), 10);
   if (isNaN(snoozes)) {
     snoozes = 0;
   }
 
   var rec = buildRecommendationPhrase(age, stats, snoozes);
-  
+
   var actions = [];
-  
+
   if (getPlatform() !== "aplite") {
     actions.push({
-        "title" : mLang().showChart,
-        "type" : "openWatchApp",
-        "launchCode" : 3
-      });
+      "title" : mLang().showChart,
+      "type" : "openWatchApp",
+      "launchCode" : 3
+    });
   }
 
   var pin = {
-    "id" : getPinId(base,"su"),
+    "id" : getPinId(base, "su"),
     "time" : summaryTime.toISOString(),
     "layout" : {
       "type" : "genericPin",
       "title" : mLang().summary,
-      "subtitle": rec.total,
+      "subtitle" : rec.total,
       "tinyIcon" : "system://images/GLUCOSE_MONITOR",
       "backgroundColor" : "#00AAFF",
       "body" : rec.summary
     },
-    "actions": actions
+    "actions" : actions
   };
 
   console.log('Inserting pin: ' + JSON.stringify(pin));
@@ -237,7 +235,7 @@ function getQuoteOfTheDay() {
       var ind = Math.floor(Math.random() * obj.length);
       var quote = obj[ind];
       console.log('quote:' + quote);
-      window.localStorage.setItem("quote", quote);
+      setNoDef("quote", quote);
     }
   });
 }
@@ -315,5 +313,4 @@ function deleteUserPin(pin, callback) {
 }
 
 /** *************************** end timeline lib ****************************** */
-
 

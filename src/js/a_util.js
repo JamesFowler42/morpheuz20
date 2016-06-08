@@ -22,23 +22,68 @@
  * THE SOFTWARE.
  */
 
-/*exported getPlatform, toHexStr */
+/*exported getPlatform, toHexStr, getWithDef, getNoDef, setNoDef, setWithDef */
 
+/*global nvl, window */
+
+/*
+ * Which watch platform
+ */
 function getPlatform() {
-    try {
-      var wi = Pebble.getActiveWatchInfo();
-      if (wi && wi.platform) {
-        return wi.platform;
-      } else {
-        return "unknown";
-      }
+  try {
+    var wi = Pebble.getActiveWatchInfo();
+    if (wi && wi.platform) {
+      return wi.platform;
+    } else {
+      return "unknown";
+    }
   } catch (err) {
     return "unknown";
   }
 }
 
-function toHexStr(number, length) {
-    var str = '' + parseInt(number,10).toString(16);
-    while (str.length < length) str = '0' + str;
-    return str;
+/*
+ * Convert to fixed length hex string
+ */
+function toHexStr(number, length, maxValueCap, minValueCap) {
+  var num = parseInt(number, 10);
+  if (num > maxValueCap) {
+    num = maxValueCap;
+  } else if (num < minValueCap) {
+    num = minValueCap;
+  }
+  var str = '' + num.toString(16);
+  while (str.length < length)
+    str = '0' + str;
+  return str;
+}
+
+/*
+ * Often used pick a local stored value with a default
+ */
+function getWithDef(vName, defVal) {
+  return nvl(getNoDef(vName), defVal);
+}
+
+/*
+ * Get local storage without a default
+ */
+function getNoDef(vName) {
+  //console.log("getItem(" + vName + ")");
+  return window.localStorage.getItem(vName);
+}
+
+/*
+ * Set local storage without a default
+ */
+function setNoDef(vName, vValue) {
+  //console.log("setItem(" + vName + "," + vValue + ")");
+  window.localStorage.setItem(vName, vValue);
+}
+
+/*
+ * Set local storage with a default
+ */
+function setWithDef(vName, vValue, defVal) {
+  setNoDef(vName, nvl(vValue, defVal));
 }

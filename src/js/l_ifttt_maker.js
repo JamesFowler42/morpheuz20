@@ -22,14 +22,14 @@
  * THE SOFTWARE.
  */
 
-/*global nvl, window, mLang, makeAjaxCall, mConst, buildUrl, generateCopyLinkData, extractSplitup */
+/*global mLang, makeAjaxCall, mConst, buildUrl, generateCopyLinkData, extractSplitup, getWithDef, setNoDef, getNoDef */
 /*exported iftttMakerInterfaceAlarm, iftttMakerInterfaceData, iftttMakerInterfaceBedtime */
 
 /*
  *
  */
 function getIfServer() {
-  var ifserver = nvl(window.localStorage.getItem("ifserver"), "");
+  var ifserver = getWithDef("ifserver", "");
   var url;
   if (ifserver === "") {
     url = mConst().makerDefaultServer;
@@ -48,34 +48,38 @@ function getIfServer() {
 function iftttMakerInterfaceAlarm() {
 
   try {
-  
+
     // Find out config information
-    var ifkey =  nvl(window.localStorage.getItem("ifkey"), "");
-  
+    var ifkey = getWithDef("ifkey", "");
+
     // Escape if not configured
     if (ifkey === "") {
       console.log("ifttt maker deactivated");
-      window.localStorage.setItem("ifstat", mLang().disabled);
+      setNoDef("ifstat", mLang().disabled);
       return;
     }
-  
-    var payload = { "value1" : "", "value2" : "", "value3" : "" };
+
+    var payload = {
+      "value1" : "",
+      "value2" : "",
+      "value3" : ""
+    };
 
     var url = getIfServer() + mConst().makerAlarmUrl + ifkey;
-    
+
     console.log("iftttMakerInterfaceAlarm: url=" + url);
-    window.localStorage.setItem("ifstat", mLang().sending);
+    setNoDef("ifstat", mLang().sending);
     makeAjaxCall("POST", url, mConst().timeout, JSON.stringify(payload), function(resp) {
       console.log("iftttMakerInterfaceAlarm: " + JSON.stringify(resp));
       if (resp.status !== 1) {
-        window.localStorage.setItem("ifstat", JSON.stringify(resp.errors));
+        setNoDef("ifstat", JSON.stringify(resp.errors));
       } else {
-        window.localStorage.setItem("ifstat", mLang().ok);
-      }     
+        setNoDef("ifstat", mLang().ok);
+      }
     });
-    
+
   } catch (err) {
-    window.localStorage.setItem("ifstat", err.message);
+    setNoDef("ifstat", err.message);
   }
 }
 
@@ -85,49 +89,53 @@ function iftttMakerInterfaceAlarm() {
 function iftttMakerInterfaceData() {
 
   try {
-  
+
     // Find out config information
-    var ifkey =  nvl(window.localStorage.getItem("ifkey"), "");
-  
+    var ifkey = getWithDef("ifkey", "");
+
     // Escape if not configured
     if (ifkey === "") {
       console.log("ifttt maker deactivated");
-      window.localStorage.setItem("ifstat", mLang().disabled);
+      setNoDef("ifstat", mLang().disabled);
       return;
     }
-   
-    var base = parseInt(window.localStorage.getItem("base"), 10);
+
+    var base = parseInt(getNoDef("base"), 10);
     var resetDate = new Date(base).format(mConst().displayDateFmt);
     var urlToAttach = buildUrl("Y");
 
-    var goneoff = nvl(window.localStorage.getItem("goneOff"), "N");
+    var goneoff = getWithDef("goneOff", "N");
     var splitup = extractSplitup();
-    var fromhr = nvl(window.localStorage.getItem("fromhr"), mConst().fromhrDef);
-    var tohr = nvl(window.localStorage.getItem("tohr"), mConst().tohrDef);
-    var frommin = nvl(window.localStorage.getItem("frommin"), mConst().fromminDef);
-    var tomin = nvl(window.localStorage.getItem("tomin"), mConst().tominDef);
-    var smartOn = nvl(window.localStorage.getItem("smart"), mConst().smartDef);
-    var snoozes = nvl(window.localStorage.getItem("snoozes"), "0");
-    
+    var fromhr = getWithDef("fromhr", mConst().fromhrDef);
+    var tohr = getWithDef("tohr", mConst().tohrDef);
+    var frommin = getWithDef("frommin", mConst().fromminDef);
+    var tomin = getWithDef("tomin", mConst().tominDef);
+    var smartOn = getWithDef("smart", mConst().smartDef);
+    var snoozes = getWithDef("snoozes", "0");
+
     var csvData = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
-  
-    var payload = { "value1" : resetDate, "value2" : urlToAttach, "value3" : csvData.body };
+
+    var payload = {
+      "value1" : resetDate,
+      "value2" : urlToAttach,
+      "value3" : csvData.body
+    };
 
     var url = getIfServer() + mConst().makerDataUrl + ifkey;
-    
+
     console.log("iftttMakerInterfaceData: url=" + url);
-    window.localStorage.setItem("ifstat", mLang().sending);
+    setNoDef("ifstat", mLang().sending);
     makeAjaxCall("POST", url, mConst().timeout, JSON.stringify(payload), function(resp) {
       console.log("iftttMakerInterfaceData: " + JSON.stringify(resp));
       if (resp.status !== 1) {
-        window.localStorage.setItem("ifstat", JSON.stringify(resp.errors));
+        setNoDef("ifstat", JSON.stringify(resp.errors));
       } else {
-        window.localStorage.setItem("ifstat", mLang().ok);
-      }     
+        setNoDef("ifstat", mLang().ok);
+      }
     });
-    
+
   } catch (err) {
-    window.localStorage.setItem("ifstat", err.message);
+    setNoDef("ifstat", err.message);
   }
 }
 
@@ -137,34 +145,37 @@ function iftttMakerInterfaceData() {
 function iftttMakerInterfaceBedtime() {
 
   try {
-  
+
     // Find out config information
-    var ifkey =  nvl(window.localStorage.getItem("ifkey"), "");
-  
+    var ifkey = getWithDef("ifkey", "");
+
     // Escape if not configured
     if (ifkey === "") {
       console.log("ifttt maker deactivated");
-      window.localStorage.setItem("ifstat", mLang().disabled);
+      setNoDef("ifstat", mLang().disabled);
       return;
     }
-  
-    var payload = { "value1" : "", "value2" : "", "value3" : "" };
+
+    var payload = {
+      "value1" : "",
+      "value2" : "",
+      "value3" : ""
+    };
 
     var url = getIfServer() + mConst().makerBedtimeUrl + ifkey;
-    
+
     console.log("iftttMakerInterfaceBedtime: url=" + url);
-    window.localStorage.setItem("ifstat", mLang().sending);
+    setNoDef("ifstat", mLang().sending);
     makeAjaxCall("POST", url, mConst().timeout, JSON.stringify(payload), function(resp) {
       console.log("iftttMakerInterfaceBedtime: " + JSON.stringify(resp));
       if (resp.status !== 1) {
-        window.localStorage.setItem("ifstat", JSON.stringify(resp.errors));
+        setNoDef("ifstat", JSON.stringify(resp.errors));
       } else {
-        window.localStorage.setItem("ifstat", mLang().ok);
-      }     
+        setNoDef("ifstat", mLang().ok);
+      }
     });
-    
+
   } catch (err) {
-    window.localStorage.setItem("ifstat", err.message);
+    setNoDef("ifstat", err.message);
   }
 }
-
