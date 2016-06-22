@@ -269,12 +269,18 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
 
   // Work out a colour stop
   function setColourStop(baseDate, targetDate, colour, grd, stops) {
-    var baseDateInt = baseDate.getTime();
+    
+    if (targetDate === null || targetDate === "null" || typeof targetDate === "undefined") {
+      return;
+    }
+
     var targetDateInt = targetDate.getTime();
 
     if (isNaN(targetDateInt)) {
       return;
     }
+    
+    var baseDateInt = baseDate.getTime();
 
     var diff = targetDateInt - baseDateInt;
 
@@ -371,7 +377,7 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
       ctxs.fillRect(0, 0, widthFloat, 30);
 
     } catch (err) {
-      comsole.log("Sun calc failed " + err.message);
+      console.log("Sun calc failed " + err.message);
     }
 
     // Moon phase
@@ -390,6 +396,7 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
 
       var cm = document.getElementById("moonbar");
       var ctxm = cm.getContext("2d");
+
       // Create gradient
       var grdm = ctxm.createLinearGradient(0, 0, widthFloat, 0);
 
@@ -408,16 +415,15 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
       setColourStop(baseDate, moonTimes2.rise, cMoonUp, grdm, stops);
       setColourStop(baseDate, moonTimes.set, cMoonDown, grdm, stops);
       setColourStop(baseDate, moonTimes2.set, cMoonDown, grdm, stops);
-
       grdm.addColorStop(0, stops.zeroColor);
       grdm.addColorStop(1, stops.oneColor);
 
       // Fill with gradient
       ctxm.fillStyle = grdm;
       ctxm.fillRect(0, 0, widthFloat, 30);
-
+      
     } catch (err) {
-      comsole.log("Moon calc failed " + err.message);
+      console.log("Moon calc failed " + err.message);
     }
 
   }, 500);
