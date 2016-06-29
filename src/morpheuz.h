@@ -169,18 +169,17 @@
 
 #define tolower(a) ((('A' <= a) && (a <= 'Z')) ? ('a' + (a - 'A')) : (a))
 
-enum MorpKey {
-  KEY_POINT = 1,
-  KEY_CTRL = 2,
-  KEY_FROM = 3,
-  KEY_TO = 4,
-  KEY_BASE = 5,
-  KEY_VERSION = 6,
-  KEY_GONEOFF = 7,
-  KEY_TRANSMIT = 8,
-  KEY_AUTO_RESET = 9,
-  KEY_SNOOZES = 10
-};
+#define  KEY_POINT  MESSAGE_KEY_keyPoint
+#define  KEY_CTRL  MESSAGE_KEY_keyCtrl
+#define  KEY_FROM  MESSAGE_KEY_keyFrom
+#define  KEY_TO MESSAGE_KEY_keyTo
+#define  KEY_BASE MESSAGE_KEY_keyBase
+#define  KEY_VERSION MESSAGE_KEY_keyVersion
+#define  KEY_GONEOFF MESSAGE_KEY_keyGoneoff
+#define  KEY_TRANSMIT MESSAGE_KEY_keyTransmit
+#define  KEY_AUTO_RESET MESSAGE_KEY_keyAutoReset
+#define  KEY_SNOOZES MESSAGE_KEY_keySnoozes
+
 
 enum CtrlValues {
   CTRL_TRANSMIT_DONE = 1,

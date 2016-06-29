@@ -1,0 +1,260 @@
+{
+    "author": "James Fowler",
+    "dependencies": {},
+    "keywords": [],
+    "name": "morpheuz",
+    "pebble": {
+        "capabilities": [
+            "location",
+            "configurable"
+        ],
+        "displayName": "Morpheuz",
+        "enableMultiJS": true,
+        "messageKeys": [
+            "keyPoint",
+            "keyCtrl",
+            "keyFrom",
+            "keyTo",
+            "keyBase",
+            "keyVersion",
+            "keyGoneoff",
+            "keyTransmit",
+            "keyAutoReset",
+            "keySnoozes"
+        ],
+        "projectType": "native",
+        "resources": {
+            "media": [
+                {
+                    "file": "images/round-title.png",
+                    "name": "IMAGE_ROUND_TITLE",
+                    "targetPlatforms": [
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/round-background.png",
+                    "name": "IMAGE_ROUND_BACKGROUND",
+                    "targetPlatforms": [
+                        "chalk"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/record.png",
+                    "name": "ICON_RECORD",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/menu_yes.png",
+                    "name": "MENU_YES",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/menu_no.png",
+                    "name": "MENU_NO",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/logo-text.png",
+                    "name": "IMAGE_LOGO_TEXT",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/logo-sleeper.png",
+                    "name": "IMAGE_LOGO_SLEEPER",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/logo-head.png",
+                    "name": "IMAGE_LOGO_HEAD",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/logo-bed.png",
+                    "name": "IMAGE_LOGO_BED",
+                    "targetPlatforms": [
+                        "aplite",
+                        "basalt"
+                    ],
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/keyboard-black.png",
+                    "name": "KEYBOARD_BG",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/ignore.png",
+                    "name": "IGNORE",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/icon.png",
+                    "menuIcon": true,
+                    "name": "IMAGE_APP_ICON",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/export.png",
+                    "name": "EXPORT",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/comms.png",
+                    "name": "COMMS_ICON",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/button-alarm-top.png",
+                    "name": "BUTTON_ALARM_TOP",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/button-alarm-bottom.png",
+                    "name": "BUTTON_ALARM_BOTTOM",
+                    "targetPlatforms": null,
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/bluetooth.png",
+                    "name": "BLUETOOTH_ICON",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/battery_icon.png",
+                    "name": "BATTERY_ICON",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/battery_charge.png",
+                    "name": "BATTERY_CHARGE",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/alarm-ring-icon.png",
+                    "name": "ALARM_RING_ICON",
+                    "type": "bitmap"
+                },
+                {
+                    "file": "images/alarm-icon.png",
+                    "name": "ALARM_ICON",
+                    "type": "bitmap"
+                },
+                {
+                    "characterRegex": "[0-9:]",
+                    "file": "fonts/axaxax-bd-38.ttf",
+                    "name": "FONT_DIGITAL_38",
+                    "type": "font"
+                },
+                {
+                    "characterRegex": "[MorpheuzJamsFwl0-9. \\xA9\\x2D]",
+                    "file": "fonts/axaxax-bd-16.ttf",
+                    "name": "FONT_DIGITAL_16",
+                    "type": "font"
+                },
+                {
+                    "file": "data/voice-unavailable.txt",
+                    "name": "NOTICE_VOICE_UNAVAILABLE",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "raw"
+                },
+                {
+                    "file": "data/voice-recognition-stopped.txt",
+                    "name": "NOTICE_VOICE_STOPPED",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "raw"
+                },
+                {
+                    "file": "data/voice-recognition-failed.txt",
+                    "name": "NOTICE_VOICE_FAILED",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "raw"
+                },
+                {
+                    "file": "data/voice-didnt-understand.txt",
+                    "name": "VOICE_DIDNT_UNDERSTAND",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "raw"
+                },
+                {
+                    "file": "data/timer-reset-noalarm.txt",
+                    "name": "NOTICE_TIMER_RESET_NOALARM",
+                    "type": "raw"
+                },
+                {
+                    "file": "data/timer-reset-alarm.txt",
+                    "name": "NOTICE_TIMER_RESET_ALARM",
+                    "targetPlatforms": [
+                        "aplite"
+                    ],
+                    "type": "raw"
+                },
+                {
+                    "file": "data/timer-reset-alarm-for.txt",
+                    "name": "NOTICE_TIMER_RESET_ALARM_FOR",
+                    "targetPlatforms": [
+                        "basalt",
+                        "chalk"
+                    ],
+                    "type": "raw"
+                },
+                {
+                    "file": "data/reset-to-start-using.txt",
+                    "name": "NOTICE_RESET_TO_START_USING",
+                    "type": "raw"
+                },
+                {
+                    "file": "data/outstanding-data.txt",
+                    "name": "NOTICE_OUTSTANDING",
+                    "type": "raw"
+                },
+                {
+                    "file": "data/data-will-be-resent-shortly.txt",
+                    "name": "NOTICE_DATA_WILL_BE_RESENT_SHORTLY",
+                    "type": "raw"
+                }
+            ]
+        },
+        "sdkVersion": "3",
+        "targetPlatforms": [
+            "aplite",
+            "basalt",
+            "chalk"
+        ],
+        "uuid": "5be44f1d-d262-4ea6-aa30-ddbec1e3cab2",
+        "watchapp": {
+            "watchface": false
+        }
+    },
+    "version": "4.6.0"
+}

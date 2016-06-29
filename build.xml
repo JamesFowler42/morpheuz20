@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <project name="morpheuz" basedir="." default="all">
 
-	<property name="ver" value="45"/>
-	<property name="verdec" value="4.5"/>
-	<property name="inc" value="5"/> <!-- Cloudpebble download inc -->
+	<property name="ver" value="46"/>
+	<property name="verdec" value="4.6"/>
+	<property name="inc" value="4"/> <!-- Cloudpebble download inc -->
 	<property name="vinc" value="1"/> <!-- Version marker on urls v=?? -->
 	<!--<property name="vincstr" value="?v=${vinc}"/>-->
 	<property name="vincstr" value=""/>
@@ -25,11 +25,12 @@
 	</target>
 	
 	<target name="all"  description="all">
+		
 		<antcall target="unpack-cloud" inheritrefs="true" inheritall="true"/>
 		<antcall target="concat" inheritrefs="true" inheritall="true">
 			<param name="in.file.1" value="view.js" />
 			<param name="in.file.2" value="utils.js" />
-			<param name="in.file.3" value="../../src/js/common.js" />
+			<param name="in.file.3" value="../../src/js/morpheuzCommon.js" />
 			<param name="in.file.4" value="suncalc/suncalc.js" />
 			<param name="join.file" value="view-${ver}.js" />
 		</antcall>
@@ -95,10 +96,10 @@
 		</antcall>
 		<antcall target="copyimages" inheritrefs="true" inheritall="true" />
 		<antcall target="archive" inheritrefs="true" inheritall="true"/>
-		<fail message="appinfo.json has incorrect version">
+		<fail message="package.json has incorrect version">
 		    <condition>
 		    	<not>
-		    		<resourcecontains resource="appinfo.json" substring="&quot;${verdec}&quot;"/>
+		    		<resourcecontains resource="package.json" substring="&quot;${verdec}.0&quot;"/>
 		    	</not>
 		    </condition>
 		</fail>
@@ -201,6 +202,7 @@
 	</target>
 	
 	<target name="unpack-cloud" description="unpack cloudpebble file">
+		<delete dir="${builddir}"/>
 		<delete dir="src"/>
 		<delete dir="resources"/>
 		<unzip src="${cpexport}" dest="${maindir}">

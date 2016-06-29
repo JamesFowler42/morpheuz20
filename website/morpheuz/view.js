@@ -58,7 +58,7 @@ function buildGraphDataSet(base, splitup, more) {
       element[1] = null;
     }
     more[i] = element;
-    startPoint = startPoint.addMinutes(mCommonConst().sampleIntervalMins);
+    startPoint = startPoint.addMinutes(MorpheuzCommon.mCommonConst().sampleIntervalMins);
   }
 }
 
@@ -89,7 +89,7 @@ function populateIgnore(base, canvasOverlayConf, splitup, totalWidth) {
       canvasOverlayConf.show = true;
       canvasOverlayConf.objects.push(ignoreOverlay);
     }
-    startPoint = startPoint.addMinutes(mCommonConst().sampleIntervalMins);
+    startPoint = startPoint.addMinutes(MorpheuzCommon.mCommonConst().sampleIntervalMins);
   }
 }
 
@@ -98,21 +98,21 @@ function populateIgnore(base, canvasOverlayConf, splitup, totalWidth) {
  */
 function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverlayConf, splitup) {
   if (smartOn) {
-    var fromstr = fixLen(fromhr) + fixLen(frommin);
-    var tostr = fixLen(tohr) + fixLen(tomin);
+    var fromstr = MorpheuzCommon.fixLen(fromhr) + MorpheuzCommon.fixLen(frommin);
+    var tostr = MorpheuzCommon.fixLen(tohr) + MorpheuzCommon.fixLen(tomin);
     var smartStartPoint = new Date(base);
     var early = null;
     var late = null;
     for (var i = 0; i < splitup.length; i++) {
       var teststr1 = smartStartPoint.format("hhmm");
       var smartStartPoint1 = smartStartPoint;
-      smartStartPoint = smartStartPoint.addMinutes(mCommonConst().sampleIntervalMins);
+      smartStartPoint = smartStartPoint.addMinutes(MorpheuzCommon.mCommonConst().sampleIntervalMins);
       var teststr2 = smartStartPoint.format("hhmm");
       if (early === null && fromstr >= teststr1 && fromstr <= teststr2) {
-        early = returnAbsoluteMatch(smartStartPoint1, smartStartPoint, fromstr);
+        early = MorpheuzCommon.returnAbsoluteMatch(smartStartPoint1, smartStartPoint, fromstr);
       }
       if (late === null && tostr >= teststr1 && tostr <= teststr2) {
-        late = returnAbsoluteMatch(smartStartPoint1, smartStartPoint, tostr);
+        late = MorpheuzCommon.returnAbsoluteMatch(smartStartPoint1, smartStartPoint, tostr);
       }
       if (late !== null && early !== null) {
         break;
@@ -155,7 +155,7 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
  * Call standard calculateStats but add in canvas control too
  */
 function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
-  var stats = calculateStats(base, goneoff, splitup);
+  var stats = MorpheuzCommon.calculateStats(base, goneoff, splitup);
   if (stats && stats.tbegin) {
     var beginOverlay = {
       verticalLine : {
@@ -238,9 +238,9 @@ function buildStripeChart(splitup) {
       }
       var position = (i + 1) / 61.0;
       var point = parseInt(splitup[i], 10);
-      if (point > mThres().awakeAbove) {
+      if (point > MorpheuzCommon.mThres().awakeAbove) {
         grd.addColorStop(position, "#55AAFF");
-      } else if (point > mThres().lightAbove) {
+      } else if (point > MorpheuzCommon.mThres().lightAbove) {
         grd.addColorStop(position, "#0055FF");
       } else if (point == -1 || point == -2) {
         grd.addColorStop(position, "#AAAAAA");
@@ -284,7 +284,7 @@ function buildEnvironment(baseDate, pLat, pLong, havePosition) {
 
     var diff = targetDateInt - baseDateInt;
 
-    var fsd = mCommonConst().sampleIntervalMins * 60 * 1000 * mConst().numberOfSamples;
+    var fsd = MorpheuzCommon.mCommonConst().sampleIntervalMins * 60 * 1000 * mConst().numberOfSamples;
 
     var offset = diff / fsd;
 
@@ -671,7 +671,7 @@ $("document").ready(function() {
   if (isNaN(snoozes)) {
     snoozes = 0;
   }
-  var rec = buildRecommendationPhrase(age, out, snoozes);
+  var rec = MorpheuzCommon.buildRecommendationPhrase(age, out, snoozes);
   $("#stats").text(rec.summary);
   $("#ttotal").text(rec.total);
   $("#tawake").text(rec.awake);
@@ -773,7 +773,7 @@ $("document").ready(function() {
           min : new Date(base)
         },
         yaxis : {
-          ticks : [ mConst().chartBottom, mThres().lightAbove, mThres().awakeAbove, mConst().chartTop ],
+          ticks : [ mConst().chartBottom, MorpheuzCommon.mThres().lightAbove, MorpheuzCommon.mThres().awakeAbove, mConst().chartTop ],
           labelRenderer : $.jqplot.CanvasAxisLabelRenderer,
           label : "Movement",
           min : mConst().chartBottom,
@@ -853,7 +853,7 @@ $("document").ready(function() {
     }
 
     // Extract data
-    var cpy = generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
+    var cpy = MorpheuzCommon.generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
     var url = mConst().url + vers + ".html" + "?base=" + base + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes + "&lat" + latStr + "&long=" + longStr;
     if (graph === "") {
@@ -862,7 +862,7 @@ $("document").ready(function() {
       url += "&graph=" + graph;
     }
     
-    var email = buildEmailJsonString(emailto, base, url, cpy);
+    var email = MorpheuzCommon.buildEmailJsonString(emailto, base, url, cpy);
 
     // Disable button and put out sending text
     $("#mail").attr("disabled", "disabled");
@@ -870,7 +870,7 @@ $("document").ready(function() {
     $("#emailSendResult").text(mConst().sendingEmail);
 
     // Send to server and await response
-    sendMailViaServer(email, function(stat, resp) {
+    MorpheuzCommon.sendMailViaServer(email, function(stat, resp) {
       if (stat === 1) {
         $("#emailSendResult").addClass("green");
       } else {
@@ -887,7 +887,7 @@ $("document").ready(function() {
   $("#age").keyup(function() {
     // Populate the statistics area
     var age = $("#age").val();
-    var rec = buildRecommendationPhrase(age, out, snoozes);
+    var rec = MorpheuzCommon.buildRecommendationPhrase(age, out, snoozes);
     $("#stats").text(rec.summary);
     if (!nosetOn) {
       setTweet(rec);
