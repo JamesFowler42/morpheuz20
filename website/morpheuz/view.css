@@ -165,7 +165,7 @@ a {
 }
 
 .exportwrap {
-    background-color: #eee;
+    background: linear-gradient(#eee, #ddd);
     border-bottom-left-radius: 5px;
     border-bottom-right-radius: 5px;
     padding-top: 2px;
@@ -176,18 +176,12 @@ a {
 }
 
 .summaryhead {
-    background-color: #b36dff;
-    border-top-left-radius: 5px;
-    border-top-right-radius: 5px;
     margin-left: 2px;
     padding-top: 5px;
     color: white;
 }
 
 .summarywrap {
-    background-color: #b36dff;
-    border-bottom-left-radius: 5px;
-    border-bottom-right-radius: 5px;
     padding-top: 2px;
     padding-bottom: 5px;
     margin-top: 0px;
@@ -196,57 +190,56 @@ a {
     color:white;
 }
 
+.summary-outer {
+    border-radius:5px;
+    background: linear-gradient(#59c7fb, #0165fd);
+    box-shadow: 2px 2px 2px grey;
+}
+
 table.jqplot-table-legend {
-    background-color: #FF7D48 !important;
+    background-color: transparent !important;
     z-index: 10;
     font-size: 8pt !important;
     border: none !important;
+    color:white;
+}
+
+.quality-outer {
+    border-radius: 5px;
+    background: linear-gradient(blue, darkblue);
+    box-shadow: 2px 2px 2px grey;
 }
 
 .quality-head {
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
     color: white;
-    background-color: #FF7D48;
     padding-top: 5px;
 }
 
 #chart2 {
     color: black;
-    background-color: #FF7D48;
     border-bottom-right-radius: 5px;
     border-bottom-left-radius: 5px;
 }
 
 .movement-head {
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
     color: white;
-    background-color: #2066C7;
     padding-top: 5px;
+}
+
+.movement-outer {
+    border-radius: 5px;
+    background: linear-gradient(blue, darkblue);
+    box-shadow: 2px 2px 2px grey;
 }
 
 #chart1 {
     color: white;
-    background-color: #2066C7;
-    xborder-bottom-right-radius: 5px;
-    xborder-bottom-left-radius: 5px;
 }
 
 #chart1bar {
     padding-top: 5px;
     padding-bottom: 5px;
     color: white;
-    background-color: #2066C7;
-    border-bottom-right-radius: 5px;
-    border-bottom-left-radius: 5px;  
-
-}
-
-div.jqplot-pie-series.jqplot-data-label {
-    font-size: 100%;
-    border-radius: 2px;
-    background-color: white;
 }
 
 .statstable {
@@ -282,8 +275,17 @@ div.jqplot-pie-series.jqplot-data-label {
 }
 
 .error {
-    color: red;
-    font-size: 83%;
+    color: pink;
+}
+
+.error a {
+    text-decoration:underline;
+    color: pink;
+}
+
+.requestForLove a {
+   text-decoration:underline;
+   color:white;
 }
 
 li.grey {
@@ -425,29 +427,13 @@ input#save2.save {
 .tsummary {
     border-collapse: collapse;
     margin-bottom: 3px;
+    color:white;
+    font-size: 8pt;
 }
 
 .stat2 td {
     text-align: left;
-}
-
-.stat2 td:first-child {
-    color: white;
-}
-
-.stat2 td:last-child {
-    color: black;
-}
-
-.lessismore {
-    float: right;
-    color:#E2C7FF;
-    position:relative;
-    top:-15px;
-    cursor: pointer;
-    background: rgba(255,255,255,0.2);
-    padding: 1px;
-    border-radius: 2px;
+    height:17px;
 }
 
 .m24x24 {
@@ -475,16 +461,19 @@ input#save2.save {
   margin-right: 5px;
 }
 
+.environment-outer {
+    border-radius: 5px;
+    background: linear-gradient(#59c7fb, #0165fd);
+    box-shadow: 2px 2px 2px grey;
+}
+
 .environment-head {
-    border-top-right-radius: 5px;
-    border-top-left-radius: 5px;
     color: white;
-    background-color: rgb(33,210,42);
+    xbackground-color: rgb(33,210,42);
     padding-top: 5px;
 }
 
 .env-div {
-    background-color: rgb(33,210,42);
     padding-top: 5px;
 }
 
@@ -511,6 +500,47 @@ input#save2.save {
 
 #save2, #save3 {
     margin-bottom: 3px;
+}
+
+.ckey {
+  width: 10px;
+  height: 10px;
+  margin-left: 10px;
+  outline: 1px solid white;
+  outline-offset: 1px;
+  float: right;
+  margin-right: 10px;
+}
+
+.ckey-restless {
+   background-color: #55AAFF;
+}
+
+.ckey-light {
+   background-color: #0055FF;
+}
+
+.ckey-deep {
+   background-color: #0000AA;
+}
+
+.ckey-ignore {
+   background-color: #AAAAAA;
+}
+
+.summary-wrap {
+   position: relative;
+   top: -18px;
+}
+
+.jqplot-pie-series.jqplot-data-label {
+    background-color: white;
+    padding: 2px;
+    border-radius: 2px;
+}
+
+#ttotal, .totalLab {
+    font-weight: bold;
 }
 
 

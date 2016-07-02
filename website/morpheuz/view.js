@@ -720,7 +720,7 @@ $("document").ready(function() {
 
     document.plot1 = $.jqplot("chart1", [ more ], {
       grid : {
-        background : "#2066C7",
+        background : "transparent",
         gridLineColor : "#1E75D7",
         borderColor : "#1E75D7",
         shadow : false
@@ -787,11 +787,11 @@ $("document").ready(function() {
 
     document.plot2 = jQuery.jqplot("chart2", [ data2 ], {
       grid : {
-        background : "#FF7D48",
-        borderColor : "#FF7D48",
+        background : "transparent",
+        borderColor : "transparent",
         shadow : false
       },
-      seriesColors : [ "#FFFF92", "#FFA966", "#FF3C31", "rgb(130,130,130)" ],
+      seriesColors : [ "#55AAFF", "#0055FF", "#0000AA", "#AAAAAA" ],
       seriesDefaults : {
         // Make this a pie chart.
         renderer : jQuery.jqplot.PieRenderer,
@@ -803,7 +803,7 @@ $("document").ready(function() {
         }
       },
       legend : {
-        show : true,
+        show : false,
         location : "e"
       }
     });
@@ -855,7 +855,7 @@ $("document").ready(function() {
     // Extract data
     var cpy = MorpheuzCommon.generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
-    var url = mConst().url + vers + ".html" + "?base=" + base + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes + "&lat" + latStr + "&long=" + longStr;
+    var url = mConst().url + vers + ".html" + "?base=" + base + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes + "&lat=" + latStr + "&long=" + longStr;
     if (graph === "") {
       url += "&graphx=" + graphx;
     } else {
@@ -893,32 +893,5 @@ $("document").ready(function() {
       setTweet(rec);
     }
   });
-
-  // Show less summary
-  $("#lesssummary").click(function() {
-    $("#summarytable").hide();
-    $("#lesssummary").hide();
-    $("#moresummary").show();
-    if (window.localStorage) {
-      window.localStorage.setItem("lesssummary", "true");
-    }
-  });
-
-  // Show more summary
-  $("#moresummary").click(function() {
-    $("#summarytable").show();
-    $("#moresummary").hide();
-    $("#lesssummary").show();
-    if (window.localStorage) {
-      window.localStorage.setItem("lesssummary", "false");
-    }
-  });
-
-  // Set summary to last remembered position
-  if (window.localStorage && window.localStorage.getItem("lesssummary") === "true") {
-    $("#summarytable").hide();
-    $("#lesssummary").hide();
-    $("#moresummary").show();
-  }
 
 });

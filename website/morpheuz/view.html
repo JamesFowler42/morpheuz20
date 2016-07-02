@@ -43,54 +43,86 @@
       <form action="">
         <div id="version" class="vpwidth"></div>
         <h2 id="title">
-          <img src="img/morpheuz24.png" class="m24x24"/>Morpheuz Sleep Monitor
+          <img src="img/morpheuz24.png" class="m24x24" />Morpheuz Sleep Monitor
         </h2>
-        <p class="error verswarning settingswrap" style="display: none;">
-          You are on an old version of Morpheuz. To get all the new features please upgrade. See <a href="http://www.morpheuz.net/p/upgrade.html">here</a> for details.
-        </p>
-        <p class="error versbeta settingswrap" style="display: none;">This is a beta version of Morpheuz. Please report any issues you find.</p>
-        <p class="error versproblem settingswrap" style="display: none;">Unable to determine current version of Morpheuz.</p>
         <h3 id="sleep-time"></h3>
-        <div id="info-message" style="display: none">
-          <p class="settingswrap">
-            Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a> or a tiny donation.
-          </p>
+        <div class="summary-outer">
+          <h3 class="summaryhead">Summary</h3>
+          <div class="summarywrap indent indentright">
+            <p id="stats" />
+            <p class="error verswarning" style="display: none;">
+              You are on an old version of Morpheuz. To get all the new features please upgrade. See <a href="http://www.morpheuz.net/p/upgrade.html">here</a> for details.
+            </p>
+            <p class="error versbeta" style="display: none;">This is a beta version of Morpheuz. Please report any issues you find.</p>
+            <p class="error versproblem" style="display: none;">Unable to determine current version of Morpheuz.</p>
+            <div id="info-message" style="display: none">
+              <p class="requestForLove">
+                Morpheuz is free. Please show your appreciation by loving the app in the Pebble app store<a class="ios" href="pebble://appstore/52b20a9b05c04688bf000058"> here</a> or a tiny <a href="#donation">donation</a>.
+              </p>
+            </div>
+
+            <div class="twitterdiv noset">
+              <a id="tweet" href="#"><img src="img/Twitter_logo_blue_16.png" />#tweetMySleep</a>
+            </div>
+          </div>
         </div>
-        <h3 class="summaryhead">Summary</h3>
-        <div class="summarywrap indent indentright">
-        <p id="stats" />
-        <table id="summarytable" class="tsummary">
-        <col width="50%">
-        <col width="50%">
-        <tr class="stat2"><td>Total:</td><td id="ttotal"></td></tr>
-        <tr class="stat2"><td>Restless:</td><td id="tawake"></td></tr>
-        <tr class="stat2"><td>Light:</td><td id="tlight"></td></tr>
-        <tr class="stat2"><td>Deep:</td><td id="tdeep"></td></tr>
-        <tr class="stat2"><td>Ignore:</td><td id="tignore"></td></tr>
-        </table>
-        <span id="lesssummary" class="lessismore">Less</span>
-        <span id="moresummary" class="lessismore" style="display:none;">More</span>
-        <div class="twitterdiv noset">
-         <a id="tweet" href="#"><img src="img/Twitter_logo_blue_16.png"/>#tweetMySleep</a>
+        <div class="movement-outer">
+          <h3 class="movement-head">Sleep Movement</h3>
+          <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
+          <div id="chart1bar" style="width: 318px; height: 30px;" class="vpwidth">
+            <img src="img/bed.png" class="bedimg" />
+            <canvas id="sleepBar" width="318" height="30" style="left: 0px; width: 318px; height: 30px; position: relative" />
+          </div>
         </div>
+        <div class="environment-outer">
+          <h3 class="environment-head environment">Sun &amp; Moon</h3>
+          <div id="sunbarDiv" style="width: 318px; height: 30px;" class="vpwidth env-div environment">
+            <img src="img/sun.png" class="sunimg" />
+            <canvas id="sunbar" width="318" height="30" style="left: 0px; width: 318px; height: 30px; position: relative" />
+          </div>
+          <div id="moonDiv" style="width: 318px; height: 30px;" class="vpwidth env-div env-div-last environment">
+            <img id="moonimg" src="img/moon-0.png" class="moonimg" />
+            <canvas id="moonbar" width="318" height="30" style="left: 0px; width: 318px; height: 30px; position: relative" />
+          </div>
         </div>
-        <h3 class="movement-head">Sleep Movement</h3>
-        <div id="chart1" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
-        <div id="chart1bar" style="width: 318px; height: 30px;" class="vpwidth">
-          <img src="img/bed.png" class="bedimg"/>
-          <canvas id="sleepBar" width="318" height="30" style="left: 0px; width: 318px; height:30px; position:relative"/>
+        <div class="quality-outer">
+          <h3 class="quality-head">Quality of Sleep</h3>
+          <div id="chart2" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
+          <div class="summary-wrap">
+            <table id="summarytable" class="tsummary vpwidth" style="width: 318px;">
+              <col width="20px">
+              <col width="20%">
+              <col width="20%">
+              <col width="20px">
+              <col width="20px">
+              <col width="20%">
+              <col width="20%">
+              <tr class="stat2">
+                <td><div class="ckey ckey-restless"></div></td>
+                <td>Restless:</td>
+                <td id="tawake"></td>
+                <td></td>
+                <td><div class="ckey ckey-light"></div></td>
+                <td>Light:</td>
+                <td id="tlight"></td>
+              </tr>
+              <tr class="stat2">
+                <td><div class="ckey ckey-deep"></div></td>
+                <td>Deep:</td>
+                <td id="tdeep"></td>
+                <td></td>
+                <td><div class="ckey ckey-ignore"></td>
+                <td>Ignore:</td>
+                <td id="tignore"></td>
+              </tr>
+              <tr class="stat2">
+                <td></td>
+                <td class="totalLab">Total:</td>
+                <td id="ttotal"></td>
+              </tr>
+            </table>
+          </div>
         </div>
-        <h3 class="environment-head environment">Sun &amp; Moon</h3>
-        <div id="sunbarDiv" style="width: 318px; height: 30px;" class="vpwidth env-div environment">
-          <img src="img/sun.png" class="sunimg"/>
-          <canvas id="sunbar" width="318" height="30" style="left: 0px; width: 318px; height:30px; position:relative"/>
-        </div>
-        <div id="moonDiv" style="width: 318px; height: 30px;" class="vpwidth env-div env-div-last environment">
-          <img id="moonimg" src="img/moon-0.png" class="moonimg"/>
-          <canvas id="moonbar" width="318" height="30" style="left: 0px; width: 318px; height:30px; position:relative"/>
-        </div>
-        <h3 class="quality-head">Quality of Sleep</h3>
-        <div id="chart2" style="width: 318px; height: 250px;" class="vpwidth vpheight"></div>
         <h3 class="exporthead noset">Personal Information</h3>
         <div class="exportwrap noset indent">
           <div class="row">
@@ -98,7 +130,7 @@
               <label for="age">Age:</label>
             </div>
             <div class="cell">
-              <input id="age" type="number" maxlength="3" class="textbox" placeholder="years"/>
+              <input id="age" type="number" maxlength="3" class="textbox" placeholder="years" />
             </div>
           </div>
           <p class="small">This information is used to compare your sleep against the recommended amount from the National Sleep Foundation.</p>
@@ -281,7 +313,7 @@
             </li>
           </ol>
           <div class="indent">
-          <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset" /><label for="testsettings" class="noset small">Test Pushover, IFTTT &amp; light settings on save</label>
+            <input class="noset save" type="button" id="save" value="Save" /><input id="testsettings" type="checkbox" class="noset" /><label for="testsettings" class="noset small">Test Pushover, IFTTT &amp; light settings on save</label>
           </div>
           <p class="small noset indent">
             Last auto export done: <span id="exptime"></span>
@@ -293,7 +325,7 @@
         <li><a href="http://www.morpheuz.net/p/instructions.html" target="_blank">Instructions @ www.morpheuz.net</a></li>
         <li><a class="ios" href="fb://profile/600709213346669">morpheuzsleepmonitor on Facebook</a> <span class="android">morpheuzsleepmonitor on Facebook</span></li>
         <li><a class="ios" href="twitter:///user?screen_name=morpheuzsleep">@MorpheuzSleep on Twitter</a> <span class="android">@MorpheuzSleep on Twitter</span></li>
-        <li><p class="notopmargin">Morpheuz is free and will remain so, but requires hosting space, domain names and I require an occasional motivational coffee. Please consider a tiny donation. (warning: slow button)</p>
+        <li id="donation"><p class="notopmargin">Morpheuz is free and will remain so, but requires hosting space, domain names and I require an occasional motivational coffee. Please consider a tiny donation. (warning: slow button)</p>
           <form action="https://www.paypal.com/cgi-bin/webscr" method="post" target="_top">
             <input type="hidden" name="cmd" value="_s-xclick" /> <input type="hidden" name="hosted_button_id" value="ECS3FWQLRZ5SW" /> <input type="image" src="https://www.paypalobjects.com/en_GB/i/btn/btn_donate_LG.gif" border="0" name="submit" alt="PayPal – The safer, easier way to pay online." /> <img alt="" border="0" src="https://www.paypalobjects.com/en_GB/i/scr/pixel.gif" width="1" height="1" />
           </form></li>
@@ -329,20 +361,26 @@
   </div>
   <script type="text/javascript" src="jqplot/jqplotbundle.min.js"></script>
   <script type="text/javascript" src="view.js?v=1"></script>
-  
+
   <!-- Google Analytics -->
   <!-- The no-referrer meta in head and the settings below ensure that all analytics gets is knowledge that the page has been shown and -->
   <!-- the usual non-personal stuff over SSL -->
   <script>
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-  (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-  m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  ga('create', 'UA-72769045-4', 'auto');
-  ga('set', 'forceSSL', true);
-  ga('set', 'location', location.origin + location.pathname);
-  ga('set', 'title', getParameterByName('noset') !== 'Y' ? document.title : document.title + " (review)");
-  ga('send', 'pageview');
-  </script>
+      (function(i, s, o, g, r, a, m) {
+        i['GoogleAnalyticsObject'] = r;
+        i[r] = i[r] || function() {
+          (i[r].q = i[r].q || []).push(arguments)
+        }, i[r].l = 1 * new Date();
+        a = s.createElement(o), m = s.getElementsByTagName(o)[0];
+        a.async = 1;
+        a.src = g;
+        m.parentNode.insertBefore(a, m)
+      })(window, document, 'script', '//www.google-analytics.com/analytics.js', 'ga');
+      ga('create', 'UA-72769045-4', 'auto');
+      ga('set', 'forceSSL', true);
+      ga('set', 'location', location.origin + location.pathname);
+      ga('set', 'title', getParameterByName('noset') !== 'Y' ? document.title : document.title + " (review)");
+      ga('send', 'pageview');
+    </script>
 </body>
 </html>
