@@ -158,7 +158,23 @@
       var userAgent = getUserAgent(model);
 
       // Build the google analytics api
-      var msg = "v=1" + "&tid=UA-72769045-3" + "&ds=app" + "&cid=" + accountToken + "&t=event" + "&cd=" + platform + "&an=Morpheuz" + "&ec=" + userAgent + "&ea=" + platform + "&el=" + model + "&ul=" + language + "&av=" + version + "&sd=" + depth + "&sr=" + screenres + "&dh=" + firmware + cd;
+      var msg = "v=1" + 
+          "&tid=UA-72769045-3" + 
+          "&ds=app" + 
+          "&cid=" + accountToken + 
+          "&t=event" + 
+          "&cd=" + platform + 
+          "&an=Morpheuz" + 
+          "&ec=" + userAgent + 
+          "&ea=" + platform + 
+          "&el=" + model + 
+          "&ul=" + language + 
+          "&av=" + version + 
+          "&sd=" + depth + 
+          "&sr=" + screenres + 
+          "&dh=" + firmware + 
+          "&dt=Morpheuz-" + version + 
+          cd;
 
       console.log("googleAnalytics: " + msg);
 
