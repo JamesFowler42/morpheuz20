@@ -56,8 +56,6 @@ static bool icon_state[MAX_ICON_STATE];
 static uint8_t previous_mday = 255;
 static time_t last_clock_update;
 static char powernap_text[3];
-static uint8_t error_code = 0;
-static char error_text[3];
 
 // Shared with rootui, rectui, roundui, primary_window with main and notice_font with noticewindows
 UiCommon ui;
@@ -119,17 +117,6 @@ static void update_clock() {
   #endif
   analogue_minute_tick();
   last_clock_update = time(NULL);
-}
-
-/*
- * Record the error code that occurred during running
- */
-EXTFN void set_error_code(uint8_t new_error_code) {
-  uint8_t old_error_code = error_code;
-  error_code |= new_error_code;
-  if (old_error_code != error_code) {
-    layer_mark_dirty(ui.icon_bar);
-  }
 }
 
 /*
@@ -198,6 +185,16 @@ static void select_click_handler_long(ClickRecognizerRef recognizer, void *conte
 }
 #endif
 
+#ifdef ACC_FAILURE_TEST
+/*
+ * Emulate a failure, so as the reporting code can be checked out
+ */
+static void failure_click_handler_long(ClickRecognizerRef recognizer, void *context) {
+  set_error_code(ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_DEAD);
+  set_error_code(ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_STUCK_VIBE);
+}
+#endif
+
 /*
  * Button config
  */
@@ -208,6 +205,9 @@ static void click_config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
   #ifdef VOICE_SUPPORTED
     window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_click_handler_long, NULL);
+  #endif
+  #ifdef ACC_FAILURE_TEST
+    window_long_click_subscribe(BUTTON_ID_UP, 0, failure_click_handler_long, NULL);
   #endif
 }
 
@@ -377,16 +377,7 @@ EXTFN void icon_bar_update_callback(Layer *layer, GContext *ctx) {
   if (icon_state[IS_EXPORT]) {
     paint_icon(ctx, &running_horizontal, 9, RESOURCE_ID_EXPORT, BMP_CACHE_EXPORT);
   }
-  
-  // Error code (must be last)
-  if (error_code != 0) {
-    error_text[0] = 'A' + error_code - 1;
-    error_text[1] = '!';
-    error_text[2] = '\0';
-    graphics_context_set_text_color(ctx, ERROR_COLOR);
-    graphics_draw_text(ctx, error_text, fonts_get_system_font(FONT_KEY_GOTHIC_14), GRect(running_horizontal - 20, -3, 20, 19), GTextOverflowModeTrailingEllipsis, GTextAlignmentCenter, NULL);
-  }
-    
+
 }
 
 /*

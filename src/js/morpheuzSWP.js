@@ -53,7 +53,7 @@
       }
       MorpheuzUtil.setNoDef("swpstat", MorpheuzConfig.mLang().sending);
       var stats = MorpheuzCommon.calculateStats(parseInt(MorpheuzUtil.getNoDef("base"), 10), MorpheuzUtil.getWithDef("goneOff", "N"), MorpheuzUtil.extractSplitup());
-      if (stats.tbegin === null || stats.tends === null) {
+      if (stats.nosleep) {
         MorpheuzUtil.setNoDef("swpstat", MorpheuzConfig.mLang().cnc);
         console.log("smartwatchProTransmit: stats couldn't be calculated");
         return;

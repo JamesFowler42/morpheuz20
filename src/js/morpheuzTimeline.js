@@ -50,7 +50,7 @@
     var base = new Date(parseInt(baseStr, 10));
 
     var stats = MorpheuzCommon.calculateStats(base, MorpheuzUtil.getWithDef("goneOff", "N"), MorpheuzUtil.extractSplitup());
-    if (stats.tends === null) {
+    if (stats.nosleep) {
       console.log("addSmartAlarmPin: stats couldn't be calculated");
       return;
     }
@@ -187,7 +187,7 @@
     var base = new Date(parseInt(baseStr, 10));
 
     var stats = MorpheuzCommon.calculateStats(base, goneOff, MorpheuzUtil.extractSplitup());
-    if (stats.tends === null) {
+    if (stats.nosleep) {
       console.log("addSummaryPin: stats couldn't be calculated");
       return;
     }
@@ -250,7 +250,7 @@
         MorpheuzUtil.setNoDef("quote", quote);
       }
     });
-  }
+  };
 
   /*
    * Taken directly from Pebble's examples

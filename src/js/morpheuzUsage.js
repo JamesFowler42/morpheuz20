@@ -66,9 +66,11 @@
       var ageSupplied = MorpheuzUtil.getWithDef("age", "") !== "";
       // morpheuz_lazarus
       var lazarusActive = MorpheuzUtil.getWithDef("lazarus", "Y") === "Y";
+      // fault
+      var fault = MorpheuzUtil.getWithDef("fault", 0);
 
       // Pass this as a custom dimension array
-      var customDimension = [ smartAlarmOn, iftttOn, lifxOn, hueOn, emailOn, pushoverOn, autoEmailOn, healthKitAutoExportOn, ageSupplied, lazarusActive ];
+      var customDimension = [ smartAlarmOn, iftttOn, lifxOn, hueOn, emailOn, pushoverOn, autoEmailOn, healthKitAutoExportOn, ageSupplied, lazarusActive, fault ];
 
       // Call analytics - this has been done like this so the analytics function
       // can be spun off as a separate library later

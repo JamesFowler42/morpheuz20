@@ -189,6 +189,7 @@
 
     // Get the full set of data up to the wake up point.
     // Ignore nulls
+    var nosleep = true;
     var timeStartPoint = new Date(base);
     var firstSleep = true;
     var tbegin = null;
@@ -197,11 +198,14 @@
     var ibegin = null;
     var iends = null;
     var iendsStop = null;
+    var tbeginStop = timeStartPoint;
+    var ibeginStop = 0;
     for (var i = 0; i < splitup.length; i++) {
       if (splitup[i] === "") {
         continue;
       }
       var data = parseInt(splitup[i], 10);
+      console.log("i=" + i + ", data=" + data);
       var teststr1 = timeStartPoint.format("hhmm");
       var timeStartPoint1 = timeStartPoint;
       timeStartPoint = timeStartPoint.addMinutes(MorpheuzCommon.mCommonConst().sampleIntervalMins);
@@ -220,12 +224,31 @@
         iendsStop = i;
       }
     }
-
+    
     // If we haven't got a regular end because of an alarm, then find
     // the last time they were below waking levels of movement
     if (tends === null && tendsStop !== null) {
       tends = tendsStop;
       iends = iendsStop;
+    }
+    
+    // This prevents silly figures when we have recorded no data
+    // but actually have an alarm
+    if (tbegin === null) {
+      tbegin = tbeginStop;
+      ibegin = ibeginStop;
+    }
+    
+    var total = 0;
+    if (tends !== null) {
+      nosleep = false;
+      // Note - the total should really be deep + light + awake + ignore. However
+      // begin and end times are calculated to an exact number of minutes
+      // (the smart alarm is accurate to the minute), whilst all other times are
+      // accurate to a 10 minute period. I'd prefer the time in the summary
+      // to match the time recorded in Healthkit.
+      var diff = tends - tbegin;
+      total = Math.round((diff / 1000) / 60);
     }
 
     // Compute the stats within the bounds of the start and stop times
@@ -251,15 +274,10 @@
       }
     }
 
-    // Note - the total should really be deep + light + awake + ignore. However
-    // begin and end times are calculated to an exact number of minutes
-    // (the smart alarm is accurate to the minute), whilst all other times are
-    // accurate to a 10 minute period. I'd prefer the time in the summary
-    // to match the time recorded in Healthkit.
-    var diff = tends - tbegin;
-    var total = Math.round((diff / 1000) / 60);
-
+    console.log("nosleep=" + nosleep);
+    
     return {
+      "nosleep" : nosleep,
       "tbegin" : tbegin,
       "tends" : tends,
       "deep" : deep * MorpheuzCommon.mCommonConst().sampleIntervalMins,
@@ -283,7 +301,7 @@
       point = point.addMinutes(1);
     }
     return early;
-  }
+  };
 
   /*
    * Generate a recommendation

@@ -149,6 +149,7 @@
     var snoozes = MorpheuzUtil.getWithDef("snoozes", 0);
     var pLat = MorpheuzUtil.getWithDef("lat", "");
     var pLong = MorpheuzUtil.getWithDef("long", "");
+    var fault = MorpheuzUtil.getWithDef("fault", 0);
 
     var extra = "";
     if (noset === "N") {
@@ -177,11 +178,11 @@
       extra = "&pouser=" + encodeURIComponent(pouser) + "&postat=" + encodeURIComponent(postat) + "&potoken=" + encodeURIComponent(potoken) + "&swpdo=" + swpdo + "&swpstat=" + encodeURIComponent(swpstat) + "&exptime=" + encodeURIComponent(exptime) + "&usage=" + usage + "&lazarus=" + lazarus + "&lifxtoken=" + lifxToken + "&lifxtime=" + lifxTime + "&hueip=" + hueip + "&hueuser=" + encodeURIComponent(hueusername) + "&hueid=" + hueid + "&ifkey=" + ifkey + "&ifserver=" + encodeURIComponent(ifserver) + "&ifstat=" + encodeURIComponent(ifstat) + "&doemail=" + doEmail + "&estat=" + encodeURIComponent(estat);
     }
 
-    var url = MorpheuzConfig.mConst().url + version + ".html" + "?base=" + base + "&graphx=" + graphx + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token + "&age=" + age + "&noset=" + noset + "&zz=" + snoozes + "&lat=" + pLat + "&long=" + pLong + extra;
+    var url = MorpheuzConfig.mConst().url + version + ".html" + "?base=" + base + "&graphx=" + graphx + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + version + "&goneoff=" + goneOff + "&emailto=" + encodeURIComponent(emailto) + "&token=" + token + "&age=" + age + "&noset=" + noset + "&zz=" + snoozes + "&lat=" + pLat + "&long=" + pLong + "&fault=" + fault + extra;
 
     console.log("url=" + url + " (len=" + url.length + ")");
     return url;
-  }
+  };
 
   module.exports = MorpheuzUtil;
 

@@ -350,12 +350,19 @@
       MorpheuzUtil.setNoDef("snoozes", snoozes);
       ctrlVal = ctrlVal | MorpheuzConfig.mConst().ctrlSnoozesDone | MorpheuzConfig.mConst().ctrlDoNext;
     }
-
+    
     // Incoming transmit to automatics
     if (typeof e.payload.keyTransmit !== "undefined") {
       console.log("MSG transmit");
       transmitMethods();
       ctrlVal = ctrlVal | MorpheuzConfig.mConst().ctrlTransmitDone;
+    }
+
+    // Fault detected
+    if (typeof e.payload.keyFault !== "undefined") {
+      var faultCode = parseInt(e.payload.keyFault, 10);
+      console.log("MSG fault=" + faultCode);
+      MorpheuzUtil.setNoDef("fault", faultCode);
     }
 
     // What auto reset are we doing today?

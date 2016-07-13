@@ -156,7 +156,7 @@ function startStopAlarm(smartOn, fromhr, frommin, tohr, tomin, base, canvasOverl
  */
 function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
   var stats = MorpheuzCommon.calculateStats(base, goneoff, splitup);
-  if (stats && stats.tbegin) {
+  if (stats && stats.tbegin && !stats.nosleep) {
     var beginOverlay = {
       verticalLine : {
         name : "begin",
@@ -170,7 +170,7 @@ function calculateStatsPlusCanvas(base, goneoff, splitup, canvasOverlayConf) {
     canvasOverlayConf.show = true;
     canvasOverlayConf.objects.push(beginOverlay);
   }
-  if (stats && stats.tends) {
+  if (stats && stats.tends && !stats.nosleep) {
     var endsStopOverlay = {
       verticalLine : {
         name : "endstop",
@@ -489,6 +489,7 @@ $("document").ready(function() {
   var snoozes = getParameterByName("zz");
   var latStr = getParameterByName("lat");
   var longStr = getParameterByName("long");
+  var fault = getParameterByName("fault");
   var returnTo = getParameterByName("return_to");
   if (returnTo === "") {
     returnTo = "pebblejs://close#";
@@ -498,6 +499,14 @@ $("document").ready(function() {
   var nosetOn = noset === "Y";
   if (nosetOn) {
     $(".noset").hide();
+  }
+  
+  // Provide fault warnings.
+  if (fault == 1 || fault == 3) {
+    $(".faulta").show();
+  }
+  if (fault == 2 || fault == 3) {
+    $(".faultb").show();
   }
 
   // Set screen fields
@@ -855,7 +864,7 @@ $("document").ready(function() {
     // Extract data
     var cpy = MorpheuzCommon.generateCopyLinkData(base, splitup, smartOn, fromhr, frommin, tohr, tomin, goneoff, snoozes);
 
-    var url = mConst().url + vers + ".html" + "?base=" + base + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes + "&lat=" + latStr + "&long=" + longStr;
+    var url = mConst().url + vers + ".html" + "?base=" + base + "&fromhr=" + fromhr + "&tohr=" + tohr + "&frommin=" + frommin + "&tomin=" + tomin + "&smart=" + smart + "&vers=" + vers + "&goneoff=" + goneoff + "&token=" + token + "&age=" + age + "&emailto=" + encodeURIComponent(emailto) + "&noset=Y" + "&zz=" + snoozes + "&lat=" + latStr + "&long=" + longStr + "&fault=" + fault;
     if (graph === "") {
       url += "&graphx=" + graphx;
     } else {

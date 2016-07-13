@@ -43,6 +43,8 @@ static bool complete_outstanding = false;
 static int8_t new_last_sent;
 static time_t last_request;
 static time_t last_response;
+static uint8_t error_code = 0;
+static uint8_t last_error_code_sent = 0;
 
 static void transmit_next_data(void *data);
 static void reset_sleep_period_action(void *data);
@@ -165,6 +167,13 @@ static void send_version(void *data) {
      }
   }
 
+}
+
+/*
+ * Store the error code for forwarding to the client side
+ */
+EXTFN void set_error_code(uint8_t new_error_code) {
+  error_code |= new_error_code;
 }
 
 /*
@@ -543,6 +552,13 @@ static void transmit_data() {
   // No comms if the last request went unanswered (out failed handler doesn't seem to spot too much)
   if (last_request > last_response) {
     set_icon(false, IS_COMMS);
+  }
+  
+  // We've got a problem with the accelerometer API
+  if (error_code != 0 && error_code != last_error_code_sent) {
+    send_to_phone(KEY_FAULT, error_code);
+    last_error_code_sent = error_code;
+    return;
   }
 
   // Send either base, from, to (if last sent is -1) or a point

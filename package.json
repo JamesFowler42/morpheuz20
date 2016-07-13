@@ -20,7 +20,8 @@
             "keyGoneoff",
             "keyTransmit",
             "keyAutoReset",
-            "keySnoozes"
+            "keySnoozes",
+            "keyFault"
         ],
         "projectType": "native",
         "resources": {

@@ -3,7 +3,7 @@
 
 	<property name="ver" value="46"/>
 	<property name="verdec" value="4.6"/>
-	<property name="inc" value="5"/> <!-- Cloudpebble download inc -->
+	<property name="inc" value="9"/> <!-- Cloudpebble download inc -->
 	<property name="vinc" value="1"/> <!-- Version marker on urls v=?? -->
 	<!--<property name="vincstr" value="?v=${vinc}"/>-->
 	<property name="vincstr" value=""/>
