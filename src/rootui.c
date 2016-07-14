@@ -185,16 +185,6 @@ static void select_click_handler_long(ClickRecognizerRef recognizer, void *conte
 }
 #endif
 
-#ifdef ACC_FAILURE_TEST
-/*
- * Emulate a failure, so as the reporting code can be checked out
- */
-static void failure_click_handler_long(ClickRecognizerRef recognizer, void *context) {
-  set_error_code(ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_DEAD);
-  set_error_code(ERR_ACCEL_DATA_SERVICE_SUBSCRIBE_STUCK_VIBE);
-}
-#endif
-
 /*
  * Button config
  */
@@ -205,9 +195,6 @@ static void click_config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_DOWN, down_single_click_handler);
   #ifdef VOICE_SUPPORTED
     window_long_click_subscribe(BUTTON_ID_SELECT, 0, select_click_handler_long, NULL);
-  #endif
-  #ifdef ACC_FAILURE_TEST
-    window_long_click_subscribe(BUTTON_ID_UP, 0, failure_click_handler_long, NULL);
   #endif
 }
 

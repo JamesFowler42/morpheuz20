@@ -256,7 +256,7 @@ enum Thresholds {
 #define LATE_PRESET 2
 
 // Change INTERNAL_VER only if the InternalData struct changes
-#define INTERNAL_VER 44
+#define INTERNAL_VER 45
 typedef struct {
   uint8_t internal_ver;
   uint32_t base;
@@ -271,6 +271,7 @@ typedef struct {
   bool stopped;
   uint8_t snoozes;
   bool snoozes_sent;
+  uint8_t error_code;
 } InternalData;
 
 // Change the CONFIG_VER only if the ConfigData struct changes
@@ -364,7 +365,6 @@ void revive_clock_on_movement(uint16_t last_movement);
 void save_config_data(void *data);
 void save_internal_data();
 void server_processing(uint16_t biggest);
-void set_error_code(uint8_t new_error_code);
 void set_icon(bool enabled, IconState icon);
 void set_ignore_on_current_time_segment();
 void set_next_wakeup();

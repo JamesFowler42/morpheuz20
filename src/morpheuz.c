@@ -37,6 +37,13 @@ static time_t last_sample;
 static uint8_t vibrates_in_a_row = 0;
 
 /*
+ * Store the error code for forwarding to the client side
+ */
+static void set_error_code(uint8_t new_error_code) {
+  get_internal_data()->error_code |= new_error_code;
+}
+
+/*
  * Set the on-screen status text
  */
 EXTFN void set_smart_status() {
@@ -109,8 +116,10 @@ static void do_axis(int16_t val, uint16_t *biggest, uint32_t avg) {
  */
 static void accel_data_handler(AccelData *data, uint32_t num_samples) {
   
+  #ifndef ACC_FAILURE_TEST
   // Last time callback was invoked
   last_sample = time(NULL);
+  #endif
 
   // Average the data
   uint32_t avg_x = 0;

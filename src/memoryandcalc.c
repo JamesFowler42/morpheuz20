@@ -43,7 +43,6 @@ static bool complete_outstanding = false;
 static int8_t new_last_sent;
 static time_t last_request;
 static time_t last_response;
-static uint8_t error_code = 0;
 static uint8_t last_error_code_sent = 0;
 
 static void transmit_next_data(void *data);
@@ -170,13 +169,6 @@ static void send_version(void *data) {
 }
 
 /*
- * Store the error code for forwarding to the client side
- */
-EXTFN void set_error_code(uint8_t new_error_code) {
-  error_code |= new_error_code;
-}
-
-/*
  * Calcuate buffer sizes and open comms
  */
 EXTFN void open_comms() {
@@ -247,13 +239,25 @@ static void set_progress_based_on_persist() {
 }
 
 /*
+ * Support migration from INTERNAL_VER - 1 to INTERNAL_VER.
+ * This seldom changes, but provide this - it's kind 
+ */
+static void migrate_internal_data() {
+  internal_data.error_code = 0;
+  internal_data.internal_ver = INTERNAL_VER;
+}
+
+/*
  * Read the internal data (or create it if missing)
  */
 EXTFN void read_internal_data() {
   int read = persist_read_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
-  if (read != sizeof(internal_data) || internal_data.internal_ver != INTERNAL_VER) {
+  if (read < 1 || internal_data.internal_ver < (INTERNAL_VER - 1) || internal_data.internal_ver > INTERNAL_VER) {
     clear_internal_data();
   } else {
+    if (internal_data.internal_ver == (INTERNAL_VER - 1)) {
+       migrate_internal_data();
+    }
     internal_data_checksum = dirty_checksum(&internal_data, sizeof(internal_data));
   }
   analogue_set_base(internal_data.base);
@@ -324,19 +328,26 @@ EXTFN void trigger_config_save() {
 }
 
 /*
+ * Common fields to reset on a reset or resend scenario
+ */
+static void reset_resend_common() {
+    internal_data.last_sent = LAST_SENT_INIT;
+    last_error_code_sent = 0;
+    set_icon(false, IS_EXPORT);
+    previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
+}
+
+/*
  * Perform the actual reset action
  */
 static void reset_sleep_period_action(void *data) {
   complete_outstanding = false;
-  previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
   clear_internal_data();
-  time_t now = time(NULL);
-  internal_data.base = now;
-  internal_data.last_sent = LAST_SENT_INIT;
+  reset_resend_common();
+  internal_data.base = time(NULL);
   internal_data.has_been_reset = true;
   set_icon(true, IS_RECORD);
   set_icon(false, IS_IGNORE);
-  set_icon(false, IS_EXPORT);
   analogue_set_base(internal_data.base);
   set_progress_based_on_persist();
   set_next_wakeup();
@@ -380,12 +391,10 @@ EXTFN void resend_all_data(bool invoked_by_change_of_time) {
   } else if (internal_data.transmit_sent) {
     return; // If we've already sent the end marker then don't send again on change of times, we'll do this on next reset.
   }
-  internal_data.last_sent = LAST_SENT_INIT;
+  reset_resend_common();
   internal_data.gone_off_sent = false;
   internal_data.transmit_sent = false;
   internal_data.snoozes_sent = false;
-  set_icon(false, IS_EXPORT);
-  previous_to_phone = DUMMY_PREVIOUS_TO_PHONE;
 }
 
 /*
@@ -555,9 +564,9 @@ static void transmit_data() {
   }
   
   // We've got a problem with the accelerometer API
-  if (error_code != 0 && error_code != last_error_code_sent) {
-    send_to_phone(KEY_FAULT, error_code);
-    last_error_code_sent = error_code;
+  if (internal_data.error_code != 0 && internal_data.error_code != last_error_code_sent) {
+    send_to_phone(KEY_FAULT, internal_data.error_code);
+    last_error_code_sent = internal_data.error_code;
     return;
   }
 

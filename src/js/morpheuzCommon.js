@@ -205,7 +205,6 @@
         continue;
       }
       var data = parseInt(splitup[i], 10);
-      console.log("i=" + i + ", data=" + data);
       var teststr1 = timeStartPoint.format("hhmm");
       var timeStartPoint1 = timeStartPoint;
       timeStartPoint = timeStartPoint.addMinutes(MorpheuzCommon.mCommonConst().sampleIntervalMins);
@@ -273,8 +272,6 @@
         }
       }
     }
-
-    console.log("nosleep=" + nosleep);
     
     return {
       "nosleep" : nosleep,
