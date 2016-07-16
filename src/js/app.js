@@ -363,6 +363,7 @@
       var faultCode = parseInt(e.payload.keyFault, 10);
       console.log("MSG fault=" + faultCode);
       MorpheuzUtil.setNoDef("fault", faultCode);
+      ctrlVal = ctrlVal | MorpheuzConfig.mConst().ctrlDoNext;
     }
 
     // What auto reset are we doing today?

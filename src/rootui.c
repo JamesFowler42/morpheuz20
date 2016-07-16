@@ -265,10 +265,7 @@ EXTFN bool is_monitoring_sleep() {
 EXTFN void set_smart_status_on_screen(bool smart_alarm_on, char *special_text) {
   set_icon(smart_alarm_on, IS_ALARM);
   #ifndef TESTING_MEMORY_LEAK
-  if (smart_alarm_on)
-    text_layer_set_text(ui.text_date_smart_alarm_range_layer, special_text);
-  else
-    text_layer_set_text(ui.text_date_smart_alarm_range_layer, date_text);
+  text_layer_set_text(ui.text_date_smart_alarm_range_layer, smart_alarm_on ? special_text : date_text);
   #endif
 }
 
@@ -343,7 +340,7 @@ EXTFN void icon_bar_update_callback(Layer *layer, GContext *ctx) {
     paint_icon(ctx, &running_horizontal, 9, icon_state[IS_COMMS] ? RESOURCE_ID_COMMS_ICON : RESOURCE_ID_BLUETOOTH_ICON,
                icon_state[IS_COMMS] ? BMP_CACHE_COMMS_ICON : BMP_CACHE_BLUETOOTH_ICON);
   }
-
+  
   // Record icon
   if (icon_state[IS_RECORD]) {
     paint_icon(ctx, &running_horizontal, 10, RESOURCE_ID_ICON_RECORD, BMP_CACHE_ICON_RECORD);

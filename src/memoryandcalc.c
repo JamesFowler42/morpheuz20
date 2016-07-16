@@ -196,6 +196,7 @@ EXTFN void open_comms() {
  * Save the internal data structure
  */
 EXTFN void save_internal_data() {
+  internal_data.internal_ver = INTERNAL_VER;
   int32_t checksum = dirty_checksum(&internal_data, sizeof(internal_data));
   if (checksum != internal_data_checksum) {
     LOG_DEBUG("save_internal_data (%d)", sizeof(internal_data));
@@ -223,8 +224,6 @@ static void save_internal_data_timer(void *data) {
  */
 static void clear_internal_data() {
   memset(&internal_data, 0, sizeof(internal_data));
-  internal_data_checksum = 0;
-  internal_data.internal_ver = INTERNAL_VER;
 }
 
 /*
@@ -239,27 +238,12 @@ static void set_progress_based_on_persist() {
 }
 
 /*
- * Support migration from INTERNAL_VER - 1 to INTERNAL_VER.
- * This seldom changes, but provide this - it's kind 
- */
-static void migrate_internal_data() {
-  internal_data.error_code = 0;
-  internal_data.internal_ver = INTERNAL_VER;
-}
-
-/*
  * Read the internal data (or create it if missing)
  */
 EXTFN void read_internal_data() {
-  int read = persist_read_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
-  if (read < 1 || internal_data.internal_ver < (INTERNAL_VER - 1) || internal_data.internal_ver > INTERNAL_VER) {
-    clear_internal_data();
-  } else {
-    if (internal_data.internal_ver == (INTERNAL_VER - 1)) {
-       migrate_internal_data();
-    }
-    internal_data_checksum = dirty_checksum(&internal_data, sizeof(internal_data));
-  }
+  clear_internal_data();
+  persist_read_data(PERSIST_MEMORY_KEY, &internal_data, sizeof(internal_data));
+  internal_data_checksum = dirty_checksum(&internal_data, sizeof(internal_data));
   analogue_set_base(internal_data.base);
   set_progress_based_on_persist();
   set_icon(internal_data.transmit_sent, IS_EXPORT);
@@ -539,6 +523,12 @@ static void transmit_points_or_background_data(int8_t last_sent) {
       send_to_phone(KEY_BASE, internal_data.base);
       break;
     default:
+      // We've got a problem with the accelerometer API
+      if (internal_data.error_code != 0 && internal_data.error_code != last_error_code_sent) {
+        send_to_phone(KEY_FAULT, internal_data.error_code);
+        last_error_code_sent = internal_data.error_code;
+        return;
+      }
       send_point(last_sent, internal_data.points[last_sent], internal_data.ignore[last_sent]);
       break;
   }
@@ -563,13 +553,6 @@ static void transmit_data() {
     set_icon(false, IS_COMMS);
   }
   
-  // We've got a problem with the accelerometer API
-  if (internal_data.error_code != 0 && internal_data.error_code != last_error_code_sent) {
-    send_to_phone(KEY_FAULT, internal_data.error_code);
-    last_error_code_sent = internal_data.error_code;
-    return;
-  }
-
   // Send either base, from, to (if last sent is -1) or a point
   transmit_points_or_background_data(internal_data.last_sent);
 }

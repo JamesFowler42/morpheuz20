@@ -34,8 +34,8 @@
 // Comment out for production build - shows heap where date or smart alarm times show
 //#define TESTING_MEMORY_LEAK
 
-// Allow a long press on up to simulate an accelerometer failure
-#define ACC_FAILURE_TEST
+// Fire the accelerometer failure alarm for testing purposes
+//#define ACC_FAILURE_TEST
 
 #ifdef TESTING_BUILD
   #define LOG_ERROR(fmt, args...) app_log(APP_LOG_LEVEL_ERROR, "", 0, fmt, ## args)

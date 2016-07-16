@@ -137,8 +137,8 @@ static void bg_update_proc(Layer *layer, GContext *ctx) {
  */
 EXTFN void analogue_set_smart_times() {
   show_smart_points = get_config_data()->smart;
-  from_time = (get_config_data()->fromhr > 12 ? get_config_data()->fromhr - 12 : get_config_data()->fromhr) * 120 + get_config_data()->frommin * 2;
-  to_time = (get_config_data()->tohr > 12 ? get_config_data()->tohr - 12 : get_config_data()->tohr) * 120 + get_config_data()->tomin * 2;
+  from_time = (get_config_data()->from * 2) % 1440;
+  to_time = (get_config_data()->to * 2) % 1440;
   if (is_visible)
     layer_mark_dirty(analogue_layer);
 }
@@ -152,7 +152,7 @@ EXTFN void analogue_set_base(time_t base) {
     start_time_round = 0;
   } else {
     struct tm *time = localtime(&base);
-    start_time = (time->tm_hour > 12 ? time->tm_hour - 12 : time->tm_hour) * 120 + time->tm_min * 2;
+    start_time = (time->tm_hour * 120 + time->tm_min * 2) % 1440;
     start_time_round = start_time - (start_time % 24);
   }
   if (is_visible)
