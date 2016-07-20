@@ -1,33 +1,44 @@
 {
-	"tweets":{
-		"star":[
+	"tweets": {
+		"star": [
 			[
 				"I need to know your age to do this"
 			],
 			[
 				"Sucky sleep",
 				"Rubbing coffee powder into my eyeballs",
-				"Sleep is for wimps!"
+				"Sleep is for wimps!",
+				"I'm feeling like something they dug up on Time Team",
+				"Not sure I have got the hang of this sleeping thing"
 			],
 			[
 				"Sorta sleep",
-				"Bad night. I've already fallen asleep in my cornflakes."
+				"Bad night. I've already fallen asleep in my cornflakes.",
+				"Pouring Red Bull on my cereal instead of milk",
+				"Must try harder",
+				"It's no good, I give up!"
 			],
 			[
 				"So-so sleep",
-				"Get me a coffee, STAT!"
+				"Get me a coffee, STAT!",
+				"That was sleep Jim, but not as we know it!",
+				"Is it morning already?"
 			],
 			[
 				"Solid sleep",
-				"Carp Diem - Seize the goldfish"
+				"Carp Diem - Seize the goldfish",
+				"A great effort 9/10"
 			],
 			[
 				"Sensational sleep",
 				"Carpe Diem - Seize the day",
-				"I'm feeling fantastic"
+				"I'm feeling fantastic",
+				"Wow! What happened there!",
+				"That was close to hibernation",
+				"Excellent. Well done. 10/10"
 			]
-			
+
 		]
-		
+
 	}
 }
