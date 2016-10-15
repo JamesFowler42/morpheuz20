@@ -698,7 +698,7 @@ $("document").ready(function() {
     $("#swpnodata").hide();
     $("#tstarts").text(out.tbegin.format(mConst().iosDateFormat));
     $("#tends").text(out.tends.format(mConst().iosDateFormat));
-    var swpUrl = "swpro2hk://?source=Morpheuz&starts=" + out.tbegin.format(mConst().swpUrlDate) + "&ends=" + out.tends.format(mConst().swpUrlDate);
+    var swpUrl = "https://2hk.swp.io/?source=Morpheuz&starts=" + out.tbegin.format(mConst().swpUrlDate) + "&ends=" + out.tends.format(mConst().swpUrlDate);
     if (token != null && token !== "") {
       swpUrl += "&at=" + token;
     }
